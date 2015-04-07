@@ -62,6 +62,6 @@ public class PullRequestIssuePostJobTest {
   public void testPullRequestAnalysisNoIssue() {
     settings.setProperty(GitHubPlugin.GITHUB_PULL_REQUEST, "1");
     pullRequestIssuePostJob.executeOn(new Project("foo"), mock(SensorContext.class));
-    verify(pullRequestFacade).addGlobalComment("SonarQube analysis reported no new issue.");
+    verify(pullRequestFacade).addGlobalComment("SonarQube analysis reported no new issues.");
   }
 }

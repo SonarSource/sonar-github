@@ -75,7 +75,7 @@ public class GlobalReport {
       printNewIssuesForMarkdown(sb, newMinor, "minor");
       printNewIssuesForMarkdown(sb, newInfo, "info");
     } else {
-      sb.append("no new issue.");
+      sb.append("no new issues.");
     }
   }
 
