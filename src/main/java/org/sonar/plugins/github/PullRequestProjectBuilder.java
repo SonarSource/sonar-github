@@ -26,10 +26,12 @@ public class PullRequestProjectBuilder extends ProjectBuilder {
 
   private final GitHubPluginConfiguration gitHubPluginConfiguration;
   private final PullRequestFacade pullRequestFacade;
+  private final FileCache fileCache;
 
-  public PullRequestProjectBuilder(GitHubPluginConfiguration gitHubPluginConfiguration, PullRequestFacade pullRequestFacade) {
+  public PullRequestProjectBuilder(GitHubPluginConfiguration gitHubPluginConfiguration, PullRequestFacade pullRequestFacade, FileCache fileCache) {
     this.gitHubPluginConfiguration = gitHubPluginConfiguration;
     this.pullRequestFacade = pullRequestFacade;
+    this.fileCache = fileCache;
   }
 
   @Override
@@ -38,9 +40,10 @@ public class PullRequestProjectBuilder extends ProjectBuilder {
     if (pullRequestNumber == 0) {
       return;
     }
+    fileCache.setProjectBaseDir(context.projectReactor().getRoot().getBaseDir());
     pullRequestFacade.init(pullRequestNumber);
 
-    pullRequestFacade.createOrUpdateSonarQubeStatus(GHCommitState.PENDING, "Analysis in progress");
+    pullRequestFacade.createOrUpdateSonarQubeStatus(GHCommitState.PENDING, "SonarQube analysis in progress");
   }
 
 }

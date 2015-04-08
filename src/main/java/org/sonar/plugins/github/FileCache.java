@@ -21,55 +21,37 @@ package org.sonar.plugins.github;
 
 import org.sonar.api.BatchComponent;
 import org.sonar.api.batch.InstantiationStrategy;
-import org.sonar.api.resources.Project;
+import org.sonar.api.batch.fs.InputFile;
+import org.sonar.api.scan.filesystem.PathResolver;
 
 import javax.annotation.CheckForNull;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 public class FileCache implements BatchComponent {
 
-  private static class File {
+  private Map<String, String> componentsFullPathByKey = new HashMap<>();
+  private File baseDir;
+  private PathResolver resolver;
 
-    private Project parentModule;
-    private String relativePath;
-
-    public File(Project parent, String relativePath) {
-      this.parentModule = parent;
-      this.relativePath = relativePath;
-    }
+  public FileCache(PathResolver resolver) {
+    this.resolver = resolver;
   }
 
-  private Map<String, File> componentsFullPathByKey = new HashMap<>();
-
-  public void add(String key, Project parent, String relativePath) {
-    componentsFullPathByKey.put(key, new File(parent, relativePath));
+  public void add(String effectiveKey, InputFile inputFile) {
+    componentsFullPathByKey.put(effectiveKey, resolver.relativePath(baseDir, inputFile.file()));
   }
 
   @CheckForNull
   public String getPathFromProjectBaseDir(String fileKey) {
-    File file = componentsFullPathByKey.get(fileKey);
-    if (file == null) {
-      return null;
-    }
-    StringBuilder fullPath = new StringBuilder();
-    prependParentPath(fullPath, file.parentModule);
-    if (fullPath.length() > 0) {
-      fullPath.append("/");
-    }
-    fullPath.append(file.relativePath);
-    return fullPath.toString();
+    return componentsFullPathByKey.get(fileKey);
   }
 
-  private void prependParentPath(StringBuilder fullPath, Project module) {
-    if (module.getParent() != null) {
-      prependParentPath(fullPath, module.getParent());
-    }
-    if (fullPath.length() > 0) {
-      fullPath.append("/");
-    }
-    fullPath.append(module.getPath());
+  public void setProjectBaseDir(File baseDir) {
+    this.baseDir = baseDir;
   }
+
 }

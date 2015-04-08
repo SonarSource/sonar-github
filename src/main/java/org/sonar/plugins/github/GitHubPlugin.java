@@ -29,14 +29,14 @@ import java.util.List;
     key = GitHubPlugin.GITHUB_LOGIN,
     name = "GitHub Login",
     description = "GitHub account used to perform operations like adding comments on pull requests.",
-    global = true
+    global = false
   ),
   @Property(
     key = GitHubPlugin.GITHUB_OAUTH,
     name = "GitHub OAuth token",
     description = "Authentication token",
     type = PropertyType.PASSWORD,
-    global = true
+    global = false
   ),
   @Property(
     key = GitHubPlugin.GITHUB_REPO,
@@ -58,7 +58,7 @@ import java.util.List;
 public class GitHubPlugin extends SonarPlugin {
 
   public static final String GITHUB_LOGIN = "sonar.github.login";
-  public static final String GITHUB_OAUTH = "sonar.github.oauth.secured";
+  public static final String GITHUB_OAUTH = "sonar.github.oauth";
   public static final String GITHUB_REPO = "sonar.github.repository";
   public static final String GITHUB_PULL_REQUEST = "sonar.github.pullRequest";
 
@@ -69,7 +69,7 @@ public class GitHubPlugin extends SonarPlugin {
       GitHubPluginConfiguration.class,
       PullRequestProjectBuilder.class,
       PullRequestFacade.class,
-      FileCacheDecorator.class,
+      FileCacheSensor.class,
       FileCache.class);
   }
 

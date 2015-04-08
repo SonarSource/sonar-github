@@ -19,19 +19,21 @@
  */
 package org.sonar.plugins.github;
 
-import org.sonar.api.batch.Decorator;
-import org.sonar.api.batch.DecoratorContext;
-import org.sonar.api.resources.File;
+import org.sonar.api.batch.Sensor;
+import org.sonar.api.batch.SensorContext;
+import org.sonar.api.batch.fs.FileSystem;
+import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.resources.Project;
 import org.sonar.api.resources.Resource;
-import org.sonar.api.resources.ResourceUtils;
 
-public class FileCacheDecorator implements Decorator {
+public class FileCacheSensor implements Sensor {
 
-  private FileCache fileCache;
+  private final FileCache fileCache;
+  private final FileSystem fs;
 
-  public FileCacheDecorator(FileCache fileCache) {
+  public FileCacheSensor(FileCache fileCache, FileSystem fs) {
     this.fileCache = fileCache;
+    this.fs = fs;
   }
 
   @Override
@@ -40,9 +42,10 @@ public class FileCacheDecorator implements Decorator {
   }
 
   @Override
-  public void decorate(Resource resource, DecoratorContext context) {
-    if (ResourceUtils.isFile(resource)) {
-      fileCache.add(resource.getEffectiveKey(), context.getProject(), ((File) resource).getPath());
+  public void analyse(Project module, SensorContext context) {
+    for (InputFile inputFile : fs.inputFiles(fs.predicates().all())) {
+      Resource sonarFile = context.getResource(inputFile);
+      fileCache.add(sonarFile.getEffectiveKey(), inputFile);
     }
 
   }

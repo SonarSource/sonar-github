@@ -129,18 +129,18 @@ public class PullRequestFacade implements BatchComponent {
 
   public void createOrUpdateReviewComment(String fullpath, Integer line, String body) {
     Integer lineInPatch = patchPositionMappingByFile.get(fullpath).get(line);
-    if (existingReviewCommentsByLocationByFile.containsKey(fullpath) && existingReviewCommentsByLocationByFile.get(fullpath).containsKey(lineInPatch)) {
-      GHPullRequestReviewComment existingReview = existingReviewCommentsByLocationByFile.get(fullpath).get(lineInPatch);
-      try {
+    try {
+      if (existingReviewCommentsByLocationByFile.containsKey(fullpath) && existingReviewCommentsByLocationByFile.get(fullpath).containsKey(lineInPatch)) {
+        GHPullRequestReviewComment existingReview = existingReviewCommentsByLocationByFile.get(fullpath).get(lineInPatch);
         if (!existingReview.getBody().equals(body)) {
           pr.updateReviewComment(existingReview.getId(), body);
           reviewCommentIdsToBeDeleted.remove(existingReview.getId());
-        } else {
-          pr.createReviewComment(body, pr.getHead().getSha(), fullpath, lineInPatch);
         }
-      } catch (IOException e) {
-        throw new IllegalStateException("Unable to create or update review comment in file " + fullpath + " at line " + line, e);
+      } else {
+        pr.createReviewComment(body, pr.getHead().getSha(), fullpath, lineInPatch);
       }
+    } catch (IOException e) {
+      throw new IllegalStateException("Unable to create or update review comment in file " + fullpath + " at line " + line, e);
     }
 
   }
