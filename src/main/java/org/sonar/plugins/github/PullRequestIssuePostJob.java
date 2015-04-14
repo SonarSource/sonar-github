@@ -19,11 +19,13 @@
  */
 package org.sonar.plugins.github;
 
-import org.sonar.api.batch.PostJob;
-import org.sonar.api.batch.SensorContext;
-import org.sonar.api.issue.Issue;
-import org.sonar.api.issue.ProjectIssues;
-import org.sonar.api.resources.Project;
+import org.sonar.api.batch.fs.InputFile;
+import org.sonar.api.batch.fs.InputPath;
+import org.sonar.api.batch.postjob.PostJob;
+import org.sonar.api.batch.postjob.PostJobContext;
+import org.sonar.api.batch.postjob.PostJobDescriptor;
+import org.sonar.api.batch.postjob.issue.Issue;
+import org.sonar.api.batch.rule.Severity;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -32,27 +34,22 @@ import java.util.Map;
 
 public class PullRequestIssuePostJob implements PostJob {
 
-  private final ProjectIssues issues;
-  private final GitHubPluginConfiguration gitHubPluginConfiguration;
   private final PullRequestFacade pullRequestFacade;
-  private final FileCache fileCache;
 
-  public PullRequestIssuePostJob(ProjectIssues issues, GitHubPluginConfiguration gitHubPluginConfiguration, PullRequestFacade pullRequestFacade, FileCache fileCache) {
-    this.issues = issues;
-    this.gitHubPluginConfiguration = gitHubPluginConfiguration;
+  public PullRequestIssuePostJob(PullRequestFacade pullRequestFacade) {
     this.pullRequestFacade = pullRequestFacade;
-    this.fileCache = fileCache;
   }
 
   @Override
-  public void executeOn(Project project, SensorContext context) {
-    int pullRequestNumber = gitHubPluginConfiguration.pullRequestNumber();
-    if (pullRequestNumber == 0) {
-      return;
-    }
+  public void describe(PostJobDescriptor descriptor) {
+    descriptor.name("GitHub Pull Request Issue Publisher")
+      .requireProperty(GitHubPlugin.GITHUB_PULL_REQUEST);
+  }
 
+  @Override
+  public void execute(PostJobContext context) {
     GlobalReport report = new GlobalReport();
-    Map<String, Map<Integer, StringBuilder>> commentsToBeAddedByLine = processIssues(report);
+    Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine = processIssues(context, report);
 
     updateReviewComments(commentsToBeAddedByLine);
 
@@ -64,34 +61,18 @@ public class PullRequestIssuePostJob implements PostJob {
 
   }
 
-  private Map<String, Map<Integer, StringBuilder>> processIssues(GlobalReport report) {
-    Map<String, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine = new HashMap<String, Map<Integer, StringBuilder>>();
-    for (Issue issue : issues.issues()) {
-      String componentKey = issue.componentKey();
-      String severity = issue.severity();
+  private Map<InputFile, Map<Integer, StringBuilder>> processIssues(PostJobContext context, GlobalReport report) {
+    Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine = new HashMap<>();
+    for (Issue issue : context.issues()) {
+      Severity severity = issue.severity();
       boolean isNew = issue.isNew();
       if (isNew) {
-        switch (severity.toLowerCase()) {
-          case "blocker":
-            report.incrementNewBlocker();
-            break;
-          case "critical":
-            report.incrementNewCritical();
-            break;
-          case "major":
-            report.incrementNewMajor();
-            break;
-          case "minor":
-            report.incrementNewMinor();
-            break;
-          case "info":
-            report.incrementNewInfo();
-            break;
-        }
+        report.increment(severity);
       }
-      String fullPath = fileCache.getPathFromProjectBaseDir(componentKey);
-      if (fullPath != null) {
-        if (!pullRequestFacade.hasFile(fullPath)) {
+      InputPath inputPath = issue.inputPath();
+      if (inputPath instanceof InputFile) {
+        InputFile inputFile = (InputFile) inputPath;
+        if (!pullRequestFacade.hasFile(inputFile)) {
           continue;
         }
         Integer issueLine = issue.line();
@@ -100,24 +81,25 @@ public class PullRequestIssuePostJob implements PostJob {
           continue;
         }
         int line = issueLine.intValue();
-        if (!pullRequestFacade.hasFileLine(fullPath, line)) {
+        if (!pullRequestFacade.hasFileLine(inputFile, line)) {
           continue;
         }
         String message = issue.message();
         String ruleKey = issue.ruleKey().toString();
-        if (!commentToBeAddedByFileAndByLine.containsKey(fullPath)) {
-          commentToBeAddedByFileAndByLine.put(fullPath, new HashMap<Integer, StringBuilder>());
+        if (!commentToBeAddedByFileAndByLine.containsKey(inputFile)) {
+          commentToBeAddedByFileAndByLine.put(inputFile, new HashMap<Integer, StringBuilder>());
         }
-        if (!commentToBeAddedByFileAndByLine.get(fullPath).containsKey(line)) {
-          commentToBeAddedByFileAndByLine.get(fullPath).put(line, new StringBuilder());
+        Map<Integer, StringBuilder> commentsByLine = commentToBeAddedByFileAndByLine.get(inputFile);
+        if (!commentsByLine.containsKey(line)) {
+          commentsByLine.put(line, new StringBuilder());
         }
-        commentToBeAddedByFileAndByLine.get(fullPath).get(line).append(formatMessage(severity, message, ruleKey, isNew)).append("\n");
+        commentsByLine.get(line).append(formatMessage(severity, message, ruleKey, isNew)).append("\n");
       }
     }
     return commentToBeAddedByFileAndByLine;
   }
 
-  private static String formatMessage(String severity, String message, String ruleKey, boolean isNew) {
+  private static String formatMessage(Severity severity, String message, String ruleKey, boolean isNew) {
 
     return (isNew ? ":new: " : "") + getImageMarkdownForSeverity(severity) + message
       + "[![...](https://raw.githubusercontent.com/henryju/image-hosting/master/more.png)](http://nemo.sonarqube.org/coding_rules#rule_key=" + encodeForUrl(ruleKey) + ")";
@@ -132,16 +114,16 @@ public class PullRequestIssuePostJob implements PostJob {
     }
   }
 
-  private static String getImageMarkdownForSeverity(String severity) {
+  private static String getImageMarkdownForSeverity(Severity severity) {
     return "![" + severity + "](https://raw.githubusercontent.com/henryju/image-hosting/master/"
-      + severity.toLowerCase() + ".png)";
+      + severity.name().toLowerCase() + ".png)";
   }
 
-  private void updateReviewComments(Map<String, Map<Integer, StringBuilder>> commentsToBeAddedByLine) {
-    for (String fullpath : commentsToBeAddedByLine.keySet()) {
-      for (Integer line : commentsToBeAddedByLine.get(fullpath).keySet()) {
-        String body = commentsToBeAddedByLine.get(fullpath).get(line).toString();
-        pullRequestFacade.createOrUpdateReviewComment(fullpath, line, body);
+  private void updateReviewComments(Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine) {
+    for (Map.Entry<InputFile, Map<Integer, StringBuilder>> entry : commentsToBeAddedByLine.entrySet()) {
+      for (Map.Entry<Integer, StringBuilder> entryPerLine : entry.getValue().entrySet()) {
+        String body = entryPerLine.getValue().toString();
+        pullRequestFacade.createOrUpdateReviewComment(entry.getKey(), entryPerLine.getKey(), body);
       }
     }
   }

@@ -43,7 +43,7 @@ import java.util.List;
     name = "GitHub repository",
     description = "GitHub repository for this project. Will be guessed from '" + CoreProperties.LINKS_SOURCES_DEV + "' if present",
     global = false,
-    project = true
+    project = false
   ),
   @Property(
     key = GitHubPlugin.GITHUB_PULL_REQUEST,
@@ -68,9 +68,7 @@ public class GitHubPlugin extends SonarPlugin {
       PullRequestIssuePostJob.class,
       GitHubPluginConfiguration.class,
       PullRequestProjectBuilder.class,
-      PullRequestFacade.class,
-      FileCacheSensor.class,
-      FileCache.class);
+      PullRequestFacade.class);
   }
 
 }

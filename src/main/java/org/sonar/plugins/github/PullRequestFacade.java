@@ -23,7 +23,12 @@ import org.apache.commons.io.IOUtils;
 import org.kohsuke.github.*;
 import org.sonar.api.BatchComponent;
 import org.sonar.api.batch.InstantiationStrategy;
+import org.sonar.api.batch.fs.InputFile;
+import org.sonar.api.scan.filesystem.PathResolver;
 
+import javax.annotation.Nullable;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
@@ -42,12 +47,16 @@ public class PullRequestFacade implements BatchComponent {
   private GHRepository ghRepo;
   private GHPullRequest pr;
   private Set<Integer> reviewCommentIdsToBeDeleted = new HashSet<>();
+  private File gitBaseDir;
 
   public PullRequestFacade(GitHubPluginConfiguration config) {
     this.config = config;
   }
 
-  public void init(int pullRequestNumber) {
+  public void init(int pullRequestNumber, File projectBaseDir) {
+    if (findGitBaseDir(projectBaseDir) == null) {
+      throw new IllegalStateException("Unable to find Git root directory. Is " + projectBaseDir + " part of a Git repository?");
+    }
     try {
       GitHub github = new GitHubBuilder().withOAuthToken(config.oauth(), config.login()).build();
       ghRepo = github.getRepository(config.repository());
@@ -57,6 +66,17 @@ public class PullRequestFacade implements BatchComponent {
     } catch (IOException e) {
       throw new IllegalStateException("Unable to perform GitHub WS operation", e);
     }
+  }
+
+  public File findGitBaseDir(@Nullable File baseDir) {
+    if (baseDir == null) {
+      return null;
+    }
+    if (new File(baseDir, ".git").exists()) {
+      this.gitBaseDir = baseDir;
+      return baseDir;
+    }
+    return findGitBaseDir(baseDir.getParentFile());
   }
 
   /**
@@ -113,21 +133,26 @@ public class PullRequestFacade implements BatchComponent {
     return patchPositionMappingByFile;
   }
 
+  private String getPath(InputFile inputFile) {
+    return new PathResolver().relativePath(gitBaseDir, inputFile.file());
+  }
+
   /**
    * Test if the P/R contains the provided file path (ie this file was added/modified/updated)
    */
-  public boolean hasFile(String fullpath) {
-    return patchPositionMappingByFile.containsKey(fullpath);
+  public boolean hasFile(InputFile inputFile) {
+    return patchPositionMappingByFile.containsKey(getPath(inputFile));
   }
 
   /**
    * Test if the P/R contains the provided line for the file path (ie this line is "visible" in diff)
    */
-  public boolean hasFileLine(String fullpath, int line) {
-    return patchPositionMappingByFile.get(fullpath).containsKey(line);
+  public boolean hasFileLine(InputFile inputFile, int line) {
+    return patchPositionMappingByFile.get(getPath(inputFile)).containsKey(line);
   }
 
-  public void createOrUpdateReviewComment(String fullpath, Integer line, String body) {
+  public void createOrUpdateReviewComment(InputFile inputFile, Integer line, String body) {
+    String fullpath = getPath(inputFile);
     Integer lineInPatch = patchPositionMappingByFile.get(fullpath).get(line);
     try {
       if (existingReviewCommentsByLocationByFile.containsKey(fullpath) && existingReviewCommentsByLocationByFile.get(fullpath).containsKey(lineInPatch)) {

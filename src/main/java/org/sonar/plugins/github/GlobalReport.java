@@ -20,32 +20,13 @@
 package org.sonar.plugins.github;
 
 import org.kohsuke.github.GHCommitState;
+import org.sonar.api.batch.rule.Severity;
 
 public class GlobalReport {
-  private int newBlocker = 0;
-  private int newCritical = 0;
-  private int newMajor = 0;
-  private int newMinor = 0;
-  private int newInfo = 0;
+  private int[] newIssuesBySeverity = new int[Severity.values().length];
 
-  public void incrementNewBlocker() {
-    this.newBlocker++;
-  }
-
-  public void incrementNewCritical() {
-    this.newCritical++;
-  }
-
-  public void incrementNewMajor() {
-    this.newMajor++;
-  }
-
-  public void incrementNewMinor() {
-    this.newMinor++;
-  }
-
-  public void incrementNewInfo() {
-    this.newInfo++;
+  public void increment(Severity severity) {
+    this.newIssuesBySeverity[severity.ordinal()]++;
   }
 
   public String formatForMarkdown() {
@@ -61,33 +42,37 @@ public class GlobalReport {
   }
 
   public GHCommitState getStatus() {
-    return (newBlocker > 0 || newCritical > 0) ? GHCommitState.ERROR : GHCommitState.SUCCESS;
+    return (newIssues(Severity.BLOCKER) > 0 || newIssues(Severity.CRITICAL) > 0) ? GHCommitState.ERROR : GHCommitState.SUCCESS;
+  }
+
+  private int newIssues(Severity s) {
+    return newIssuesBySeverity[s.ordinal()];
   }
 
   private void printNewIssuesMarkdown(StringBuilder sb) {
     sb.append("SonarQube analysis reported ");
-    int newIssues = newBlocker + newCritical + newMajor + newMinor + newInfo;
+    int newIssues = newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL) + newIssues(Severity.MAJOR) + newIssues(Severity.MINOR) + newIssues(Severity.INFO);
     if (newIssues > 0) {
       sb.append(newIssues).append(" new issue" + (newIssues > 1 ? "s" : "")).append(":\n");
-      printNewIssuesForMarkdown(sb, newBlocker, "blocking");
-      printNewIssuesForMarkdown(sb, newCritical, "critical");
-      printNewIssuesForMarkdown(sb, newMajor, "major");
-      printNewIssuesForMarkdown(sb, newMinor, "minor");
-      printNewIssuesForMarkdown(sb, newInfo, "info");
+      printNewIssuesForMarkdown(sb, newIssues(Severity.BLOCKER), "blocking");
+      printNewIssuesForMarkdown(sb, newIssues(Severity.CRITICAL), "critical");
+      printNewIssuesForMarkdown(sb, newIssues(Severity.MAJOR), "major");
+      printNewIssuesForMarkdown(sb, newIssues(Severity.MINOR), "minor");
+      printNewIssuesForMarkdown(sb, newIssues(Severity.INFO), "info");
     } else {
       sb.append("no new issues.");
     }
   }
 
   private void printNewIssuesInline(StringBuilder sb) {
-    int newIssues = newBlocker + newCritical + newMajor + newMinor + newInfo;
+    int newIssues = newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL) + newIssues(Severity.MAJOR) + newIssues(Severity.MINOR) + newIssues(Severity.INFO);
     if (newIssues > 0) {
       sb.append("+").append(newIssues).append(" issue" + (newIssues > 1 ? "s" : "")).append(" (");
-      printNewIssuesInline(sb, newBlocker, "blocking");
-      printNewIssuesInline(sb, newCritical, "critical");
-      printNewIssuesInline(sb, newMajor, "major");
-      printNewIssuesInline(sb, newMinor, "minor");
-      printNewIssuesInline(sb, newInfo, "info");
+      printNewIssuesInline(sb, newIssues(Severity.BLOCKER), "blocking");
+      printNewIssuesInline(sb, newIssues(Severity.CRITICAL), "critical");
+      printNewIssuesInline(sb, newIssues(Severity.MAJOR), "major");
+      printNewIssuesInline(sb, newIssues(Severity.MINOR), "minor");
+      printNewIssuesInline(sb, newIssues(Severity.INFO), "info");
       sb.append(")");
     } else {
       sb.append("No new issue");

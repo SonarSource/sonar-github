@@ -26,22 +26,19 @@ public class PullRequestProjectBuilder extends ProjectBuilder {
 
   private final GitHubPluginConfiguration gitHubPluginConfiguration;
   private final PullRequestFacade pullRequestFacade;
-  private final FileCache fileCache;
 
-  public PullRequestProjectBuilder(GitHubPluginConfiguration gitHubPluginConfiguration, PullRequestFacade pullRequestFacade, FileCache fileCache) {
+  public PullRequestProjectBuilder(GitHubPluginConfiguration gitHubPluginConfiguration, PullRequestFacade pullRequestFacade) {
     this.gitHubPluginConfiguration = gitHubPluginConfiguration;
     this.pullRequestFacade = pullRequestFacade;
-    this.fileCache = fileCache;
   }
 
   @Override
   public void build(Context context) {
-    int pullRequestNumber = gitHubPluginConfiguration.pullRequestNumber();
-    if (pullRequestNumber == 0) {
+    if (!gitHubPluginConfiguration.isEnabled()) {
       return;
     }
-    fileCache.setProjectBaseDir(context.projectReactor().getRoot().getBaseDir());
-    pullRequestFacade.init(pullRequestNumber);
+    int pullRequestNumber = gitHubPluginConfiguration.pullRequestNumber();
+    pullRequestFacade.init(pullRequestNumber, context.projectReactor().getRoot().getBaseDir());
 
     pullRequestFacade.createOrUpdateSonarQubeStatus(GHCommitState.PENDING, "SonarQube analysis in progress");
   }

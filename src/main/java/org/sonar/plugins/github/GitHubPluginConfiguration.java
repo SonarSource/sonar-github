@@ -24,6 +24,8 @@ import org.sonar.api.CoreProperties;
 import org.sonar.api.batch.InstantiationStrategy;
 import org.sonar.api.config.Settings;
 
+import javax.annotation.CheckForNull;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,6 +44,7 @@ public class GitHubPluginConfiguration implements BatchComponent {
     return settings.getInt(GitHubPlugin.GITHUB_PULL_REQUEST);
   }
 
+  @CheckForNull
   public String repository() {
     if (settings.hasKey(GitHubPlugin.GITHUB_REPO)) {
       return settings.getString(GitHubPlugin.GITHUB_REPO);
@@ -63,12 +66,18 @@ public class GitHubPluginConfiguration implements BatchComponent {
     return null;
   }
 
+  @CheckForNull
   public String oauth() {
     return settings.getString(GitHubPlugin.GITHUB_OAUTH);
   }
 
+  @CheckForNull
   public String login() {
     return settings.getString(GitHubPlugin.GITHUB_LOGIN);
+  }
+
+  public boolean isEnabled() {
+    return settings.hasKey(GitHubPlugin.GITHUB_PULL_REQUEST);
   }
 
 }
