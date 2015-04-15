@@ -19,33 +19,26 @@
  */
 package org.sonar.plugins.github;
 
-import org.kohsuke.github.GHCommitState;
-import org.sonar.api.batch.bootstrap.ProjectBuilder;
+import org.sonar.api.batch.fs.InputFile;
+import org.sonar.api.batch.fs.InputFileFilter;
 
 /**
- * Trigger load of pull request metadata at the very beginning of SQ analysis. Also
- * set "in progress" status on the pull request. 
+ * Filter files to analyze to keep only files referenced in the pull request.
  *
  */
-public class PullRequestProjectBuilder extends ProjectBuilder {
+public class PullRequestInputFileFilter implements InputFileFilter {
 
   private final GitHubPluginConfiguration gitHubPluginConfiguration;
   private final PullRequestFacade pullRequestFacade;
 
-  public PullRequestProjectBuilder(GitHubPluginConfiguration gitHubPluginConfiguration, PullRequestFacade pullRequestFacade) {
+  public PullRequestInputFileFilter(GitHubPluginConfiguration gitHubPluginConfiguration, PullRequestFacade pullRequestFacade) {
     this.gitHubPluginConfiguration = gitHubPluginConfiguration;
     this.pullRequestFacade = pullRequestFacade;
   }
 
   @Override
-  public void build(Context context) {
-    if (!gitHubPluginConfiguration.isEnabled()) {
-      return;
-    }
-    int pullRequestNumber = gitHubPluginConfiguration.pullRequestNumber();
-    pullRequestFacade.init(pullRequestNumber, context.projectReactor().getRoot().getBaseDir());
-
-    pullRequestFacade.createOrUpdateSonarQubeStatus(GHCommitState.PENDING, "SonarQube analysis in progress");
+  public boolean accept(InputFile f) {
+    return !gitHubPluginConfiguration.isEnabled() || pullRequestFacade.hasFile(f);
   }
 
 }

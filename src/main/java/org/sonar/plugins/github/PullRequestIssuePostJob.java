@@ -32,6 +32,9 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Compute comments to be added on the pull request.
+ */
 public class PullRequestIssuePostJob implements PostJob {
 
   private final PullRequestFacade pullRequestFacade;

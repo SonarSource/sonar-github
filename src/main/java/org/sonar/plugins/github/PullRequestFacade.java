@@ -38,6 +38,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Facade for all WS interaction with GitHub.
+ */
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 public class PullRequestFacade implements BatchComponent {
 

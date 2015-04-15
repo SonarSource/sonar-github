@@ -68,7 +68,8 @@ public class GitHubPlugin extends SonarPlugin {
       PullRequestIssuePostJob.class,
       GitHubPluginConfiguration.class,
       PullRequestProjectBuilder.class,
-      PullRequestFacade.class);
+      PullRequestFacade.class,
+      PullRequestInputFileFilter.class);
   }
 
 }
