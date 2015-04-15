@@ -162,8 +162,8 @@ public class PullRequestFacade implements BatchComponent {
         GHPullRequestReviewComment existingReview = existingReviewCommentsByLocationByFile.get(fullpath).get(lineInPatch);
         if (!existingReview.getBody().equals(body)) {
           pr.updateReviewComment(existingReview.getId(), body);
-          reviewCommentIdsToBeDeleted.remove(existingReview.getId());
         }
+        reviewCommentIdsToBeDeleted.remove(existingReview.getId());
       } else {
         pr.createReviewComment(body, pr.getHead().getSha(), fullpath, lineInPatch);
       }
