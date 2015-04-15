@@ -1,5 +1,5 @@
 /*
- * SonarQube :: GitHub Integration
+ * SonarQube :: GitHub Plugin
  * Copyright (C) 2015 SonarSource
  * dev@sonar.codehaus.org
  *
