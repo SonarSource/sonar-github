@@ -52,6 +52,10 @@ public class GitHubPluginConfigurationTest {
     settings.setProperty(CoreProperties.LINKS_SOURCES_DEV, "scm:git:git@github.com:SonarCommunity2/github-integration.git");
     assertThat(config.repository()).isEqualTo("SonarCommunity2/github-integration");
 
+    settings.setProperty(GitHubPlugin.GITHUB_REPO, "https://github.com/SonarCommunity/sonar-github.git");
+    assertThat(config.repository()).isEqualTo("SonarCommunity/sonar-github");
+    settings.setProperty(GitHubPlugin.GITHUB_REPO, "http://github.com/SonarCommunity/sonar-github.git");
+    assertThat(config.repository()).isEqualTo("SonarCommunity/sonar-github");
     settings.setProperty(GitHubPlugin.GITHUB_REPO, "SonarCommunity3/github-integration");
     assertThat(config.repository()).isEqualTo("SonarCommunity3/github-integration");
   }

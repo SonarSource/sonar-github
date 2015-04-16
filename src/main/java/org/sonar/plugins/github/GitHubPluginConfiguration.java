@@ -33,11 +33,13 @@ import java.util.regex.Pattern;
 public class GitHubPluginConfiguration implements BatchComponent {
 
   private Settings settings;
-  private Pattern gitPattern;
+  private Pattern gitSshPattern;
+  private Pattern gitHttpPattern;
 
   public GitHubPluginConfiguration(Settings settings) {
     this.settings = settings;
-    this.gitPattern = Pattern.compile(".*@github\\.com:(.*/.*)\\.git");
+    this.gitSshPattern = Pattern.compile(".*@github\\.com:(.*/.*)\\.git");
+    this.gitHttpPattern = Pattern.compile("https?://github\\.com/(.*/.*)\\.git");
   }
 
   public int pullRequestNumber() {
@@ -46,22 +48,34 @@ public class GitHubPluginConfiguration implements BatchComponent {
 
   @CheckForNull
   public String repository() {
+    String repo = null;
     if (settings.hasKey(GitHubPlugin.GITHUB_REPO)) {
-      return settings.getString(GitHubPlugin.GITHUB_REPO);
+      String urlOrRepo = settings.getString(GitHubPlugin.GITHUB_REPO);
+      repo = parseGitUrl(urlOrRepo);
+      if (repo == null) {
+        repo = urlOrRepo;
+      }
     }
-    if (settings.hasKey(CoreProperties.LINKS_SOURCES_DEV)) {
+    if (repo == null && settings.hasKey(CoreProperties.LINKS_SOURCES_DEV)) {
       String url = settings.getString(CoreProperties.LINKS_SOURCES_DEV);
-      Matcher matcher = gitPattern.matcher(url);
-      if (matcher.matches()) {
-        return matcher.group(1);
-      }
+      repo = parseGitUrl(url);
     }
-    if (settings.hasKey(CoreProperties.LINKS_SOURCES)) {
+    if (repo == null && settings.hasKey(CoreProperties.LINKS_SOURCES)) {
       String url = settings.getString(CoreProperties.LINKS_SOURCES);
-      Matcher matcher = gitPattern.matcher(url);
-      if (matcher.matches()) {
-        return matcher.group(1);
-      }
+      repo = parseGitUrl(url);
+    }
+    return repo;
+  }
+
+  @CheckForNull
+  private String parseGitUrl(String urlOrRepo) {
+    Matcher matcher = gitSshPattern.matcher(urlOrRepo);
+    if (matcher.matches()) {
+      return matcher.group(1);
+    }
+    matcher = gitHttpPattern.matcher(urlOrRepo);
+    if (matcher.matches()) {
+      return matcher.group(1);
     }
     return null;
   }
