@@ -32,9 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,7 +47,7 @@ public class PullRequestFacade implements BatchComponent {
   private Map<String, Map<Integer, GHPullRequestReviewComment>> existingReviewCommentsByLocationByFile;
   private GHRepository ghRepo;
   private GHPullRequest pr;
-  private Set<Integer> reviewCommentIdsToBeDeleted = new HashSet<>();
+  private Map<Integer, GHPullRequestReviewComment> reviewCommentToBeDeletedById = new HashMap<>();
   private File gitBaseDir;
 
   public PullRequestFacade(GitHubPluginConfiguration config) {
@@ -96,7 +94,7 @@ public class PullRequestFacade implements BatchComponent {
         existingReviewCommentsByLocationByFile.put(comment.getPath(), new HashMap<Integer, GHPullRequestReviewComment>());
       }
       // By default all previous comments will be marked for deletion
-      reviewCommentIdsToBeDeleted.add(comment.getId());
+      reviewCommentToBeDeletedById.put(comment.getId(), comment);
       existingReviewCommentsByLocationByFile.get(comment.getPath()).put(comment.getPosition(), comment);
     }
     return existingReviewCommentsByLocationByFile;
@@ -161,9 +159,9 @@ public class PullRequestFacade implements BatchComponent {
       if (existingReviewCommentsByLocationByFile.containsKey(fullpath) && existingReviewCommentsByLocationByFile.get(fullpath).containsKey(lineInPatch)) {
         GHPullRequestReviewComment existingReview = existingReviewCommentsByLocationByFile.get(fullpath).get(lineInPatch);
         if (!existingReview.getBody().equals(body)) {
-          pr.updateReviewComment(existingReview.getId(), body);
+          existingReview.update(body);
         }
-        reviewCommentIdsToBeDeleted.remove(existingReview.getId());
+        reviewCommentToBeDeletedById.remove(existingReview.getId());
       } else {
         pr.createReviewComment(body, pr.getHead().getSha(), fullpath, lineInPatch);
       }
@@ -174,11 +172,11 @@ public class PullRequestFacade implements BatchComponent {
   }
 
   public void deleteOutdatedComments() {
-    for (Integer idReviewToDelete : reviewCommentIdsToBeDeleted) {
+    for (GHPullRequestReviewComment reviewToDelete : reviewCommentToBeDeletedById.values()) {
       try {
-        pr.deleteReviewComment(idReviewToDelete);
+        reviewToDelete.delete();
       } catch (IOException e) {
-        throw new IllegalStateException("Unable to delete review comment with id " + idReviewToDelete, e);
+        throw new IllegalStateException("Unable to delete review comment with id " + reviewToDelete.getId(), e);
       }
     }
   }
