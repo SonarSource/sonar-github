@@ -69,9 +69,7 @@ public class PullRequestIssuePostJob implements PostJob {
     for (Issue issue : context.issues()) {
       Severity severity = issue.severity();
       boolean isNew = issue.isNew();
-      if (isNew) {
-        report.increment(severity);
-      }
+      report.process(issue);
       InputPath inputPath = issue.inputPath();
       if (inputPath instanceof InputFile) {
         InputFile inputFile = (InputFile) inputPath;

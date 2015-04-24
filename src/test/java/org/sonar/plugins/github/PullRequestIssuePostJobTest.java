@@ -69,7 +69,7 @@ public class PullRequestIssuePostJobTest {
     PostJobContext context = mock(PostJobContext.class);
     when(context.issues()).thenReturn(Arrays.<Issue>asList());
     pullRequestIssuePostJob.execute(context);
-    verify(pullRequestFacade).addGlobalComment("SonarQube analysis reported no new issues.");
+    verify(pullRequestFacade).addGlobalComment("SonarQube analysis reported no new issues.\n");
   }
 
   @Test
@@ -78,50 +78,64 @@ public class PullRequestIssuePostJobTest {
     Issue newIssue = mock(Issue.class);
     DefaultInputFile inputFile1 = new DefaultInputFile("foo", "src/Foo.php").setModuleBaseDir(baseDir.toPath());
     when(newIssue.inputPath()).thenReturn(inputFile1);
+    when(newIssue.componentKey()).thenReturn("foo:src/Foo.php");
     when(newIssue.line()).thenReturn(1);
     when(newIssue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
     when(newIssue.severity()).thenReturn(Severity.BLOCKER);
     when(newIssue.isNew()).thenReturn(true);
+    when(newIssue.message()).thenReturn("msg");
 
     Issue lineNotVisible = mock(Issue.class);
     when(lineNotVisible.inputPath()).thenReturn(inputFile1);
+    when(lineNotVisible.componentKey()).thenReturn("foo:src/Foo.php");
     when(lineNotVisible.line()).thenReturn(2);
     when(lineNotVisible.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
     when(lineNotVisible.severity()).thenReturn(Severity.BLOCKER);
     when(lineNotVisible.isNew()).thenReturn(true);
+    when(lineNotVisible.message()).thenReturn("msg");
 
     Issue fileNotInPR = mock(Issue.class);
     DefaultInputFile inputFile2 = new DefaultInputFile("foo", "src/Foo2.php").setModuleBaseDir(baseDir.toPath());
     when(fileNotInPR.inputPath()).thenReturn(inputFile2);
+    when(fileNotInPR.componentKey()).thenReturn("foo:src/Foo2.php");
     when(fileNotInPR.line()).thenReturn(1);
     when(fileNotInPR.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
     when(fileNotInPR.severity()).thenReturn(Severity.BLOCKER);
     when(fileNotInPR.isNew()).thenReturn(true);
+    when(fileNotInPR.message()).thenReturn("msg");
 
     Issue notNewIssue = mock(Issue.class);
     when(notNewIssue.inputPath()).thenReturn(inputFile1);
+    when(notNewIssue.componentKey()).thenReturn("foo:src/Foo.php");
     when(notNewIssue.line()).thenReturn(1);
     when(notNewIssue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
     when(notNewIssue.severity()).thenReturn(Severity.BLOCKER);
     when(notNewIssue.isNew()).thenReturn(false);
+    when(notNewIssue.message()).thenReturn("msg");
 
     Issue issueOnDir = mock(Issue.class);
     when(issueOnDir.inputPath()).thenReturn(new DefaultInputDir("foo", "src"));
+    when(issueOnDir.componentKey()).thenReturn("foo:src");
     when(issueOnDir.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
     when(issueOnDir.severity()).thenReturn(Severity.BLOCKER);
     when(issueOnDir.isNew()).thenReturn(true);
+    when(issueOnDir.message()).thenReturn("msg");
 
     Issue issueOnProject = mock(Issue.class);
     when(issueOnProject.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
+    when(issueOnProject.componentKey()).thenReturn("foo");
     when(issueOnProject.severity()).thenReturn(Severity.BLOCKER);
     when(issueOnProject.isNew()).thenReturn(true);
+    when(issueOnProject.message()).thenReturn("msg");
 
     Issue globalIssue = mock(Issue.class);
     when(globalIssue.inputPath()).thenReturn(inputFile1);
+    when(globalIssue.componentKey()).thenReturn("foo:src/Foo.php");
     when(globalIssue.line()).thenReturn(null);
     when(globalIssue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
     when(globalIssue.severity()).thenReturn(Severity.BLOCKER);
     when(globalIssue.isNew()).thenReturn(true);
+    when(globalIssue.message()).thenReturn("msg");
 
     when(context.issues()).thenReturn(Arrays.<Issue>asList(newIssue, globalIssue, issueOnProject, issueOnDir, fileNotInPR, lineNotVisible, notNewIssue));
     when(pullRequestFacade.hasFile(inputFile1)).thenReturn(true);
@@ -129,5 +143,6 @@ public class PullRequestIssuePostJobTest {
 
     pullRequestIssuePostJob.execute(context);
     verify(pullRequestFacade).addGlobalComment(contains("SonarQube analysis reported 6 new issues:"));
+    verify(pullRequestFacade).addGlobalComment(contains(" * foo:src/Foo.php (L1) msg (repo:rule)"));
   }
 }

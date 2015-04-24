@@ -20,18 +20,21 @@
 package org.sonar.plugins.github;
 
 import org.kohsuke.github.GHCommitState;
+import org.sonar.api.batch.postjob.issue.Issue;
 import org.sonar.api.batch.rule.Severity;
 
 public class GlobalReport {
   private int[] newIssuesBySeverity = new int[Severity.values().length];
+  private StringBuilder details = new StringBuilder();
 
-  public void increment(Severity severity) {
+  private void increment(Severity severity) {
     this.newIssuesBySeverity[severity.ordinal()]++;
   }
 
   public String formatForMarkdown() {
     StringBuilder sb = new StringBuilder();
     printNewIssuesMarkdown(sb);
+    sb.append("\n").append(details.toString());
     return sb.toString();
   }
 
@@ -92,5 +95,18 @@ public class GlobalReport {
     if (issueCount > 0) {
       sb.append("* ").append(issueCount).append(" ").append(severityLabel).append("\n");
     }
+  }
+
+  public void process(Issue issue) {
+    if (!issue.isNew()) {
+      return;
+    }
+    increment(issue.severity());
+    details.append(" * ").append(issue.componentKey());
+    Integer line = issue.line();
+    if (line != null) {
+      details.append(" (L").append(line).append(")");
+    }
+    details.append(" ").append(issue.message()).append(" (").append(issue.ruleKey()).append(")").append("\n");
   }
 }
