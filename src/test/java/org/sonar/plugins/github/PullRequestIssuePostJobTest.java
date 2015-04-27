@@ -69,7 +69,7 @@ public class PullRequestIssuePostJobTest {
     PostJobContext context = mock(PostJobContext.class);
     when(context.issues()).thenReturn(Arrays.<Issue>asList());
     pullRequestIssuePostJob.execute(context);
-    verify(pullRequestFacade).addGlobalComment("SonarQube analysis reported no new issues.\n");
+    verify(pullRequestFacade).addGlobalComment("SonarQube analysis reported no new issues.");
   }
 
   @Test
@@ -84,6 +84,7 @@ public class PullRequestIssuePostJobTest {
     when(newIssue.severity()).thenReturn(Severity.BLOCKER);
     when(newIssue.isNew()).thenReturn(true);
     when(newIssue.message()).thenReturn("msg");
+    when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn("http://github/blob/abc123/src/Foo.php#L1");
 
     Issue lineNotVisible = mock(Issue.class);
     when(lineNotVisible.inputPath()).thenReturn(inputFile1);
@@ -143,6 +144,8 @@ public class PullRequestIssuePostJobTest {
 
     pullRequestIssuePostJob.execute(context);
     verify(pullRequestFacade).addGlobalComment(contains("SonarQube analysis reported 6 new issues:"));
-    verify(pullRequestFacade).addGlobalComment(contains(" * foo:src/Foo.php (L1) msg (repo:rule)"));
+    verify(pullRequestFacade)
+      .addGlobalComment(
+        contains("* [msg](http://github/blob/abc123/src/Foo.php#L1)[![...](https://raw.githubusercontent.com/henryju/image-hosting/master/more.png)](http://nemo.sonarqube.org/coding_rules#rule_key=repo%3Arule)"));
   }
 }

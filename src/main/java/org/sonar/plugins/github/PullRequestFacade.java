@@ -24,13 +24,19 @@ import org.kohsuke.github.*;
 import org.sonar.api.BatchComponent;
 import org.sonar.api.batch.InstantiationStrategy;
 import org.sonar.api.batch.fs.InputFile;
+import org.sonar.api.batch.fs.InputPath;
 import org.sonar.api.scan.filesystem.PathResolver;
+import org.sonar.api.utils.log.Logger;
+import org.sonar.api.utils.log.Loggers;
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -41,6 +47,8 @@ import java.util.regex.Pattern;
  */
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 public class PullRequestFacade implements BatchComponent {
+
+  private static final Logger LOG = Loggers.get(PullRequestFacade.class);
 
   private final GitHubPluginConfiguration config;
   private Map<String, Map<Integer, Integer>> patchPositionMappingByFile;
@@ -134,8 +142,8 @@ public class PullRequestFacade implements BatchComponent {
     return patchPositionMappingByFile;
   }
 
-  private String getPath(InputFile inputFile) {
-    return new PathResolver().relativePath(gitBaseDir, inputFile.file());
+  private String getPath(InputPath inputPath) {
+    return new PathResolver().relativePath(gitBaseDir, inputPath.file());
   }
 
   /**
@@ -195,5 +203,18 @@ public class PullRequestFacade implements BatchComponent {
     } catch (IOException e) {
       throw new IllegalStateException("Unable to update commit status", e);
     }
+  }
+
+  @CheckForNull
+  public String getGithubUrl(@Nullable InputPath inputPath, @Nullable Integer issueLine) {
+    if (inputPath != null) {
+      String path = getPath(inputPath);
+      try {
+        return new URL(ghRepo.getHtmlUrl(), "blob/" + pr.getHead().getSha() + "/" + path + (issueLine != null ? "#L" + issueLine : "")).toString();
+      } catch (MalformedURLException e) {
+        LOG.warn("Unable to create GitHub URL", e);
+      }
+    }
+    return null;
   }
 }

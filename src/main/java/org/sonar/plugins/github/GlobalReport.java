@@ -23,6 +23,8 @@ import org.kohsuke.github.GHCommitState;
 import org.sonar.api.batch.postjob.issue.Issue;
 import org.sonar.api.batch.rule.Severity;
 
+import javax.annotation.Nullable;
+
 public class GlobalReport {
   private int[] newIssuesBySeverity = new int[Severity.values().length];
   private StringBuilder details = new StringBuilder();
@@ -34,7 +36,9 @@ public class GlobalReport {
   public String formatForMarkdown() {
     StringBuilder sb = new StringBuilder();
     printNewIssuesMarkdown(sb);
-    sb.append("\n").append(details.toString());
+    if (details.length() > 0) {
+      sb.append("\nDetails:\n").append(details.toString());
+    }
     return sb.toString();
   }
 
@@ -97,16 +101,17 @@ public class GlobalReport {
     }
   }
 
-  public void process(Issue issue) {
+  public void process(Issue issue, @Nullable String githubUrl) {
     if (!issue.isNew()) {
       return;
     }
     increment(issue.severity());
-    details.append(" * ").append(issue.componentKey());
-    Integer line = issue.line();
-    if (line != null) {
-      details.append(" (L").append(line).append(")");
+    details.append("* ");
+    if (githubUrl != null) {
+      details.append("[").append(issue.message()).append("]").append("(").append(githubUrl).append(")");
+    } else {
+      details.append(issue.message()).append(" ").append("(").append(issue.componentKey()).append(")");
     }
-    details.append(" ").append(issue.message()).append(" (").append(issue.ruleKey()).append(")").append("\n");
+    details.append(PullRequestIssuePostJob.getRuleLink(issue.ruleKey().toString())).append("\n");
   }
 }

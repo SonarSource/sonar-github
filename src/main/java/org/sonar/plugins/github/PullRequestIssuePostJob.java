@@ -69,14 +69,14 @@ public class PullRequestIssuePostJob implements PostJob {
     for (Issue issue : context.issues()) {
       Severity severity = issue.severity();
       boolean isNew = issue.isNew();
-      report.process(issue);
       InputPath inputPath = issue.inputPath();
+      Integer issueLine = issue.line();
+      report.process(issue, pullRequestFacade.getGithubUrl(inputPath, issueLine));
       if (inputPath instanceof InputFile) {
         InputFile inputFile = (InputFile) inputPath;
         if (!pullRequestFacade.hasFile(inputFile)) {
           continue;
         }
-        Integer issueLine = issue.line();
         if (issueLine == null) {
           // Global issue
           continue;
@@ -102,8 +102,12 @@ public class PullRequestIssuePostJob implements PostJob {
 
   private static String formatMessage(Severity severity, String message, String ruleKey, boolean isNew) {
 
-    return (isNew ? ":new: " : "") + getImageMarkdownForSeverity(severity) + message
-      + "[![...](https://raw.githubusercontent.com/henryju/image-hosting/master/more.png)](http://nemo.sonarqube.org/coding_rules#rule_key=" + encodeForUrl(ruleKey) + ")";
+    String ruleLink = getRuleLink(ruleKey);
+    return (isNew ? ":new: " : "") + getImageMarkdownForSeverity(severity) + message + ruleLink;
+  }
+
+  public static String getRuleLink(String ruleKey) {
+    return "[![...](https://raw.githubusercontent.com/henryju/image-hosting/master/more.png)](http://nemo.sonarqube.org/coding_rules#rule_key=" + encodeForUrl(ruleKey) + ")";
   }
 
   public static String encodeForUrl(String url) {
