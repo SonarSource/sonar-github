@@ -21,12 +21,20 @@ package org.sonar.plugins.github;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.IOUtils;
-import org.kohsuke.github.*;
+import org.kohsuke.github.FixedGHPullRequestReviewComment;
+import org.kohsuke.github.GHCommitState;
+import org.kohsuke.github.GHPullRequest;
+import org.kohsuke.github.GHPullRequestFileDetail;
+import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.GitHub;
+import org.kohsuke.github.GitHubBuilder;
 import org.sonar.api.BatchComponent;
 import org.sonar.api.batch.InstantiationStrategy;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.InputPath;
 import org.sonar.api.scan.filesystem.PathResolver;
+import org.sonar.api.utils.log.Logger;
+import org.sonar.api.utils.log.Loggers;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
@@ -44,6 +52,8 @@ import java.util.regex.Pattern;
  */
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 public class PullRequestFacade implements BatchComponent {
+
+  private static final Logger LOG = Loggers.get(PullRequestFacade.class);
 
   private final GitHubPluginConfiguration config;
   private Map<String, Map<Integer, Integer>> patchPositionMappingByFile;
@@ -65,6 +75,7 @@ public class PullRequestFacade implements BatchComponent {
       GitHub github = new GitHubBuilder().withOAuthToken(config.oauth(), config.login()).build();
       setGhRepo(github.getRepository(config.repository()));
       setPr(ghRepo.getPullRequest(pullRequestNumber));
+      LOG.info("Starting analysis of pull request: " + pr.getHtmlUrl());
       existingReviewCommentsByLocationByFile = loadExistingReviewComments(github.getMyself().getLogin());
       patchPositionMappingByFile = mapPatchPositionsToLines(pr);
     } catch (IOException e) {
@@ -131,25 +142,35 @@ public class PullRequestFacade implements BatchComponent {
       if (patch == null) {
         continue;
       }
-      int currentLine = -1;
-      int patchLocation = 0;
-      for (String line : IOUtils.readLines(new StringReader(patch))) {
-        if (line.startsWith("@")) {
-          Matcher matcher = Pattern.compile("@@\\p{IsWhite_Space}-[0-9]+,[0-9]+\\p{IsWhite_Space}\\+([0-9]+),[0-9]+\\p{IsWhite_Space}@@.*").matcher(line);
-          if (!matcher.matches()) {
-            throw new IllegalStateException("Unable to parse patch line " + line);
-          }
-          currentLine = Integer.parseInt(matcher.group(1));
-        } else if (line.startsWith("-")) {
-          // Skip
-        } else {
-          patchLocationMapping.put(currentLine, patchLocation);
-          currentLine++;
-        }
-        patchLocation++;
-      }
+      processPatch(patchLocationMapping, patch);
     }
     return patchPositionMappingByFile;
+  }
+
+  @VisibleForTesting
+  static void processPatch(Map<Integer, Integer> patchLocationMapping, String patch) throws IOException {
+    int currentLine = -1;
+    int patchLocation = 0;
+    for (String line : IOUtils.readLines(new StringReader(patch))) {
+      if (line.startsWith("@")) {
+        // http://en.wikipedia.org/wiki/Diff_utility#Unified_format
+        Matcher matcher = Pattern.compile("@@\\p{IsWhite_Space}-[0-9]+(?:,[0-9]+)?\\p{IsWhite_Space}\\+([0-9]+)(?:,[0-9]+)?\\p{IsWhite_Space}@@.*").matcher(line);
+        if (!matcher.matches()) {
+          throw new IllegalStateException("Unable to parse patch line " + line + "\nFull patch: \n" + patch);
+        }
+        currentLine = Integer.parseInt(matcher.group(1));
+      } else if (line.startsWith("-")) {
+        // Skip removed lines
+      } else if (line.startsWith("+") || line.startsWith(" ")) {
+        // Count added and unmodified lines
+        patchLocationMapping.put(currentLine, patchLocation);
+        currentLine++;
+      } else if (line.startsWith("\\")) {
+        // I'm only aware of \ No newline at end of file
+        // Ignore
+      }
+      patchLocation++;
+    }
   }
 
   private String getPath(InputPath inputPath) {
