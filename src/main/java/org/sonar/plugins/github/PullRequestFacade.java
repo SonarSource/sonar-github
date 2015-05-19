@@ -21,13 +21,7 @@ package org.sonar.plugins.github;
 
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.io.IOUtils;
-import org.kohsuke.github.FixedGHPullRequestReviewComment;
-import org.kohsuke.github.GHCommitState;
-import org.kohsuke.github.GHPullRequest;
-import org.kohsuke.github.GHPullRequestFileDetail;
-import org.kohsuke.github.GHRepository;
-import org.kohsuke.github.GitHub;
-import org.kohsuke.github.GitHubBuilder;
+import org.kohsuke.github.*;
 import org.sonar.api.BatchComponent;
 import org.sonar.api.batch.InstantiationStrategy;
 import org.sonar.api.batch.fs.InputFile;
@@ -54,6 +48,8 @@ import java.util.regex.Pattern;
 public class PullRequestFacade implements BatchComponent {
 
   private static final Logger LOG = Loggers.get(PullRequestFacade.class);
+
+  private static final String COMMIT_CONTEXT = "sonarqube";
 
   private final GitHubPluginConfiguration config;
   private Map<String, Map<Integer, Integer>> patchPositionMappingByFile;
@@ -230,7 +226,12 @@ public class PullRequestFacade implements BatchComponent {
 
   public void createOrUpdateSonarQubeStatus(GHCommitState status, String statusDescription) {
     try {
-      ghRepo.createCommitStatus(pr.getHead().getSha(), status, null, statusDescription, "sonarqube");
+      String targetUrl = null;
+      GHCommitStatus lastStatus = pr.getHead().getCommit().getLastStatus();
+      if (lastStatus != null){
+        targetUrl = lastStatus.getTargetUrl();
+      }
+      ghRepo.createCommitStatus(pr.getHead().getSha(), status, targetUrl, statusDescription, COMMIT_CONTEXT);
     } catch (IOException e) {
       throw new IllegalStateException("Unable to update commit status", e);
     }
