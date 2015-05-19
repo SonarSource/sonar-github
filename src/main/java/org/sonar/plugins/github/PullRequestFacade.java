@@ -44,6 +44,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,7 +57,8 @@ public class PullRequestFacade implements BatchComponent {
 
   private static final Logger LOG = Loggers.get(PullRequestFacade.class);
 
-  private static final String COMMIT_CONTEXT = "sonarqube";
+  @VisibleForTesting
+  static final String COMMIT_CONTEXT = "sonarqube";
 
   private final GitHubPluginConfiguration config;
   private Map<String, Map<Integer, Integer>> patchPositionMappingByFile;
@@ -235,7 +237,7 @@ public class PullRequestFacade implements BatchComponent {
     try {
       // Copy previous targetUrl in case it was set by an external system (like the CI job).
       String targetUrl = null;
-      GHCommitStatus lastStatus = pr.getHead().getCommit().getLastStatus();
+      GHCommitStatus lastStatus = getCommitStatusForContext(pr, COMMIT_CONTEXT);
       if (lastStatus != null) {
         targetUrl = lastStatus.getTargetUrl();
       }
@@ -250,6 +252,23 @@ public class PullRequestFacade implements BatchComponent {
     if (inputPath != null) {
       String path = getPath(inputPath);
       return ghRepo.getHtmlUrl().toString() + "/blob/" + pr.getHead().getSha() + "/" + path + (issueLine != null ? "#L" + issueLine : "");
+    }
+    return null;
+  }
+
+  @VisibleForTesting
+  @CheckForNull
+  GHCommitStatus getCommitStatusForContext(GHPullRequest pr, String context){
+    List<GHCommitStatus> statuses = null;
+    try {
+      statuses = pr.getRepository().listCommitStatuses(pr.getHead().getSha()).asList();
+    } catch (IOException e) {
+      throw new IllegalStateException("Unable to retrieve commit statuses.", e);
+    }
+    for (GHCommitStatus status : statuses) {
+      if (context.equals(status.getContext())) {
+        return status;
+      }
     }
     return null;
   }

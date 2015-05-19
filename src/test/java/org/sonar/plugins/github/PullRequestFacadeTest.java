@@ -23,14 +23,19 @@ import org.assertj.core.data.MapEntry;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.kohsuke.github.GHCommitStatus;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHRepository;
+import org.kohsuke.github.PagedIterable;
+import org.mockito.Mockito;
 import org.sonar.api.batch.fs.InputPath;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -96,4 +101,34 @@ public class PullRequestFacadeTest {
 
     assertThat(patchLocationMapping).isEmpty();
   }
+
+  @Test
+  public void testEmptyGetCommitStatusForContext() throws IOException {
+    PullRequestFacade facade = new PullRequestFacade(mock(GitHubPluginConfiguration.class));
+    GHRepository ghRepo = mock(GHRepository.class);
+    PagedIterable<GHCommitStatus> ghCommitStatuses = Mockito.mock(PagedIterable.class);
+    GHPullRequest pr = mock(GHPullRequest.class, withSettings().defaultAnswer(RETURNS_DEEP_STUBS));
+    when(pr.getRepository()).thenReturn(ghRepo);
+    when(pr.getHead().getSha()).thenReturn("abc123");
+    when(ghRepo.listCommitStatuses(pr.getHead().getSha())).thenReturn(ghCommitStatuses);
+    assertThat(facade.getCommitStatusForContext(pr, PullRequestFacade.COMMIT_CONTEXT)).isNull();
+  }
+
+  @Test
+  public void testGetCommitStatusForContextWithOneCorrectStatus() throws IOException {
+    PullRequestFacade facade = new PullRequestFacade(mock(GitHubPluginConfiguration.class));
+    GHRepository ghRepo = mock(GHRepository.class);
+    PagedIterable<GHCommitStatus> ghCommitStatuses = Mockito.mock(PagedIterable.class);
+    List<GHCommitStatus> ghCommitStatusesList = new ArrayList<>();
+    GHCommitStatus ghCommitStatusGHPRHContext = Mockito.mock(GHCommitStatus.class);
+    ghCommitStatusesList.add(ghCommitStatusGHPRHContext);
+    GHPullRequest pr = mock(GHPullRequest.class, withSettings().defaultAnswer(RETURNS_DEEP_STUBS));
+    when(pr.getRepository()).thenReturn(ghRepo);
+    when(pr.getHead().getSha()).thenReturn("abc123");
+    when(ghRepo.listCommitStatuses(pr.getHead().getSha())).thenReturn(ghCommitStatuses);
+    when(ghCommitStatuses.asList()).thenReturn(ghCommitStatusesList);
+    when(ghCommitStatusGHPRHContext.getContext()).thenReturn(PullRequestFacade.COMMIT_CONTEXT);
+    assertThat(facade.getCommitStatusForContext(pr, PullRequestFacade.COMMIT_CONTEXT).getContext()).isEqualTo(PullRequestFacade.COMMIT_CONTEXT);
+  }
+
 }
