@@ -145,6 +145,6 @@ public class PullRequestIssuePostJobTest {
     verify(pullRequestFacade).addGlobalComment(contains("SonarQube analysis reported 6 new issues:"));
     verify(pullRequestFacade)
       .addGlobalComment(
-        contains("* [msg](http://github/blob/abc123/src/Foo.php#L1)[![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://nemo.sonarqube.org/coding_rules#rule_key=repo%3Arule)"));
+        contains("* [msg](http://github/blob/abc123/src/Foo.php#L1) [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://nemo.sonarqube.org/coding_rules#rule_key=repo%3Arule)"));
   }
 }

@@ -19,11 +19,10 @@
  */
 package org.sonar.plugins.github;
 
+import javax.annotation.Nullable;
 import org.kohsuke.github.GHCommitState;
 import org.sonar.api.batch.postjob.issue.Issue;
 import org.sonar.api.batch.rule.Severity;
-
-import javax.annotation.Nullable;
 
 public class GlobalReport {
   private int[] newIssuesBySeverity = new int[Severity.values().length];
@@ -112,6 +111,6 @@ public class GlobalReport {
     } else {
       details.append(issue.message()).append(" ").append("(").append(issue.componentKey()).append(")");
     }
-    details.append(PullRequestIssuePostJob.getRuleLink(issue.ruleKey().toString())).append("\n");
+    details.append(" ").append(PullRequestIssuePostJob.getRuleLink(issue.ruleKey().toString())).append("\n");
   }
 }

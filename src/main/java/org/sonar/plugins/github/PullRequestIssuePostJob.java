@@ -102,14 +102,23 @@ public class PullRequestIssuePostJob implements PostJob {
 
   private static String formatMessage(Severity severity, String message, String ruleKey, boolean isNew) {
     String ruleLink = getRuleLink(ruleKey);
-    return (isNew ? "![New](" + IMAGES_ROOT_URL + "new.png)" : "") + getImageMarkdownForSeverity(severity) + message + ruleLink;
+    StringBuilder sb = new StringBuilder();
+    if (isNew) {
+      sb.append(("![New](" + IMAGES_ROOT_URL + "new.png) "));
+    }
+    sb.append(getImageMarkdownForSeverity(severity))
+      .append(" ")
+      .append(message)
+      .append(" ")
+      .append(ruleLink);
+    return sb.toString();
   }
 
-  public static String getRuleLink(String ruleKey) {
+  static String getRuleLink(String ruleKey) {
     return "[![rule](" + IMAGES_ROOT_URL + "rule.png)](http://nemo.sonarqube.org/coding_rules#rule_key=" + encodeForUrl(ruleKey) + ")";
   }
 
-  public static String encodeForUrl(String url) {
+  static String encodeForUrl(String url) {
     try {
       return URLEncoder.encode(url, "UTF-8");
 
