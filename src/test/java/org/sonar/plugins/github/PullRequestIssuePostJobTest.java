@@ -19,6 +19,8 @@
  */
 package org.sonar.plugins.github;
 
+import java.io.File;
+import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,9 +32,6 @@ import org.sonar.api.batch.postjob.internal.DefaultPostJobDescriptor;
 import org.sonar.api.batch.postjob.issue.Issue;
 import org.sonar.api.batch.rule.Severity;
 import org.sonar.api.rule.RuleKey;
-
-import java.io.File;
-import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.contains;
@@ -146,6 +145,6 @@ public class PullRequestIssuePostJobTest {
     verify(pullRequestFacade).addGlobalComment(contains("SonarQube analysis reported 6 new issues:"));
     verify(pullRequestFacade)
       .addGlobalComment(
-        contains("* [msg](http://github/blob/abc123/src/Foo.php#L1)[![...](https://raw.githubusercontent.com/henryju/image-hosting/master/more.png)](http://nemo.sonarqube.org/coding_rules#rule_key=repo%3Arule)"));
+        contains("* [msg](http://github/blob/abc123/src/Foo.php#L1)[![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://nemo.sonarqube.org/coding_rules#rule_key=repo%3Arule)"));
   }
 }

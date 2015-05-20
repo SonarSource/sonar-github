@@ -19,6 +19,10 @@
  */
 package org.sonar.plugins.github;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.InputPath;
 import org.sonar.api.batch.postjob.PostJob;
@@ -27,16 +31,12 @@ import org.sonar.api.batch.postjob.PostJobDescriptor;
 import org.sonar.api.batch.postjob.issue.Issue;
 import org.sonar.api.batch.rule.Severity;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Compute comments to be added on the pull request.
  */
 public class PullRequestIssuePostJob implements PostJob {
 
+  private static final String IMAGES_ROOT_URL = "https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/";
   private final PullRequestFacade pullRequestFacade;
 
   public PullRequestIssuePostJob(PullRequestFacade pullRequestFacade) {
@@ -101,13 +101,12 @@ public class PullRequestIssuePostJob implements PostJob {
   }
 
   private static String formatMessage(Severity severity, String message, String ruleKey, boolean isNew) {
-
     String ruleLink = getRuleLink(ruleKey);
-    return (isNew ? ":new: " : "") + getImageMarkdownForSeverity(severity) + message + ruleLink;
+    return (isNew ? "![New](" + IMAGES_ROOT_URL + "new.png)" : "") + getImageMarkdownForSeverity(severity) + message + ruleLink;
   }
 
   public static String getRuleLink(String ruleKey) {
-    return "[![...](https://raw.githubusercontent.com/henryju/image-hosting/master/more.png)](http://nemo.sonarqube.org/coding_rules#rule_key=" + encodeForUrl(ruleKey) + ")";
+    return "[![rule](" + IMAGES_ROOT_URL + "rule.png)](http://nemo.sonarqube.org/coding_rules#rule_key=" + encodeForUrl(ruleKey) + ")";
   }
 
   public static String encodeForUrl(String url) {
@@ -120,8 +119,7 @@ public class PullRequestIssuePostJob implements PostJob {
   }
 
   private static String getImageMarkdownForSeverity(Severity severity) {
-    return "![" + severity + "](https://raw.githubusercontent.com/henryju/image-hosting/master/"
-      + severity.name().toLowerCase() + ".png)";
+    return "![" + severity + "](" + IMAGES_ROOT_URL + "severity-" + severity.name().toLowerCase() + ".png)";
   }
 
   private void updateReviewComments(Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine) {
