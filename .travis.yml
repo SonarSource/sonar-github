@@ -1,6 +1,13 @@
 language: java
 sudo: false
-install: true
+
+# Download and install a green version of sonarqube 5.2-SNAPSHOT
+# Will be removed when the snapshot dependency is removed.
+install:
+  - mkdir /tmp/sonarqube
+  - wget -O - https://github.com/SonarSource/sonarqube/archive/dc4cc92fd314b16cd5b52433a69275013ac2243a.tar.gz | tar zx --strip-components 1 -C /tmp/sonarqube
+  - cd /tmp/sonarqube && mvn install -B -e -DskipTests=true -Pdev
+  - cd -
 
 jdk:
   - oraclejdk7
