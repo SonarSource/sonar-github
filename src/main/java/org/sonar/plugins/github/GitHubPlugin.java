@@ -19,10 +19,13 @@
  */
 package org.sonar.plugins.github;
 
-import org.sonar.api.*;
-
 import java.util.Arrays;
 import java.util.List;
+import org.sonar.api.CoreProperties;
+import org.sonar.api.Properties;
+import org.sonar.api.Property;
+import org.sonar.api.PropertyType;
+import org.sonar.api.SonarPlugin;
 
 @Properties({
   @Property(
@@ -69,7 +72,8 @@ public class GitHubPlugin extends SonarPlugin {
       GitHubPluginConfiguration.class,
       PullRequestProjectBuilder.class,
       PullRequestFacade.class,
-      PullRequestInputFileFilter.class);
+      PullRequestInputFileFilter.class,
+      InputFileCache.class);
   }
 
 }

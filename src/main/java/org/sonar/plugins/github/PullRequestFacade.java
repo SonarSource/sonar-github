@@ -20,6 +20,16 @@
 package org.sonar.plugins.github;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.annotation.CheckForNull;
+import javax.annotation.Nullable;
 import org.apache.commons.io.IOUtils;
 import org.kohsuke.github.FixedGHPullRequestReviewComment;
 import org.kohsuke.github.GHCommitState;
@@ -29,25 +39,13 @@ import org.kohsuke.github.GHPullRequestFileDetail;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sonar.api.BatchComponent;
 import org.sonar.api.batch.InstantiationStrategy;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.InputPath;
 import org.sonar.api.scan.filesystem.PathResolver;
-import org.sonar.api.utils.log.Logger;
-import org.sonar.api.utils.log.Loggers;
-
-import javax.annotation.CheckForNull;
-import javax.annotation.Nullable;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Facade for all WS interaction with GitHub.
@@ -55,7 +53,7 @@ import java.util.regex.Pattern;
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 public class PullRequestFacade implements BatchComponent {
 
-  private static final Logger LOG = Loggers.get(PullRequestFacade.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PullRequestFacade.class);
 
   @VisibleForTesting
   static final String COMMIT_CONTEXT = "sonarqube";
@@ -258,7 +256,7 @@ public class PullRequestFacade implements BatchComponent {
 
   @VisibleForTesting
   @CheckForNull
-  GHCommitStatus getCommitStatusForContext(GHPullRequest pr, String context){
+  GHCommitStatus getCommitStatusForContext(GHPullRequest pr, String context) {
     List<GHCommitStatus> statuses = null;
     try {
       statuses = pr.getRepository().listCommitStatuses(pr.getHead().getSha()).asList();

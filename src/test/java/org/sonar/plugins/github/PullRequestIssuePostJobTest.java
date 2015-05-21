@@ -25,15 +25,12 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.sonar.api.batch.fs.internal.DefaultInputDir;
 import org.sonar.api.batch.fs.internal.DefaultInputFile;
-import org.sonar.api.batch.postjob.PostJobContext;
-import org.sonar.api.batch.postjob.internal.DefaultPostJobDescriptor;
-import org.sonar.api.batch.postjob.issue.Issue;
-import org.sonar.api.batch.rule.Severity;
+import org.sonar.api.issue.Issue;
+import org.sonar.api.issue.ProjectIssues;
 import org.sonar.api.rule.RuleKey;
+import org.sonar.api.rule.Severity;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -47,36 +44,32 @@ public class PullRequestIssuePostJobTest {
   private PullRequestIssuePostJob pullRequestIssuePostJob;
   private PullRequestFacade pullRequestFacade;
   private File baseDir;
+  private ProjectIssues issues;
+  private InputFileCache cache;
 
   @Before
   public void prepare() throws Exception {
     baseDir = temp.newFolder();
     pullRequestFacade = mock(PullRequestFacade.class);
-    pullRequestIssuePostJob = new PullRequestIssuePostJob(pullRequestFacade);
+    GitHubPluginConfiguration config = mock(GitHubPluginConfiguration.class);
+    issues = mock(ProjectIssues.class);
+    cache = mock(InputFileCache.class);
+    pullRequestIssuePostJob = new PullRequestIssuePostJob(config, pullRequestFacade, issues, cache);
 
-  }
-
-  @Test
-  public void describe() {
-    DefaultPostJobDescriptor descriptor = new DefaultPostJobDescriptor();
-    pullRequestIssuePostJob.describe(descriptor);
-    assertThat(descriptor.properties()).containsExactly(GitHubPlugin.GITHUB_PULL_REQUEST);
   }
 
   @Test
   public void testPullRequestAnalysisNoIssue() {
-    PostJobContext context = mock(PostJobContext.class);
-    when(context.issues()).thenReturn(Arrays.<Issue>asList());
-    pullRequestIssuePostJob.execute(context);
+    when(issues.issues()).thenReturn(Arrays.<Issue>asList());
+    pullRequestIssuePostJob.executeOn(null, null);
     verify(pullRequestFacade).addGlobalComment("SonarQube analysis reported no new issues.");
   }
 
   @Test
   public void testPullRequestAnalysisWithNewIssues() {
-    PostJobContext context = mock(PostJobContext.class);
     Issue newIssue = mock(Issue.class);
-    DefaultInputFile inputFile1 = new DefaultInputFile("foo", "src/Foo.php").setModuleBaseDir(baseDir.toPath());
-    when(newIssue.inputPath()).thenReturn(inputFile1);
+    DefaultInputFile inputFile1 = new DefaultInputFile("src/Foo.php");
+    when(cache.byKey("foo:src/Foo.php")).thenReturn(inputFile1);
     when(newIssue.componentKey()).thenReturn("foo:src/Foo.php");
     when(newIssue.line()).thenReturn(1);
     when(newIssue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
@@ -86,7 +79,7 @@ public class PullRequestIssuePostJobTest {
     when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn("http://github/blob/abc123/src/Foo.php#L1");
 
     Issue lineNotVisible = mock(Issue.class);
-    when(lineNotVisible.inputPath()).thenReturn(inputFile1);
+    when(cache.byKey("foo:src/Foo.php")).thenReturn(inputFile1);
     when(lineNotVisible.componentKey()).thenReturn("foo:src/Foo.php");
     when(lineNotVisible.line()).thenReturn(2);
     when(lineNotVisible.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
@@ -95,8 +88,8 @@ public class PullRequestIssuePostJobTest {
     when(lineNotVisible.message()).thenReturn("msg");
 
     Issue fileNotInPR = mock(Issue.class);
-    DefaultInputFile inputFile2 = new DefaultInputFile("foo", "src/Foo2.php").setModuleBaseDir(baseDir.toPath());
-    when(fileNotInPR.inputPath()).thenReturn(inputFile2);
+    DefaultInputFile inputFile2 = new DefaultInputFile("src/Foo2.php");
+    when(cache.byKey("foo:src/Foo2.php")).thenReturn(inputFile1);
     when(fileNotInPR.componentKey()).thenReturn("foo:src/Foo2.php");
     when(fileNotInPR.line()).thenReturn(1);
     when(fileNotInPR.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
@@ -105,7 +98,7 @@ public class PullRequestIssuePostJobTest {
     when(fileNotInPR.message()).thenReturn("msg");
 
     Issue notNewIssue = mock(Issue.class);
-    when(notNewIssue.inputPath()).thenReturn(inputFile1);
+    when(cache.byKey("foo:src/Foo.php")).thenReturn(inputFile1);
     when(notNewIssue.componentKey()).thenReturn("foo:src/Foo.php");
     when(notNewIssue.line()).thenReturn(1);
     when(notNewIssue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
@@ -114,7 +107,7 @@ public class PullRequestIssuePostJobTest {
     when(notNewIssue.message()).thenReturn("msg");
 
     Issue issueOnDir = mock(Issue.class);
-    when(issueOnDir.inputPath()).thenReturn(new DefaultInputDir("foo", "src"));
+    when(cache.byKey("foo:src")).thenReturn(null);
     when(issueOnDir.componentKey()).thenReturn("foo:src");
     when(issueOnDir.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
     when(issueOnDir.severity()).thenReturn(Severity.BLOCKER);
@@ -129,7 +122,7 @@ public class PullRequestIssuePostJobTest {
     when(issueOnProject.message()).thenReturn("msg");
 
     Issue globalIssue = mock(Issue.class);
-    when(globalIssue.inputPath()).thenReturn(inputFile1);
+    when(cache.byKey("foo:src/Foo.php")).thenReturn(inputFile1);
     when(globalIssue.componentKey()).thenReturn("foo:src/Foo.php");
     when(globalIssue.line()).thenReturn(null);
     when(globalIssue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
@@ -137,11 +130,11 @@ public class PullRequestIssuePostJobTest {
     when(globalIssue.isNew()).thenReturn(true);
     when(globalIssue.message()).thenReturn("msg");
 
-    when(context.issues()).thenReturn(Arrays.<Issue>asList(newIssue, globalIssue, issueOnProject, issueOnDir, fileNotInPR, lineNotVisible, notNewIssue));
+    when(issues.issues()).thenReturn(Arrays.<Issue>asList(newIssue, globalIssue, issueOnProject, issueOnDir, fileNotInPR, lineNotVisible, notNewIssue));
     when(pullRequestFacade.hasFile(inputFile1)).thenReturn(true);
     when(pullRequestFacade.hasFileLine(inputFile1, 1)).thenReturn(true);
 
-    pullRequestIssuePostJob.execute(context);
+    pullRequestIssuePostJob.executeOn(null, null);
     verify(pullRequestFacade).addGlobalComment(contains("SonarQube analysis reported 6 new issues:"));
     verify(pullRequestFacade)
       .addGlobalComment(
