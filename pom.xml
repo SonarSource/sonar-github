@@ -18,7 +18,7 @@
   <inceptionYear>2015</inceptionYear>
   
   <properties>
-    <sonar.version>5.2-SNAPSHOT</sonar.version>
+    <sonar.version>4.5.2</sonar.version>
     <sonar.pluginName>GitHub</sonar.pluginName>
     <sonar.pluginClass>org.sonar.plugins.github.GitHubPlugin</sonar.pluginClass>
   </properties>

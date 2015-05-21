@@ -23,34 +23,39 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
+import org.sonar.api.batch.CheckProject;
+import org.sonar.api.batch.SensorContext;
 import org.sonar.api.batch.fs.InputFile;
-import org.sonar.api.batch.fs.InputPath;
-import org.sonar.api.batch.postjob.PostJob;
-import org.sonar.api.batch.postjob.PostJobContext;
-import org.sonar.api.batch.postjob.PostJobDescriptor;
-import org.sonar.api.batch.postjob.issue.Issue;
-import org.sonar.api.batch.rule.Severity;
+import org.sonar.api.issue.Issue;
+import org.sonar.api.issue.ProjectIssues;
+import org.sonar.api.resources.Project;
 
 /**
  * Compute comments to be added on the pull request.
  */
-public class PullRequestIssuePostJob implements PostJob {
+public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, CheckProject {
 
   private static final String IMAGES_ROOT_URL = "https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/";
   private final PullRequestFacade pullRequestFacade;
+  private final ProjectIssues projectIssues;
+  private final GitHubPluginConfiguration gitHubPluginConfiguration;
+  private final InputFileCache inputFileCache;
 
-  public PullRequestIssuePostJob(PullRequestFacade pullRequestFacade) {
+  public PullRequestIssuePostJob(GitHubPluginConfiguration gitHubPluginConfiguration, PullRequestFacade pullRequestFacade, ProjectIssues projectIssues,
+    InputFileCache inputFileCache) {
+    this.gitHubPluginConfiguration = gitHubPluginConfiguration;
     this.pullRequestFacade = pullRequestFacade;
+    this.projectIssues = projectIssues;
+    this.inputFileCache = inputFileCache;
   }
 
   @Override
-  public void describe(PostJobDescriptor descriptor) {
-    descriptor.name("GitHub Pull Request Issue Publisher")
-      .requireProperty(GitHubPlugin.GITHUB_PULL_REQUEST);
+  public boolean shouldExecuteOnProject(Project project) {
+    return gitHubPluginConfiguration.isEnabled();
   }
 
   @Override
-  public void execute(PostJobContext context) {
+  public void executeOn(Project project, SensorContext context) {
     GlobalReport report = new GlobalReport();
     Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine = processIssues(context, report);
 
@@ -61,19 +66,22 @@ public class PullRequestIssuePostJob implements PostJob {
     pullRequestFacade.addGlobalComment(report.formatForMarkdown());
 
     pullRequestFacade.createOrUpdateSonarQubeStatus(report.getStatus(), report.getStatusDescription());
-
   }
 
-  private Map<InputFile, Map<Integer, StringBuilder>> processIssues(PostJobContext context, GlobalReport report) {
+  @Override
+  public String toString() {
+    return "GitHub Pull Request Issue Publisher";
+  }
+
+  private Map<InputFile, Map<Integer, StringBuilder>> processIssues(SensorContext context, GlobalReport report) {
     Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine = new HashMap<>();
-    for (Issue issue : context.issues()) {
-      Severity severity = issue.severity();
+    for (Issue issue : projectIssues.issues()) {
+      String severity = issue.severity();
       boolean isNew = issue.isNew();
-      InputPath inputPath = issue.inputPath();
       Integer issueLine = issue.line();
-      report.process(issue, pullRequestFacade.getGithubUrl(inputPath, issueLine));
-      if (inputPath instanceof InputFile) {
-        InputFile inputFile = (InputFile) inputPath;
+      InputFile inputFile = inputFileCache.byKey(issue.componentKey());
+      report.process(issue, pullRequestFacade.getGithubUrl(inputFile, issueLine));
+      if (inputFile != null) {
         if (!pullRequestFacade.hasFile(inputFile)) {
           continue;
         }
@@ -100,7 +108,7 @@ public class PullRequestIssuePostJob implements PostJob {
     return commentToBeAddedByFileAndByLine;
   }
 
-  private static String formatMessage(Severity severity, String message, String ruleKey, boolean isNew) {
+  private static String formatMessage(String severity, String message, String ruleKey, boolean isNew) {
     String ruleLink = getRuleLink(ruleKey);
     StringBuilder sb = new StringBuilder();
     if (isNew) {
@@ -127,8 +135,8 @@ public class PullRequestIssuePostJob implements PostJob {
     }
   }
 
-  private static String getImageMarkdownForSeverity(Severity severity) {
-    return "![" + severity + "](" + IMAGES_ROOT_URL + "severity-" + severity.name().toLowerCase() + ".png)";
+  private static String getImageMarkdownForSeverity(String severity) {
+    return "![" + severity + "](" + IMAGES_ROOT_URL + "severity-" + severity.toLowerCase() + ".png)";
   }
 
   private void updateReviewComments(Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine) {

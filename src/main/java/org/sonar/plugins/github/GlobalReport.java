@@ -21,15 +21,15 @@ package org.sonar.plugins.github;
 
 import javax.annotation.Nullable;
 import org.kohsuke.github.GHCommitState;
-import org.sonar.api.batch.postjob.issue.Issue;
-import org.sonar.api.batch.rule.Severity;
+import org.sonar.api.issue.Issue;
+import org.sonar.api.rule.Severity;
 
 public class GlobalReport {
-  private int[] newIssuesBySeverity = new int[Severity.values().length];
+  private int[] newIssuesBySeverity = new int[Severity.ALL.size()];
   private StringBuilder details = new StringBuilder();
 
-  private void increment(Severity severity) {
-    this.newIssuesBySeverity[severity.ordinal()]++;
+  private void increment(String severity) {
+    this.newIssuesBySeverity[Severity.ALL.indexOf(severity)]++;
   }
 
   public String formatForMarkdown() {
@@ -51,8 +51,8 @@ public class GlobalReport {
     return (newIssues(Severity.BLOCKER) > 0 || newIssues(Severity.CRITICAL) > 0) ? GHCommitState.ERROR : GHCommitState.SUCCESS;
   }
 
-  private int newIssues(Severity s) {
-    return newIssuesBySeverity[s.ordinal()];
+  private int newIssues(String s) {
+    return newIssuesBySeverity[Severity.ALL.indexOf(s)];
   }
 
   private void printNewIssuesMarkdown(StringBuilder sb) {
