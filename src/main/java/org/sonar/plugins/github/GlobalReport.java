@@ -113,4 +113,8 @@ public class GlobalReport {
     }
     details.append(" ").append(PullRequestIssuePostJob.getRuleLink(issue.ruleKey().toString())).append("\n");
   }
+
+  public boolean hasNewIssue() {
+    return newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL) + newIssues(Severity.MAJOR) + newIssues(Severity.MINOR) + newIssues(Severity.INFO) > 0;
+  }
 }

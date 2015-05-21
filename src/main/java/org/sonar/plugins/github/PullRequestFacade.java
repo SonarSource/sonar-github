@@ -34,6 +34,7 @@ import org.apache.commons.io.IOUtils;
 import org.kohsuke.github.FixedGHPullRequestReviewComment;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHCommitStatus;
+import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestFileDetail;
 import org.kohsuke.github.GHRepository;
@@ -65,6 +66,7 @@ public class PullRequestFacade implements BatchComponent {
   private GHPullRequest pr;
   private Map<Integer, FixedGHPullRequestReviewComment> reviewCommentToBeDeletedById = new HashMap<>();
   private File gitBaseDir;
+  private String myself;
 
   public PullRequestFacade(GitHubPluginConfiguration config) {
     this.config = config;
@@ -79,7 +81,8 @@ public class PullRequestFacade implements BatchComponent {
       setGhRepo(github.getRepository(config.repository()));
       setPr(ghRepo.getPullRequest(pullRequestNumber));
       LOG.info("Starting analysis of pull request: " + pr.getHtmlUrl());
-      existingReviewCommentsByLocationByFile = loadExistingReviewComments(github.getMyself().getLogin());
+      myself = github.getMyself().getLogin();
+      existingReviewCommentsByLocationByFile = loadExistingReviewComments();
       patchPositionMappingByFile = mapPatchPositionsToLines(pr);
     } catch (IOException e) {
       throw new IllegalStateException("Unable to perform GitHub WS operation", e);
@@ -115,10 +118,10 @@ public class PullRequestFacade implements BatchComponent {
   /**
    * Load all previous comments made by provided github account.
    */
-  private Map<String, Map<Integer, FixedGHPullRequestReviewComment>> loadExistingReviewComments(String githubAccount) throws IOException {
+  private Map<String, Map<Integer, FixedGHPullRequestReviewComment>> loadExistingReviewComments() throws IOException {
     Map<String, Map<Integer, FixedGHPullRequestReviewComment>> existingReviewCommentsByLocationByFile = new HashMap<String, Map<Integer, FixedGHPullRequestReviewComment>>();
     for (FixedGHPullRequestReviewComment comment : pr.listReviewComments()) {
-      if (!githubAccount.equals(comment.getUser().getLogin())) {
+      if (!myself.equals(comment.getUser().getLogin())) {
         // Ignore comments from other users
         continue;
       }
@@ -220,6 +223,18 @@ public class PullRequestFacade implements BatchComponent {
       } catch (IOException e) {
         throw new IllegalStateException("Unable to delete review comment with id " + reviewToDelete.getId(), e);
       }
+    }
+  }
+
+  public void removePreviousGlobalComments() {
+    try {
+      for (GHIssueComment comment : pr.listComments()) {
+        if (myself.equals(comment.getUser().getLogin())) {
+          comment.delete();
+        }
+      }
+    } catch (IOException e) {
+      throw new IllegalStateException("Unable to comment the pull request", e);
     }
   }
 
