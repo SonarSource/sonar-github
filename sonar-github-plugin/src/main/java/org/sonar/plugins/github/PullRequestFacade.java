@@ -31,12 +31,12 @@ import java.util.regex.Pattern;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 import org.apache.commons.io.IOUtils;
-import org.kohsuke.github.FixedGHPullRequestReviewComment;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHCommitStatus;
 import org.kohsuke.github.GHIssueComment;
 import org.kohsuke.github.GHPullRequest;
 import org.kohsuke.github.GHPullRequestFileDetail;
+import org.kohsuke.github.GHPullRequestReviewComment;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
@@ -61,10 +61,10 @@ public class PullRequestFacade implements BatchComponent {
 
   private final GitHubPluginConfiguration config;
   private Map<String, Map<Integer, Integer>> patchPositionMappingByFile;
-  private Map<String, Map<Integer, FixedGHPullRequestReviewComment>> existingReviewCommentsByLocationByFile;
+  private Map<String, Map<Integer, GHPullRequestReviewComment>> existingReviewCommentsByLocationByFile;
   private GHRepository ghRepo;
   private GHPullRequest pr;
-  private Map<Integer, FixedGHPullRequestReviewComment> reviewCommentToBeDeletedById = new HashMap<>();
+  private Map<Integer, GHPullRequestReviewComment> reviewCommentToBeDeletedById = new HashMap<>();
   private File gitBaseDir;
   private String myself;
 
@@ -118,15 +118,15 @@ public class PullRequestFacade implements BatchComponent {
   /**
    * Load all previous comments made by provided github account.
    */
-  private Map<String, Map<Integer, FixedGHPullRequestReviewComment>> loadExistingReviewComments() throws IOException {
-    Map<String, Map<Integer, FixedGHPullRequestReviewComment>> existingReviewCommentsByLocationByFile = new HashMap<String, Map<Integer, FixedGHPullRequestReviewComment>>();
-    for (FixedGHPullRequestReviewComment comment : pr.listReviewComments()) {
+  private Map<String, Map<Integer, GHPullRequestReviewComment>> loadExistingReviewComments() throws IOException {
+    Map<String, Map<Integer, GHPullRequestReviewComment>> existingReviewCommentsByLocationByFile = new HashMap<String, Map<Integer, GHPullRequestReviewComment>>();
+    for (GHPullRequestReviewComment comment : pr.listReviewComments()) {
       if (!myself.equals(comment.getUser().getLogin())) {
         // Ignore comments from other users
         continue;
       }
       if (!existingReviewCommentsByLocationByFile.containsKey(comment.getPath())) {
-        existingReviewCommentsByLocationByFile.put(comment.getPath(), new HashMap<Integer, FixedGHPullRequestReviewComment>());
+        existingReviewCommentsByLocationByFile.put(comment.getPath(), new HashMap<Integer, GHPullRequestReviewComment>());
       }
       // By default all previous comments will be marked for deletion
       reviewCommentToBeDeletedById.put(comment.getId(), comment);
@@ -202,7 +202,7 @@ public class PullRequestFacade implements BatchComponent {
     Integer lineInPatch = patchPositionMappingByFile.get(fullpath).get(line);
     try {
       if (existingReviewCommentsByLocationByFile.containsKey(fullpath) && existingReviewCommentsByLocationByFile.get(fullpath).containsKey(lineInPatch)) {
-        FixedGHPullRequestReviewComment existingReview = existingReviewCommentsByLocationByFile.get(fullpath).get(lineInPatch);
+        GHPullRequestReviewComment existingReview = existingReviewCommentsByLocationByFile.get(fullpath).get(lineInPatch);
         if (!existingReview.getBody().equals(body)) {
           existingReview.update(body);
         }
@@ -217,7 +217,7 @@ public class PullRequestFacade implements BatchComponent {
   }
 
   public void deleteOutdatedComments() {
-    for (FixedGHPullRequestReviewComment reviewToDelete : reviewCommentToBeDeletedById.values()) {
+    for (GHPullRequestReviewComment reviewToDelete : reviewCommentToBeDeletedById.values()) {
       try {
         reviewToDelete.delete();
       } catch (IOException e) {
