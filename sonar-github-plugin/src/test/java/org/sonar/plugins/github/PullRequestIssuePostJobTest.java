@@ -31,8 +31,10 @@ import org.sonar.api.issue.ProjectIssues;
 import org.sonar.api.rule.RuleKey;
 import org.sonar.api.rule.Severity;
 
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -62,7 +64,8 @@ public class PullRequestIssuePostJobTest {
   public void testPullRequestAnalysisNoIssue() {
     when(issues.issues()).thenReturn(Arrays.<Issue>asList());
     pullRequestIssuePostJob.executeOn(null, null);
-    verify(pullRequestFacade).addGlobalComment("SonarQube analysis reported no new issues.");
+    verify(pullRequestFacade).removePreviousGlobalComments();
+    verify(pullRequestFacade, never()).addGlobalComment(anyString());
   }
 
   @Test
@@ -135,6 +138,7 @@ public class PullRequestIssuePostJobTest {
     when(pullRequestFacade.hasFileLine(inputFile1, 1)).thenReturn(true);
 
     pullRequestIssuePostJob.executeOn(null, null);
+    verify(pullRequestFacade).removePreviousGlobalComments();
     verify(pullRequestFacade).addGlobalComment(contains("SonarQube analysis reported 6 new issues:"));
     verify(pullRequestFacade)
       .addGlobalComment(
