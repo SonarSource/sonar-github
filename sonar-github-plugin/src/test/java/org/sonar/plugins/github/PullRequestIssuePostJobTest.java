@@ -31,6 +31,7 @@ import org.sonar.api.issue.ProjectIssues;
 import org.sonar.api.rule.RuleKey;
 import org.sonar.api.rule.Severity;
 
+import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.mock;
@@ -78,7 +79,7 @@ public class PullRequestIssuePostJobTest {
     when(newIssue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
     when(newIssue.severity()).thenReturn(Severity.BLOCKER);
     when(newIssue.isNew()).thenReturn(true);
-    when(newIssue.message()).thenReturn("msg");
+    when(newIssue.message()).thenReturn("msg1");
     when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn("http://github/blob/abc123/src/Foo.php#L1");
 
     Issue lineNotVisible = mock(Issue.class);
@@ -88,17 +89,18 @@ public class PullRequestIssuePostJobTest {
     when(lineNotVisible.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
     when(lineNotVisible.severity()).thenReturn(Severity.BLOCKER);
     when(lineNotVisible.isNew()).thenReturn(true);
-    when(lineNotVisible.message()).thenReturn("msg");
+    when(lineNotVisible.message()).thenReturn("msg2");
+    when(pullRequestFacade.getGithubUrl(inputFile1, 2)).thenReturn("http://github/blob/abc123/src/Foo.php#L2");
 
     Issue fileNotInPR = mock(Issue.class);
     DefaultInputFile inputFile2 = new DefaultInputFile("src/Foo2.php");
-    when(cache.byKey("foo:src/Foo2.php")).thenReturn(inputFile1);
+    when(cache.byKey("foo:src/Foo2.php")).thenReturn(inputFile2);
     when(fileNotInPR.componentKey()).thenReturn("foo:src/Foo2.php");
     when(fileNotInPR.line()).thenReturn(1);
     when(fileNotInPR.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
     when(fileNotInPR.severity()).thenReturn(Severity.BLOCKER);
     when(fileNotInPR.isNew()).thenReturn(true);
-    when(fileNotInPR.message()).thenReturn("msg");
+    when(fileNotInPR.message()).thenReturn("msg3");
 
     Issue notNewIssue = mock(Issue.class);
     when(cache.byKey("foo:src/Foo.php")).thenReturn(inputFile1);
@@ -115,7 +117,7 @@ public class PullRequestIssuePostJobTest {
     when(issueOnDir.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
     when(issueOnDir.severity()).thenReturn(Severity.BLOCKER);
     when(issueOnDir.isNew()).thenReturn(true);
-    when(issueOnDir.message()).thenReturn("msg");
+    when(issueOnDir.message()).thenReturn("msg4");
 
     Issue issueOnProject = mock(Issue.class);
     when(issueOnProject.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
@@ -131,7 +133,7 @@ public class PullRequestIssuePostJobTest {
     when(globalIssue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
     when(globalIssue.severity()).thenReturn(Severity.BLOCKER);
     when(globalIssue.isNew()).thenReturn(true);
-    when(globalIssue.message()).thenReturn("msg");
+    when(globalIssue.message()).thenReturn("msg5");
 
     when(issues.issues()).thenReturn(Arrays.<Issue>asList(newIssue, globalIssue, issueOnProject, issueOnDir, fileNotInPR, lineNotVisible, notNewIssue));
     when(pullRequestFacade.hasFile(inputFile1)).thenReturn(true);
@@ -142,6 +144,9 @@ public class PullRequestIssuePostJobTest {
     verify(pullRequestFacade).addGlobalComment(contains("SonarQube analysis reported 6 new issues:"));
     verify(pullRequestFacade)
       .addGlobalComment(
-        contains("* [msg](http://github/blob/abc123/src/Foo.php#L1) [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://nemo.sonarqube.org/coding_rules#rule_key=repo%3Arule)"));
+        not(contains("* [msg]")));
+    verify(pullRequestFacade)
+      .addGlobalComment(
+        contains("* [msg2](http://github/blob/abc123/src/Foo.php#L2) [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://nemo.sonarqube.org/coding_rules#rule_key=repo%3Arule)"));
   }
 }
