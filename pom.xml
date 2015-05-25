@@ -9,7 +9,7 @@
   <version>1.0-SNAPSHOT</version>
 
   <modules>
-    <module>externals/github-api</module>
+    <module>github-api</module>
     <module>sonar-github-plugin</module>
   </modules>
 </project>
