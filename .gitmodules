@@ -1,4 +1,0 @@
-[submodule "github-api"]
-	path = github-api
-	url = https://github.com/henryju/github-api.git
-	branch = branch/for_sonarqube_github
