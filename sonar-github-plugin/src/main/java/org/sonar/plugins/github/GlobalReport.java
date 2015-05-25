@@ -100,17 +100,20 @@ public class GlobalReport {
     }
   }
 
-  public void process(Issue issue, @Nullable String githubUrl) {
-    if (!issue.isNew()) {
-      return;
-    }
+  public void process(Issue issue, @Nullable String githubUrl, boolean reportedInline) {
     increment(issue.severity());
-    details.append("* ");
-    if (githubUrl != null) {
-      details.append("[").append(issue.message()).append("]").append("(").append(githubUrl).append(")");
-    } else {
-      details.append(issue.message()).append(" ").append("(").append(issue.componentKey()).append(")");
+    if (!reportedInline) {
+      details.append("* ");
+      if (githubUrl != null) {
+        details.append("[").append(issue.message()).append("]").append("(").append(githubUrl).append(")");
+      } else {
+        details.append(issue.message()).append(" ").append("(").append(issue.componentKey()).append(")");
+      }
+      details.append(" ").append(PullRequestIssuePostJob.getRuleLink(issue.ruleKey().toString())).append("\n");
     }
-    details.append(" ").append(PullRequestIssuePostJob.getRuleLink(issue.ruleKey().toString())).append("\n");
+  }
+
+  public boolean hasNewIssue() {
+    return newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL) + newIssues(Severity.MAJOR) + newIssues(Severity.MINOR) + newIssues(Severity.INFO) > 0;
   }
 }

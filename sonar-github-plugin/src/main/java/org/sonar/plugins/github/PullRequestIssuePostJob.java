@@ -63,7 +63,10 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
 
     pullRequestFacade.deleteOutdatedComments();
 
-    pullRequestFacade.addGlobalComment(report.formatForMarkdown());
+    pullRequestFacade.removePreviousGlobalComments();
+    if (report.hasNewIssue()) {
+      pullRequestFacade.addGlobalComment(report.formatForMarkdown());
+    }
 
     pullRequestFacade.createOrUpdateSonarQubeStatus(report.getStatus(), report.getStatusDescription());
   }
@@ -78,32 +81,32 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
     for (Issue issue : projectIssues.issues()) {
       String severity = issue.severity();
       boolean isNew = issue.isNew();
+      if (!isNew) {
+        continue;
+      }
       Integer issueLine = issue.line();
       InputFile inputFile = inputFileCache.byKey(issue.componentKey());
-      report.process(issue, pullRequestFacade.getGithubUrl(inputFile, issueLine));
+      boolean reportedInline = false;
       if (inputFile != null) {
-        if (!pullRequestFacade.hasFile(inputFile)) {
-          continue;
+        if (pullRequestFacade.hasFile(inputFile) && issueLine != null) {
+          int line = issueLine.intValue();
+          if (pullRequestFacade.hasFileLine(inputFile, line)) {
+            String message = issue.message();
+            String ruleKey = issue.ruleKey().toString();
+            if (!commentToBeAddedByFileAndByLine.containsKey(inputFile)) {
+              commentToBeAddedByFileAndByLine.put(inputFile, new HashMap<Integer, StringBuilder>());
+            }
+            Map<Integer, StringBuilder> commentsByLine = commentToBeAddedByFileAndByLine.get(inputFile);
+            if (!commentsByLine.containsKey(line)) {
+              commentsByLine.put(line, new StringBuilder());
+            }
+            commentsByLine.get(line).append(formatMessage(severity, message, ruleKey, isNew)).append("\n");
+            reportedInline = true;
+          }
         }
-        if (issueLine == null) {
-          // Global issue
-          continue;
-        }
-        int line = issueLine.intValue();
-        if (!pullRequestFacade.hasFileLine(inputFile, line)) {
-          continue;
-        }
-        String message = issue.message();
-        String ruleKey = issue.ruleKey().toString();
-        if (!commentToBeAddedByFileAndByLine.containsKey(inputFile)) {
-          commentToBeAddedByFileAndByLine.put(inputFile, new HashMap<Integer, StringBuilder>());
-        }
-        Map<Integer, StringBuilder> commentsByLine = commentToBeAddedByFileAndByLine.get(inputFile);
-        if (!commentsByLine.containsKey(line)) {
-          commentsByLine.put(line, new StringBuilder());
-        }
-        commentsByLine.get(line).append(formatMessage(severity, message, ruleKey, isNew)).append("\n");
       }
+      report.process(issue, pullRequestFacade.getGithubUrl(inputFile, issueLine), reportedInline);
+
     }
     return commentToBeAddedByFileAndByLine;
   }
