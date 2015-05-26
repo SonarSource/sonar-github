@@ -3,10 +3,9 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.codehaus.sonar-plugins</groupId>
-    <artifactId>parent</artifactId>
-    <version>19</version>
-    <relativePath />
+    <groupId>org.codehaus.sonar-plugins.github</groupId>
+    <artifactId>sonar-github-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
   </parent>
   <artifactId>sonar-github-plugin</artifactId>
   <groupId>org.codehaus.sonar-plugins.github</groupId>
@@ -81,7 +80,7 @@
     <dependency>
       <groupId>org.codehaus.sonar-plugins.github</groupId>
       <artifactId>github-api</artifactId>
-      <version>1.69-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
 
     <!-- unit tests -->
