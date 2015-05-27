@@ -19,7 +19,6 @@
  */
 package org.sonar.plugins.github;
 
-import java.io.File;
 import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Rule;
@@ -46,13 +45,11 @@ public class PullRequestIssuePostJobTest {
 
   private PullRequestIssuePostJob pullRequestIssuePostJob;
   private PullRequestFacade pullRequestFacade;
-  private File baseDir;
   private ProjectIssues issues;
   private InputFileCache cache;
 
   @Before
   public void prepare() throws Exception {
-    baseDir = temp.newFolder();
     pullRequestFacade = mock(PullRequestFacade.class);
     GitHubPluginConfiguration config = mock(GitHubPluginConfiguration.class);
     issues = mock(ProjectIssues.class);

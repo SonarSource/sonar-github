@@ -114,9 +114,6 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
   private static String formatMessage(String severity, String message, String ruleKey, boolean isNew) {
     String ruleLink = getRuleLink(ruleKey);
     StringBuilder sb = new StringBuilder();
-    if (isNew) {
-      sb.append(("![New](" + IMAGES_ROOT_URL + "new.png) "));
-    }
     sb.append(getImageMarkdownForSeverity(severity))
       .append(" ")
       .append(message)
