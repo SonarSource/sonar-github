@@ -13,7 +13,7 @@
   <packaging>sonar-plugin</packaging>
   <version>1.0-SNAPSHOT</version>
   <description>Provide some integration between GitHub and SonarQube</description>
-  <url>TODO</url>
+  <url>http://redirect.sonarsource.com/plugins/github.html</url>
   <inceptionYear>2015</inceptionYear>
   
   <properties>
