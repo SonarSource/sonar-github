@@ -74,7 +74,7 @@ public class GlobalReport {
     int newIssues = newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL) + newIssues(Severity.MAJOR) + newIssues(Severity.MINOR) + newIssues(Severity.INFO);
     if (newIssues > 0) {
       sb.append("+").append(newIssues).append(" issue" + (newIssues > 1 ? "s" : "")).append(" (");
-      printNewIssuesInline(sb, newIssues(Severity.BLOCKER), "blocking");
+      printNewIssuesInline(sb, newIssues(Severity.BLOCKER), "blocker");
       printNewIssuesInline(sb, newIssues(Severity.CRITICAL), "critical");
       printNewIssuesInline(sb, newIssues(Severity.MAJOR), "major");
       printNewIssuesInline(sb, newIssues(Severity.MINOR), "minor");
