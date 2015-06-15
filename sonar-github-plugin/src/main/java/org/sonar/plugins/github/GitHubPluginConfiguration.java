@@ -19,15 +19,13 @@
  */
 package org.sonar.plugins.github;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.annotation.CheckForNull;
 import org.sonar.api.BatchComponent;
 import org.sonar.api.CoreProperties;
 import org.sonar.api.batch.InstantiationStrategy;
 import org.sonar.api.config.Settings;
-
-import javax.annotation.CheckForNull;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 public class GitHubPluginConfiguration implements BatchComponent {
@@ -92,6 +90,10 @@ public class GitHubPluginConfiguration implements BatchComponent {
 
   public boolean isEnabled() {
     return settings.hasKey(GitHubPlugin.GITHUB_PULL_REQUEST);
+  }
+
+  public String endpoint() {
+    return settings.getString(GitHubPlugin.GITHUB_ENDPOINT);
   }
 
 }

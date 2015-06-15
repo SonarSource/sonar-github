@@ -29,25 +29,28 @@ import org.sonar.api.SonarPlugin;
 
 @Properties({
   @Property(
+    key = GitHubPlugin.GITHUB_ENDPOINT,
+    name = "GitHub API Endpoint",
+    description = "URL to access GitHub WS API. Deafult value is fine for public GitHub. Can be modified for GitHub enterprise.",
+    defaultValue = "https://api.github.com",
+    global = true),
+  @Property(
     key = GitHubPlugin.GITHUB_LOGIN,
     name = "GitHub Login",
     description = "GitHub account used to perform operations like adding comments on pull requests.",
-    global = false
-  ),
+    global = false),
   @Property(
     key = GitHubPlugin.GITHUB_OAUTH,
     name = "GitHub OAuth token",
     description = "Authentication token",
     type = PropertyType.PASSWORD,
-    global = false
-  ),
+    global = false),
   @Property(
     key = GitHubPlugin.GITHUB_REPO,
     name = "GitHub repository",
     description = "GitHub repository for this project. Will be guessed from '" + CoreProperties.LINKS_SOURCES_DEV + "' if present",
     global = false,
-    project = false
-  ),
+    project = false),
   @Property(
     key = GitHubPlugin.GITHUB_PULL_REQUEST,
     name = "GitHub Pull Request",
@@ -55,11 +58,11 @@ import org.sonar.api.SonarPlugin;
     type = PropertyType.INTEGER,
     global = false,
     project = false,
-    module = false
-  )
+    module = false)
 })
 public class GitHubPlugin extends SonarPlugin {
 
+  public static final String GITHUB_ENDPOINT = "sonar.github.endpoint";
   public static final String GITHUB_LOGIN = "sonar.github.login";
   public static final String GITHUB_OAUTH = "sonar.github.oauth";
   public static final String GITHUB_REPO = "sonar.github.repository";

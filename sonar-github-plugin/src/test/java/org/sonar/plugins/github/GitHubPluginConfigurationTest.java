@@ -72,6 +72,10 @@ public class GitHubPluginConfigurationTest {
     settings.setProperty(GitHubPlugin.GITHUB_PULL_REQUEST, "3");
     assertThat(config.pullRequestNumber()).isEqualTo(3);
     assertThat(config.isEnabled()).isTrue();
+
+    assertThat(config.endpoint()).isEqualTo("https://api.github.com");
+    settings.setProperty(GitHubPlugin.GITHUB_ENDPOINT, "http://myprivate-endpoint");
+    assertThat(config.endpoint()).isEqualTo("http://myprivate-endpoint");
   }
 
 }
