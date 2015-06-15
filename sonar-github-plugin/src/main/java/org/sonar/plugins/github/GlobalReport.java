@@ -64,11 +64,11 @@ public class GlobalReport {
     int newIssues = newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL) + newIssues(Severity.MAJOR) + newIssues(Severity.MINOR) + newIssues(Severity.INFO);
     if (newIssues > 0) {
       sb.append(newIssues).append(" issue" + (newIssues > 1 ? "s" : "")).append(":\n");
-      printNewIssuesForMarkdown(sb, newIssues(Severity.BLOCKER), "blocker");
-      printNewIssuesForMarkdown(sb, newIssues(Severity.CRITICAL), "critical");
-      printNewIssuesForMarkdown(sb, newIssues(Severity.MAJOR), "major");
-      printNewIssuesForMarkdown(sb, newIssues(Severity.MINOR), "minor");
-      printNewIssuesForMarkdown(sb, newIssues(Severity.INFO), "info");
+      printNewIssuesForMarkdown(sb, Severity.BLOCKER);
+      printNewIssuesForMarkdown(sb, Severity.CRITICAL);
+      printNewIssuesForMarkdown(sb, Severity.MAJOR);
+      printNewIssuesForMarkdown(sb, Severity.MINOR);
+      printNewIssuesForMarkdown(sb, Severity.INFO);
     } else {
       sb.append("no issues.");
     }
@@ -78,29 +78,31 @@ public class GlobalReport {
     int newIssues = newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL) + newIssues(Severity.MAJOR) + newIssues(Severity.MINOR) + newIssues(Severity.INFO);
     if (newIssues > 0) {
       sb.append("+").append(newIssues).append(" issue" + (newIssues > 1 ? "s" : "")).append(" (");
-      printNewIssuesInline(sb, newIssues(Severity.BLOCKER), "blocker");
-      printNewIssuesInline(sb, newIssues(Severity.CRITICAL), "critical");
-      printNewIssuesInline(sb, newIssues(Severity.MAJOR), "major");
-      printNewIssuesInline(sb, newIssues(Severity.MINOR), "minor");
-      printNewIssuesInline(sb, newIssues(Severity.INFO), "info");
+      printNewIssuesInline(sb, Severity.BLOCKER);
+      printNewIssuesInline(sb, Severity.CRITICAL);
+      printNewIssuesInline(sb, Severity.MAJOR);
+      printNewIssuesInline(sb, Severity.MINOR);
+      printNewIssuesInline(sb, Severity.INFO);
       sb.append(")");
     } else {
       sb.append("No new issue");
     }
   }
 
-  private void printNewIssuesInline(StringBuilder sb, int issueCount, String severityLabel) {
+  private void printNewIssuesInline(StringBuilder sb, String severity) {
+    int issueCount = newIssues(severity);
     if (issueCount > 0) {
       if (sb.charAt(sb.length() - 1) != '(') {
         sb.append(" ");
       }
-      sb.append("+").append(issueCount).append(" ").append(severityLabel);
+      sb.append("+").append(issueCount).append(" ").append(severity.toLowerCase());
     }
   }
 
-  private void printNewIssuesForMarkdown(StringBuilder sb, int issueCount, String severityLabel) {
+  private void printNewIssuesForMarkdown(StringBuilder sb, String severity) {
+    int issueCount = newIssues(severity);
     if (issueCount > 0) {
-      sb.append("* ").append(issueCount).append(" ").append(severityLabel).append("\n");
+      sb.append("* ").append(MarkDownUtils.getImageMarkdownForSeverity(severity)).append(" ").append(issueCount).append(" ").append(severity.toLowerCase()).append("\n");
     }
   }
 

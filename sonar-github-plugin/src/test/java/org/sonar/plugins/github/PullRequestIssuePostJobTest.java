@@ -140,6 +140,8 @@ public class PullRequestIssuePostJobTest {
     verify(pullRequestFacade).removePreviousGlobalComments();
     verify(pullRequestFacade).addGlobalComment(contains("SonarQube analysis reported 6 issues:"));
     verify(pullRequestFacade)
+      .addGlobalComment(contains("* ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png) 6 blocker"));
+    verify(pullRequestFacade)
       .addGlobalComment(
         not(contains("* [msg]")));
     verify(pullRequestFacade)

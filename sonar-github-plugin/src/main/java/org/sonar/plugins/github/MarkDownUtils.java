@@ -68,7 +68,7 @@ public class MarkDownUtils {
     }
   }
 
-  private static String getImageMarkdownForSeverity(String severity) {
+  public static String getImageMarkdownForSeverity(String severity) {
     return "![" + severity + "](" + IMAGES_ROOT_URL + "severity-" + severity.toLowerCase() + ".png)";
   }
 
