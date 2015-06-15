@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.kohsuke.github.GHCommitState;
 import org.sonar.api.batch.fs.internal.DefaultInputFile;
 import org.sonar.api.issue.Issue;
 import org.sonar.api.issue.ProjectIssues;
@@ -55,7 +56,6 @@ public class PullRequestIssuePostJobTest {
     issues = mock(ProjectIssues.class);
     cache = mock(InputFileCache.class);
     pullRequestIssuePostJob = new PullRequestIssuePostJob(config, pullRequestFacade, issues, cache);
-
   }
 
   @Test
@@ -64,6 +64,7 @@ public class PullRequestIssuePostJobTest {
     pullRequestIssuePostJob.executeOn(null, null);
     verify(pullRequestFacade).removePreviousGlobalComments();
     verify(pullRequestFacade, never()).addGlobalComment(anyString());
+    verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.SUCCESS, "no issues");
   }
 
   @Test
@@ -148,5 +149,83 @@ public class PullRequestIssuePostJobTest {
       .addGlobalComment(
         contains(
           "* ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png) [msg2](http://github/blob/abc123/src/Foo.php#L2) [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://nemo.sonarqube.org/coding_rules#rule_key=repo%3Arule)"));
+
+    verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.ERROR, "6 new issues, with 6 blocker");
+  }
+
+  @Test
+  public void testPullRequestAnalysisWithNewCriticalIssues() {
+    Issue newIssue = mock(Issue.class);
+    DefaultInputFile inputFile1 = new DefaultInputFile("src/Foo.php");
+    when(cache.byKey("foo:src/Foo.php")).thenReturn(inputFile1);
+    when(newIssue.componentKey()).thenReturn("foo:src/Foo.php");
+    when(newIssue.line()).thenReturn(1);
+    when(newIssue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
+    when(newIssue.severity()).thenReturn(Severity.CRITICAL);
+    when(newIssue.isNew()).thenReturn(true);
+    when(newIssue.message()).thenReturn("msg1");
+    when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn("http://github/blob/abc123/src/Foo.php#L1");
+
+    when(issues.issues()).thenReturn(Arrays.<Issue>asList(newIssue));
+    when(pullRequestFacade.hasFile(inputFile1)).thenReturn(true);
+    when(pullRequestFacade.hasFileLine(inputFile1, 1)).thenReturn(true);
+
+    pullRequestIssuePostJob.executeOn(null, null);
+
+    verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.ERROR, "1 new issue, with 1 critical");
+  }
+
+  @Test
+  public void testPullRequestAnalysisWithNewIssuesNoBlockerNorCritical() {
+    Issue newIssue = mock(Issue.class);
+    DefaultInputFile inputFile1 = new DefaultInputFile("src/Foo.php");
+    when(cache.byKey("foo:src/Foo.php")).thenReturn(inputFile1);
+    when(newIssue.componentKey()).thenReturn("foo:src/Foo.php");
+    when(newIssue.line()).thenReturn(1);
+    when(newIssue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
+    when(newIssue.severity()).thenReturn(Severity.MAJOR);
+    when(newIssue.isNew()).thenReturn(true);
+    when(newIssue.message()).thenReturn("msg1");
+    when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn("http://github/blob/abc123/src/Foo.php#L1");
+
+    when(issues.issues()).thenReturn(Arrays.<Issue>asList(newIssue));
+    when(pullRequestFacade.hasFile(inputFile1)).thenReturn(true);
+    when(pullRequestFacade.hasFileLine(inputFile1, 1)).thenReturn(true);
+
+    pullRequestIssuePostJob.executeOn(null, null);
+
+    verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.SUCCESS, "1 new issue, no critical nor blocker");
+  }
+
+  @Test
+  public void testPullRequestAnalysisWithNewBlockerAndCriticalIssues() {
+    Issue newIssue = mock(Issue.class);
+    DefaultInputFile inputFile1 = new DefaultInputFile("src/Foo.php");
+    when(cache.byKey("foo:src/Foo.php")).thenReturn(inputFile1);
+    when(newIssue.componentKey()).thenReturn("foo:src/Foo.php");
+    when(newIssue.line()).thenReturn(1);
+    when(newIssue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
+    when(newIssue.severity()).thenReturn(Severity.CRITICAL);
+    when(newIssue.isNew()).thenReturn(true);
+    when(newIssue.message()).thenReturn("msg1");
+    when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn("http://github/blob/abc123/src/Foo.php#L1");
+
+    Issue lineNotVisible = mock(Issue.class);
+    when(cache.byKey("foo:src/Foo.php")).thenReturn(inputFile1);
+    when(lineNotVisible.componentKey()).thenReturn("foo:src/Foo.php");
+    when(lineNotVisible.line()).thenReturn(2);
+    when(lineNotVisible.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
+    when(lineNotVisible.severity()).thenReturn(Severity.BLOCKER);
+    when(lineNotVisible.isNew()).thenReturn(true);
+    when(lineNotVisible.message()).thenReturn("msg2");
+    when(pullRequestFacade.getGithubUrl(inputFile1, 2)).thenReturn("http://github/blob/abc123/src/Foo.php#L2");
+
+    when(issues.issues()).thenReturn(Arrays.<Issue>asList(newIssue, lineNotVisible));
+    when(pullRequestFacade.hasFile(inputFile1)).thenReturn(true);
+    when(pullRequestFacade.hasFileLine(inputFile1, 1)).thenReturn(true);
+
+    pullRequestIssuePostJob.executeOn(null, null);
+
+    verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.ERROR, "2 new issues, with 1 critical and 1 blocker");
   }
 }

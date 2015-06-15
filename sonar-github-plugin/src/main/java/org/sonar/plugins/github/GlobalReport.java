@@ -77,25 +77,28 @@ public class GlobalReport {
   private void printNewIssuesInline(StringBuilder sb) {
     int newIssues = newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL) + newIssues(Severity.MAJOR) + newIssues(Severity.MINOR) + newIssues(Severity.INFO);
     if (newIssues > 0) {
-      sb.append("+").append(newIssues).append(" issue" + (newIssues > 1 ? "s" : "")).append(" (");
-      printNewIssuesInline(sb, Severity.BLOCKER);
-      printNewIssuesInline(sb, Severity.CRITICAL);
-      printNewIssuesInline(sb, Severity.MAJOR);
-      printNewIssuesInline(sb, Severity.MINOR);
-      printNewIssuesInline(sb, Severity.INFO);
-      sb.append(")");
+      sb.append(newIssues).append(" new issue" + (newIssues > 1 ? "s" : "")).append(",");
+      int newCriticalOrBlockerIssues = newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL);
+      if (newCriticalOrBlockerIssues > 0) {
+        printNewIssuesInline(sb, Severity.CRITICAL);
+        printNewIssuesInline(sb, Severity.BLOCKER);
+      } else {
+        sb.append(" no critical nor blocker");
+      }
     } else {
-      sb.append("No new issue");
+      sb.append("no issues");
     }
   }
 
   private void printNewIssuesInline(StringBuilder sb, String severity) {
     int issueCount = newIssues(severity);
     if (issueCount > 0) {
-      if (sb.charAt(sb.length() - 1) != '(') {
-        sb.append(" ");
+      if (sb.charAt(sb.length() - 1) == ',') {
+        sb.append(" with ");
+      } else {
+        sb.append(" and ");
       }
-      sb.append("+").append(issueCount).append(" ").append(severity.toLowerCase());
+      sb.append(issueCount).append(" ").append(severity.toLowerCase());
     }
   }
 
