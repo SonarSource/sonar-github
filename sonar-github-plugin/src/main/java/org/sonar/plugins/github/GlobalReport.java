@@ -26,7 +26,7 @@ import org.sonar.api.rule.Severity;
 
 public class GlobalReport {
   private int[] newIssuesBySeverity = new int[Severity.ALL.size()];
-  private StringBuilder details = new StringBuilder();
+  private StringBuilder notReportedOnDiff = new StringBuilder();
 
   private void increment(String severity) {
     this.newIssuesBySeverity[Severity.ALL.indexOf(severity)]++;
@@ -35,8 +35,12 @@ public class GlobalReport {
   public String formatForMarkdown() {
     StringBuilder sb = new StringBuilder();
     printNewIssuesMarkdown(sb);
-    if (details.length() > 0) {
-      sb.append("\nDetails:\n").append(details.toString());
+    if (hasNewIssue()) {
+      sb.append("\nWatch the comments in this conversation to review them.");
+    }
+    if (notReportedOnDiff.length() > 0) {
+      sb.append("\nNote: the following issues could not be reported as comments because they are located on lines that are not part of this pull request:\n")
+        .append(notReportedOnDiff.toString());
     }
     return sb.toString();
   }
@@ -59,14 +63,14 @@ public class GlobalReport {
     sb.append("SonarQube analysis reported ");
     int newIssues = newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL) + newIssues(Severity.MAJOR) + newIssues(Severity.MINOR) + newIssues(Severity.INFO);
     if (newIssues > 0) {
-      sb.append(newIssues).append(" new issue" + (newIssues > 1 ? "s" : "")).append(":\n");
+      sb.append(newIssues).append(" issue" + (newIssues > 1 ? "s" : "")).append(":\n");
       printNewIssuesForMarkdown(sb, newIssues(Severity.BLOCKER), "blocker");
       printNewIssuesForMarkdown(sb, newIssues(Severity.CRITICAL), "critical");
       printNewIssuesForMarkdown(sb, newIssues(Severity.MAJOR), "major");
       printNewIssuesForMarkdown(sb, newIssues(Severity.MINOR), "minor");
       printNewIssuesForMarkdown(sb, newIssues(Severity.INFO), "info");
     } else {
-      sb.append("no new issues.");
+      sb.append("no issues.");
     }
   }
 
@@ -100,16 +104,13 @@ public class GlobalReport {
     }
   }
 
-  public void process(Issue issue, @Nullable String githubUrl, boolean reportedInline) {
+  public void process(Issue issue, @Nullable String githubUrl, boolean reportedOnDiff) {
     increment(issue.severity());
-    if (!reportedInline) {
-      details.append("* ");
-      if (githubUrl != null) {
-        details.append("[").append(issue.message()).append("]").append("(").append(githubUrl).append(")");
-      } else {
-        details.append(issue.message()).append(" ").append("(").append(issue.componentKey()).append(")");
-      }
-      details.append(" ").append(PullRequestIssuePostJob.getRuleLink(issue.ruleKey().toString())).append("\n");
+    if (!reportedOnDiff) {
+      notReportedOnDiff
+        .append("* ")
+        .append(MarkDownUtils.globalIssue(issue.severity(), issue.message(), issue.ruleKey().toString(), githubUrl, issue.componentKey()))
+        .append("\n");
     }
   }
 

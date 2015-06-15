@@ -138,12 +138,13 @@ public class PullRequestIssuePostJobTest {
 
     pullRequestIssuePostJob.executeOn(null, null);
     verify(pullRequestFacade).removePreviousGlobalComments();
-    verify(pullRequestFacade).addGlobalComment(contains("SonarQube analysis reported 6 new issues:"));
+    verify(pullRequestFacade).addGlobalComment(contains("SonarQube analysis reported 6 issues:"));
     verify(pullRequestFacade)
       .addGlobalComment(
         not(contains("* [msg]")));
     verify(pullRequestFacade)
       .addGlobalComment(
-        contains("* [msg2](http://github/blob/abc123/src/Foo.php#L2) [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://nemo.sonarqube.org/coding_rules#rule_key=repo%3Arule)"));
+        contains(
+          "* ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png) [msg2](http://github/blob/abc123/src/Foo.php#L2) [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://nemo.sonarqube.org/coding_rules#rule_key=repo%3Arule)"));
   }
 }

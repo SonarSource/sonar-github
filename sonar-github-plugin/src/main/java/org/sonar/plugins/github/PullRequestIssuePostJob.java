@@ -19,8 +19,6 @@
  */
 package org.sonar.plugins.github;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import org.sonar.api.batch.CheckProject;
@@ -100,7 +98,7 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
             if (!commentsByLine.containsKey(line)) {
               commentsByLine.put(line, new StringBuilder());
             }
-            commentsByLine.get(line).append(formatMessage(severity, message, ruleKey, isNew)).append("\n");
+            commentsByLine.get(line).append(MarkDownUtils.inlineIssue(severity, message, ruleKey)).append("\n");
             reportedInline = true;
           }
         }
@@ -109,34 +107,6 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
 
     }
     return commentToBeAddedByFileAndByLine;
-  }
-
-  private static String formatMessage(String severity, String message, String ruleKey, boolean isNew) {
-    String ruleLink = getRuleLink(ruleKey);
-    StringBuilder sb = new StringBuilder();
-    sb.append(getImageMarkdownForSeverity(severity))
-      .append(" ")
-      .append(message)
-      .append(" ")
-      .append(ruleLink);
-    return sb.toString();
-  }
-
-  static String getRuleLink(String ruleKey) {
-    return "[![rule](" + IMAGES_ROOT_URL + "rule.png)](http://nemo.sonarqube.org/coding_rules#rule_key=" + encodeForUrl(ruleKey) + ")";
-  }
-
-  static String encodeForUrl(String url) {
-    try {
-      return URLEncoder.encode(url, "UTF-8");
-
-    } catch (UnsupportedEncodingException e) {
-      throw new IllegalStateException("Encoding not supported", e);
-    }
-  }
-
-  private static String getImageMarkdownForSeverity(String severity) {
-    return "![" + severity + "](" + IMAGES_ROOT_URL + "severity-" + severity.toLowerCase() + ".png)";
   }
 
   private void updateReviewComments(Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine) {
