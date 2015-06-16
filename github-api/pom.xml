@@ -17,6 +17,7 @@
     <skipTests>true</skipTests>
     <animal.sniffer.skip>true</animal.sniffer.skip>
     <license.skip>true</license.skip>
+    <sonar.skip>true</sonar.skip>
   </properties>
 
   <build>
