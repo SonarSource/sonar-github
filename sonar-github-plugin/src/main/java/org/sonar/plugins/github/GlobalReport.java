@@ -75,9 +75,10 @@ public class GlobalReport {
   }
 
   private void printNewIssuesInline(StringBuilder sb) {
+    sb.append("SonarQube reported ");
     int newIssues = newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL) + newIssues(Severity.MAJOR) + newIssues(Severity.MINOR) + newIssues(Severity.INFO);
     if (newIssues > 0) {
-      sb.append(newIssues).append(" new issue" + (newIssues > 1 ? "s" : "")).append(",");
+      sb.append(newIssues).append(" issue" + (newIssues > 1 ? "s" : "")).append(",");
       int newCriticalOrBlockerIssues = newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL);
       if (newCriticalOrBlockerIssues > 0) {
         printNewIssuesInline(sb, Severity.CRITICAL);
