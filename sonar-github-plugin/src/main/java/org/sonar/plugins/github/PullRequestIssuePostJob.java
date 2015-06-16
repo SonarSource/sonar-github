@@ -33,7 +33,6 @@ import org.sonar.api.resources.Project;
  */
 public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, CheckProject {
 
-  private static final String IMAGES_ROOT_URL = "https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/";
   private final PullRequestFacade pullRequestFacade;
   private final ProjectIssues projectIssues;
   private final GitHubPluginConfiguration gitHubPluginConfiguration;
@@ -85,22 +84,20 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
       Integer issueLine = issue.line();
       InputFile inputFile = inputFileCache.byKey(issue.componentKey());
       boolean reportedInline = false;
-      if (inputFile != null) {
-        if (pullRequestFacade.hasFile(inputFile) && issueLine != null) {
-          int line = issueLine.intValue();
-          if (pullRequestFacade.hasFileLine(inputFile, line)) {
-            String message = issue.message();
-            String ruleKey = issue.ruleKey().toString();
-            if (!commentToBeAddedByFileAndByLine.containsKey(inputFile)) {
-              commentToBeAddedByFileAndByLine.put(inputFile, new HashMap<Integer, StringBuilder>());
-            }
-            Map<Integer, StringBuilder> commentsByLine = commentToBeAddedByFileAndByLine.get(inputFile);
-            if (!commentsByLine.containsKey(line)) {
-              commentsByLine.put(line, new StringBuilder());
-            }
-            commentsByLine.get(line).append(MarkDownUtils.inlineIssue(severity, message, ruleKey)).append("\n");
-            reportedInline = true;
+      if (inputFile != null && pullRequestFacade.hasFile(inputFile) && issueLine != null) {
+        int line = issueLine.intValue();
+        if (pullRequestFacade.hasFileLine(inputFile, line)) {
+          String message = issue.message();
+          String ruleKey = issue.ruleKey().toString();
+          if (!commentToBeAddedByFileAndByLine.containsKey(inputFile)) {
+            commentToBeAddedByFileAndByLine.put(inputFile, new HashMap<Integer, StringBuilder>());
           }
+          Map<Integer, StringBuilder> commentsByLine = commentToBeAddedByFileAndByLine.get(inputFile);
+          if (!commentsByLine.containsKey(line)) {
+            commentsByLine.put(line, new StringBuilder());
+          }
+          commentsByLine.get(line).append(MarkDownUtils.inlineIssue(severity, message, ruleKey)).append("\n");
+          reportedInline = true;
         }
       }
       report.process(issue, pullRequestFacade.getGithubUrl(inputFile, issueLine), reportedInline);

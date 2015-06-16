@@ -82,7 +82,7 @@ public class PullRequestFacade implements BatchComponent {
       setPr(ghRepo.getPullRequest(pullRequestNumber));
       LOG.info("Starting analysis of pull request: " + pr.getHtmlUrl());
       myself = github.getMyself().getLogin();
-      existingReviewCommentsByLocationByFile = loadExistingReviewComments();
+      loadExistingReviewComments();
       patchPositionMappingByFile = mapPatchPositionsToLines(pr);
     } catch (IOException e) {
       throw new IllegalStateException("Unable to perform GitHub WS operation", e);
@@ -118,8 +118,7 @@ public class PullRequestFacade implements BatchComponent {
   /**
    * Load all previous comments made by provided github account.
    */
-  private Map<String, Map<Integer, GHPullRequestReviewComment>> loadExistingReviewComments() throws IOException {
-    Map<String, Map<Integer, GHPullRequestReviewComment>> existingReviewCommentsByLocationByFile = new HashMap<String, Map<Integer, GHPullRequestReviewComment>>();
+  private void loadExistingReviewComments() throws IOException {
     for (GHPullRequestReviewComment comment : pr.listReviewComments()) {
       if (!myself.equals(comment.getUser().getLogin())) {
         // Ignore comments from other users
@@ -132,11 +131,11 @@ public class PullRequestFacade implements BatchComponent {
       reviewCommentToBeDeletedById.put(comment.getId(), comment);
       existingReviewCommentsByLocationByFile.get(comment.getPath()).put(comment.getPosition(), comment);
     }
-    return existingReviewCommentsByLocationByFile;
   }
 
   /**
-   * GitHub expect review comments to be added on "patch lines" (aka position) but not on file lines. So we have to iterate over each patch and compute corresponding file line in order to later map issues to the correct position.
+   * GitHub expect review comments to be added on "patch lines" (aka position) but not on file lines. 
+   * So we have to iterate over each patch and compute corresponding file line in order to later map issues to the correct position.
    * @return Map File path -> Line -> Position
    */
   private static Map<String, Map<Integer, Integer>> mapPatchPositionsToLines(GHPullRequest pr) throws IOException {
@@ -264,7 +263,7 @@ public class PullRequestFacade implements BatchComponent {
   public String getGithubUrl(@Nullable InputPath inputPath, @Nullable Integer issueLine) {
     if (inputPath != null) {
       String path = getPath(inputPath);
-      return ghRepo.getHtmlUrl().toString() + "/blob/" + pr.getHead().getSha() + "/" + path + (issueLine != null ? "#L" + issueLine : "");
+      return ghRepo.getHtmlUrl().toString() + "/blob/" + pr.getHead().getSha() + "/" + path + (issueLine != null ? ("#L" + issueLine) : "");
     }
     return null;
   }
