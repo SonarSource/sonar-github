@@ -3,16 +3,21 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.codehaus.sonar-plugins</groupId>
+    <groupId>org.sonarsource.sonar-plugins</groupId>
     <artifactId>parent</artifactId>
-    <version>19</version>
+    <version>22</version>
     <relativePath />
   </parent>  
-  <groupId>org.codehaus.sonar-plugins.github</groupId>
+  <groupId>org.sonarsource.sonar-plugins.github</groupId>
   <artifactId>sonar-github-parent</artifactId>
   <name>SonarQube :: GitHub Plugin :: Parent</name>
   <packaging>pom</packaging>
   <version>1.0-SNAPSHOT</version>
+
+  <properties>
+    <bintray.package>sonar-github</bintray.package>
+  </properties>
+
   <modules>
     <module>github-api</module>
     <module>sonar-github-plugin</module>
