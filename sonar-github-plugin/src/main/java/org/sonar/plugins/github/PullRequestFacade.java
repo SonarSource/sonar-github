@@ -61,7 +61,7 @@ public class PullRequestFacade implements BatchComponent {
 
   private final GitHubPluginConfiguration config;
   private Map<String, Map<Integer, Integer>> patchPositionMappingByFile;
-  private Map<String, Map<Integer, GHPullRequestReviewComment>> existingReviewCommentsByLocationByFile;
+  private Map<String, Map<Integer, GHPullRequestReviewComment>> existingReviewCommentsByLocationByFile = new HashMap<>();
   private GHRepository ghRepo;
   private GHPullRequest pr;
   private Map<Integer, GHPullRequestReviewComment> reviewCommentToBeDeletedById = new HashMap<>();
