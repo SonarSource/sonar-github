@@ -45,9 +45,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git@github.com:SonarCommunity/github-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:SonarCommunity/github-plugin.git</developerConnection>
-    <url>https://github.com/SonarCommunity/github-plugin</url>
+    <connection>scm:git:git@github.com:SonarCommunity/sonar-github.git</connection>
+    <developerConnection>scm:git:git@github.com:SonarCommunity/sonar-github.git</developerConnection>
+    <url>https://github.com/SonarCommunity/sonar-github</url>
     <tag>HEAD</tag>
   </scm>
 
