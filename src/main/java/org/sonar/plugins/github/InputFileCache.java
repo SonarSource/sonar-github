@@ -1,6 +1,6 @@
 /*
- * SonarQube :: GitHub Plugin :: Parent
- * Copyright (C) 2009 ${owner}
+ * SonarQube :: GitHub Plugin
+ * Copyright (C) 2015 SonarSource
  * sonarqube@googlegroups.com
  *
  * This program is free software; you can redistribute it and/or
@@ -22,36 +22,20 @@ package org.sonar.plugins.github;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.CheckForNull;
-import org.sonar.api.batch.Sensor;
-import org.sonar.api.batch.SensorContext;
-import org.sonar.api.batch.fs.FileSystem;
+import org.sonar.api.BatchComponent;
+import org.sonar.api.batch.InstantiationStrategy;
 import org.sonar.api.batch.fs.InputFile;
-import org.sonar.api.resources.Project;
 
 /**
  * This is a temporary solution before being able to use new postjob API in SQ 5.2.
  */
-public class InputFileCache implements Sensor {
+@InstantiationStrategy(InstantiationStrategy.PER_BATCH)
+public class InputFileCache implements BatchComponent {
 
-  private final GitHubPluginConfiguration gitHubPluginConfiguration;
-  private final FileSystem fs;
   private final Map<String, InputFile> inputFileByKey = new HashMap<>();
 
-  public InputFileCache(GitHubPluginConfiguration gitHubPluginConfiguration, FileSystem fs) {
-    this.gitHubPluginConfiguration = gitHubPluginConfiguration;
-    this.fs = fs;
-  }
-
-  @Override
-  public boolean shouldExecuteOnProject(Project project) {
-    return gitHubPluginConfiguration.isEnabled();
-  }
-
-  @Override
-  public void analyse(Project module, SensorContext context) {
-    for (InputFile inputFile : fs.inputFiles(fs.predicates().all())) {
-      inputFileByKey.put(context.getResource(inputFile).getEffectiveKey(), inputFile);
-    }
+  void put(String componentKey, InputFile inputFile) {
+    inputFileByKey.put(componentKey, inputFile);
   }
 
   @CheckForNull

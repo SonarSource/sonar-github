@@ -1,24 +1,121 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.sonarsource.sonar-plugins</groupId>
-    <artifactId>parent</artifactId>
-    <version>22</version>
-    <relativePath />
-  </parent>  
-  <groupId>org.sonarsource.sonar-plugins.github</groupId>
-  <artifactId>sonar-github-parent</artifactId>
-  <name>SonarQube :: GitHub Plugin :: Parent</name>
-  <packaging>pom</packaging>
-  <version>1.1-SNAPSHOT</version>
 
+  <parent>
+    <groupId>org.sonarsource.parent</groupId>
+    <artifactId>parent</artifactId>
+    <version>23</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>org.sonarsource.github</groupId>
+  <artifactId>sonar-github-plugin</artifactId>
+  <name>SonarQube :: GitHub Plugin</name>
+  <packaging>sonar-plugin</packaging>
+  <version>1.1-SNAPSHOT</version>
+  <description>Provide some integration between GitHub and SonarQube</description>
+  <url>http://redirect.sonarsource.com/plugins/github.html</url>
+  <inceptionYear>2015</inceptionYear>
+  
   <properties>
-    <bintray.package>sonar-github</bintray.package>
+    <sonar.version>4.5.2</sonar.version>
+    <sonar.pluginName>GitHub</sonar.pluginName>
+    <sonar.pluginClass>org.sonar.plugins.github.GitHubPlugin</sonar.pluginClass>
   </properties>
 
-  <modules>
-    <module>github-api</module>
-    <module>sonar-github-plugin</module>
-  </modules>
+  <organization>
+    <name>SonarSource</name>
+    <url>http://www.sonarsource.com</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>GNU LGPL 3</name>
+      <url>http://www.gnu.org/licenses/lgpl.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <id>henryju</id>
+      <name>Julien Henry</name>
+      <timezone>+1</timezone>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git@github.com:SonarCommunity/sonar-github.git</connection>
+    <developerConnection>scm:git:git@github.com:SonarCommunity/sonar-github.git</developerConnection>
+    <url>https://github.com/SonarCommunity/sonar-github</url>
+  </scm>
+
+  <issueManagement>
+    <system>jira</system>
+    <url>http://jira.sonarsource.com/browse/SONARGITUB</url>
+  </issueManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.codehaus.sonar</groupId>
+      <artifactId>sonar-plugin-api</artifactId>
+      <version>${sonar.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+      <version>2.0.3</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.4</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.3.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.kohsuke</groupId>
+      <artifactId>github-api</artifactId>
+      <version>1.69</version>
+    </dependency>
+
+    <!-- unit tests -->
+    <dependency>
+      <groupId>org.codehaus.sonar</groupId>
+      <artifactId>sonar-batch</artifactId>
+      <version>5.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <version>1.7.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>1.9.5</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.1.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
 </project>
