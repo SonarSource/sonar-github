@@ -83,8 +83,12 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
       }
       Integer issueLine = issue.line();
       InputFile inputFile = inputFileCache.byKey(issue.componentKey());
+      if (inputFile != null && !pullRequestFacade.hasFile(inputFile)) {
+        // SONARGITUB-13 Ignore issues on files no modified by the P/R
+        continue;
+      }
       boolean reportedInline = false;
-      if (inputFile != null && pullRequestFacade.hasFile(inputFile) && issueLine != null) {
+      if (inputFile != null && issueLine != null) {
         int line = issueLine.intValue();
         if (pullRequestFacade.hasFileLine(inputFile, line)) {
           String message = issue.message();
