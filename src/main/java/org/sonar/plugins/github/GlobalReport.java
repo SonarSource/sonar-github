@@ -27,6 +27,8 @@ import org.sonar.api.rule.Severity;
 public class GlobalReport {
   private int[] newIssuesBySeverity = new int[Severity.ALL.size()];
   private StringBuilder notReportedOnDiff = new StringBuilder();
+  private int notReportedIssueCount = 0;
+  private int notReportedDisplayedIssueCount = 0;
 
   private void increment(String severity) {
     this.newIssuesBySeverity[Severity.ALL.indexOf(severity)]++;
@@ -41,6 +43,12 @@ public class GlobalReport {
     if (notReportedOnDiff.length() > 0) {
       sb.append("\nNote: the following issues could not be reported as comments because they are located on lines that are not displayed in this pull request:\n")
         .append(notReportedOnDiff.toString());
+
+      if (notReportedIssueCount >= GitHubPluginConfiguration.MAX_GLOBAL_ISSUES) {
+        sb.append("* ... ")
+          .append(notReportedIssueCount - GitHubPluginConfiguration.MAX_GLOBAL_ISSUES)
+          .append(" more\n");
+      }
     }
     return sb.toString();
   }
@@ -113,10 +121,15 @@ public class GlobalReport {
   public void process(Issue issue, @Nullable String githubUrl, boolean reportedOnDiff) {
     increment(issue.severity());
     if (!reportedOnDiff) {
-      notReportedOnDiff
-        .append("* ")
-        .append(MarkDownUtils.globalIssue(issue.severity(), issue.message(), issue.ruleKey().toString(), githubUrl, issue.componentKey()))
-        .append("\n");
+      notReportedIssueCount++;
+
+      if (notReportedDisplayedIssueCount < GitHubPluginConfiguration.MAX_GLOBAL_ISSUES) {
+        notReportedOnDiff
+          .append("* ")
+          .append(MarkDownUtils.globalIssue(issue.severity(), issue.message(), issue.ruleKey().toString(), githubUrl, issue.componentKey()))
+          .append("\n");
+        notReportedDisplayedIssueCount++;
+      }
     }
   }
 

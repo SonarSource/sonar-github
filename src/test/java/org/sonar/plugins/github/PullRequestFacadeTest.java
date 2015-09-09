@@ -130,5 +130,4 @@ public class PullRequestFacadeTest {
     when(ghCommitStatusGHPRHContext.getContext()).thenReturn(PullRequestFacade.COMMIT_CONTEXT);
     assertThat(facade.getCommitStatusForContext(pr, PullRequestFacade.COMMIT_CONTEXT).getContext()).isEqualTo(PullRequestFacade.COMMIT_CONTEXT);
   }
-
 }

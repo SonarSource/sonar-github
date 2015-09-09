@@ -134,7 +134,7 @@ public class PullRequestFacade implements BatchComponent {
   }
 
   /**
-   * GitHub expect review comments to be added on "patch lines" (aka position) but not on file lines. 
+   * GitHub expect review comments to be added on "patch lines" (aka position) but not on file lines.
    * So we have to iterate over each patch and compute corresponding file line in order to later map issues to the correct position.
    * @return Map File path -> Line -> Position
    */
