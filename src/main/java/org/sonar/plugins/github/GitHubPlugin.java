@@ -76,7 +76,8 @@ public class GitHubPlugin extends SonarPlugin {
       PullRequestProjectBuilder.class,
       PullRequestFacade.class,
       InputFileCacheSensor.class,
-      InputFileCache.class);
+      InputFileCache.class,
+      MarkDownUtils.class);
   }
 
 }

@@ -25,10 +25,15 @@ import org.sonar.api.issue.Issue;
 import org.sonar.api.rule.Severity;
 
 public class GlobalReport {
+  private final MarkDownUtils markDownUtils;
   private int[] newIssuesBySeverity = new int[Severity.ALL.size()];
   private StringBuilder notReportedOnDiff = new StringBuilder();
   private int notReportedIssueCount = 0;
   private int notReportedDisplayedIssueCount = 0;
+
+  public GlobalReport(MarkDownUtils markDownUtils) {
+    this.markDownUtils = markDownUtils;
+  }
 
   private void increment(String severity) {
     this.newIssuesBySeverity[Severity.ALL.indexOf(severity)]++;
@@ -126,7 +131,7 @@ public class GlobalReport {
       if (notReportedDisplayedIssueCount < GitHubPluginConfiguration.MAX_GLOBAL_ISSUES) {
         notReportedOnDiff
           .append("* ")
-          .append(MarkDownUtils.globalIssue(issue.severity(), issue.message(), issue.ruleKey().toString(), githubUrl, issue.componentKey()))
+          .append(markDownUtils.globalIssue(issue.severity(), issue.message(), issue.ruleKey().toString(), githubUrl, issue.componentKey()))
           .append("\n");
         notReportedDisplayedIssueCount++;
       }

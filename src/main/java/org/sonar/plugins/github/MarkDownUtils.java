@@ -22,16 +22,27 @@ package org.sonar.plugins.github;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import javax.annotation.Nullable;
+import org.sonar.api.BatchComponent;
+import org.sonar.api.CoreProperties;
+import org.sonar.api.batch.InstantiationStrategy;
+import org.sonar.api.config.Settings;
 
-public class MarkDownUtils {
+@InstantiationStrategy(InstantiationStrategy.PER_BATCH)
+public class MarkDownUtils implements BatchComponent {
 
   private static final String IMAGES_ROOT_URL = "https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/";
+  private final String ruleUrlPrefix;
 
-  private MarkDownUtils() {
-    // Utility class
+  public MarkDownUtils(Settings settings) {
+    // If server base URL was not configured in SQ server then is is better to take URL configured on batch side
+    String baseUrl = settings.hasKey(CoreProperties.SERVER_BASE_URL) ? settings.getString(CoreProperties.SERVER_BASE_URL) : settings.getString("sonar.host.url");
+    if (!baseUrl.endsWith("/")) {
+      baseUrl += "/";
+    }
+    this.ruleUrlPrefix = baseUrl;
   }
 
-  public static String inlineIssue(String severity, String message, String ruleKey) {
+  public String inlineIssue(String severity, String message, String ruleKey) {
     String ruleLink = getRuleLink(ruleKey);
     StringBuilder sb = new StringBuilder();
     sb.append(getImageMarkdownForSeverity(severity))
@@ -42,7 +53,7 @@ public class MarkDownUtils {
     return sb.toString();
   }
 
-  public static String globalIssue(String severity, String message, String ruleKey, @Nullable String url, String componentKey) {
+  public String globalIssue(String severity, String message, String ruleKey, @Nullable String url, String componentKey) {
     String ruleLink = getRuleLink(ruleKey);
     StringBuilder sb = new StringBuilder();
     sb.append(getImageMarkdownForSeverity(severity)).append(" ");
@@ -55,8 +66,8 @@ public class MarkDownUtils {
     return sb.toString();
   }
 
-  static String getRuleLink(String ruleKey) {
-    return "[![rule](" + IMAGES_ROOT_URL + "rule.png)](http://nemo.sonarqube.org/coding_rules#rule_key=" + encodeForUrl(ruleKey) + ")";
+  String getRuleLink(String ruleKey) {
+    return "[![rule](" + IMAGES_ROOT_URL + "rule.png)](" + ruleUrlPrefix + "coding_rules#rule_key=" + encodeForUrl(ruleKey) + ")";
   }
 
   static String encodeForUrl(String url) {

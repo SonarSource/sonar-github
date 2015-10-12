@@ -25,7 +25,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.kohsuke.github.GHCommitState;
+import org.sonar.api.CoreProperties;
 import org.sonar.api.batch.fs.internal.DefaultInputFile;
+import org.sonar.api.config.PropertyDefinition;
+import org.sonar.api.config.PropertyDefinitions;
+import org.sonar.api.config.Settings;
 import org.sonar.api.issue.Issue;
 import org.sonar.api.issue.ProjectIssues;
 import org.sonar.api.rule.RuleKey;
@@ -55,7 +59,16 @@ public class PullRequestIssuePostJobTest {
     GitHubPluginConfiguration config = mock(GitHubPluginConfiguration.class);
     issues = mock(ProjectIssues.class);
     cache = mock(InputFileCache.class);
-    pullRequestIssuePostJob = new PullRequestIssuePostJob(config, pullRequestFacade, issues, cache);
+    Settings settings = new Settings(new PropertyDefinitions(PropertyDefinition.builder(CoreProperties.SERVER_BASE_URL)
+      .name("Server base URL")
+      .description("HTTP URL of this SonarQube server, such as <i>http://yourhost.yourdomain/sonar</i>. This value is used i.e. to create links in emails.")
+      .category(CoreProperties.CATEGORY_GENERAL)
+      .defaultValue(CoreProperties.SERVER_BASE_URL_DEFAULT_VALUE)
+      .build()));
+
+    settings.setProperty("sonar.host.url", "http://192.168.0.1");
+    settings.setProperty(CoreProperties.SERVER_BASE_URL, "http://myserver");
+    pullRequestIssuePostJob = new PullRequestIssuePostJob(config, pullRequestFacade, issues, cache, new MarkDownUtils(settings));
   }
 
   @Test
@@ -148,7 +161,7 @@ public class PullRequestIssuePostJobTest {
     verify(pullRequestFacade)
       .addGlobalComment(
         contains(
-          "* ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png) [msg2](http://github/blob/abc123/src/Foo.php#L2) [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://nemo.sonarqube.org/coding_rules#rule_key=repo%3Arule)"));
+          "* ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png) [msg2](http://github/blob/abc123/src/Foo.php#L2) [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule)"));
 
     verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.ERROR, "SonarQube reported 5 issues, with 5 blocker");
   }

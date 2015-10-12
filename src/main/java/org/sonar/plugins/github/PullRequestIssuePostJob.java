@@ -37,13 +37,15 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
   private final ProjectIssues projectIssues;
   private final GitHubPluginConfiguration gitHubPluginConfiguration;
   private final InputFileCache inputFileCache;
+  private final MarkDownUtils markDownUtils;
 
   public PullRequestIssuePostJob(GitHubPluginConfiguration gitHubPluginConfiguration, PullRequestFacade pullRequestFacade, ProjectIssues projectIssues,
-    InputFileCache inputFileCache) {
+    InputFileCache inputFileCache, MarkDownUtils markDownUtils) {
     this.gitHubPluginConfiguration = gitHubPluginConfiguration;
     this.pullRequestFacade = pullRequestFacade;
     this.projectIssues = projectIssues;
     this.inputFileCache = inputFileCache;
+    this.markDownUtils = markDownUtils;
   }
 
   @Override
@@ -53,7 +55,7 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
 
   @Override
   public void executeOn(Project project, SensorContext context) {
-    GlobalReport report = new GlobalReport();
+    GlobalReport report = new GlobalReport(markDownUtils);
     Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine = processIssues(context, report);
 
     updateReviewComments(commentsToBeAddedByLine);
@@ -100,7 +102,7 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
           if (!commentsByLine.containsKey(line)) {
             commentsByLine.put(line, new StringBuilder());
           }
-          commentsByLine.get(line).append(MarkDownUtils.inlineIssue(severity, message, ruleKey)).append("\n");
+          commentsByLine.get(line).append(markDownUtils.inlineIssue(severity, message, ruleKey)).append("\n");
           reportedInline = true;
         }
       }
