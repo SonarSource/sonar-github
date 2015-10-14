@@ -1,2 +1,3 @@
-Some files from github-api are overriden waiting for pull request to be integrated:
-https://github.com/kohsuke/github-api/pull/182
+# SonarQube GitHUb Plugin
+
+[![Build Status](https://travis-ci.org/SonarCommunity/sonar-github.svg?branch=master)](https://travis-ci.org/SonarCommunity/sonar-github)
