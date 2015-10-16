@@ -20,7 +20,10 @@
 package org.sonar.plugins.github;
 
 import org.kohsuke.github.GHCommitState;
+import org.sonar.api.CoreProperties;
 import org.sonar.api.batch.bootstrap.ProjectBuilder;
+import org.sonar.api.config.Settings;
+import org.sonar.api.utils.MessageException;
 
 /**
  * Trigger load of pull request metadata at the very beginning of SQ analysis. Also
@@ -31,10 +34,12 @@ public class PullRequestProjectBuilder extends ProjectBuilder {
 
   private final GitHubPluginConfiguration gitHubPluginConfiguration;
   private final PullRequestFacade pullRequestFacade;
+  private final Settings settings;
 
-  public PullRequestProjectBuilder(GitHubPluginConfiguration gitHubPluginConfiguration, PullRequestFacade pullRequestFacade) {
+  public PullRequestProjectBuilder(GitHubPluginConfiguration gitHubPluginConfiguration, PullRequestFacade pullRequestFacade, Settings settings) {
     this.gitHubPluginConfiguration = gitHubPluginConfiguration;
     this.pullRequestFacade = pullRequestFacade;
+    this.settings = settings;
   }
 
   @Override
@@ -42,10 +47,18 @@ public class PullRequestProjectBuilder extends ProjectBuilder {
     if (!gitHubPluginConfiguration.isEnabled()) {
       return;
     }
+    checkMode();
     int pullRequestNumber = gitHubPluginConfiguration.pullRequestNumber();
     pullRequestFacade.init(pullRequestNumber, context.projectReactor().getRoot().getBaseDir());
 
     pullRequestFacade.createOrUpdateSonarQubeStatus(GHCommitState.PENDING, "SonarQube analysis in progress");
+  }
+
+  private void checkMode() {
+    if (!settings.getBoolean(CoreProperties.DRY_RUN)) {
+      throw MessageException.of("The GitHub plugin is only intended to be used in preview mode. Please set '" + CoreProperties.ANALYSIS_MODE + "'.");
+    }
+
   }
 
 }
