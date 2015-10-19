@@ -66,19 +66,48 @@ public class PullRequestProjectBuilderTest {
     settings.setProperty(GitHubPlugin.GITHUB_PULL_REQUEST, "1");
 
     thrown.expect(MessageException.class);
-    thrown.expectMessage("The GitHub plugin is only intended to be used in preview mode. Please set 'sonar.analysis.mode'.");
+    thrown.expectMessage("The GitHub plugin is only intended to be used in preview or issues mode. Please set 'sonar.analysis.mode'.");
 
     pullRequestProjectBuilder.build(null);
   }
 
   @Test
-  public void shouldNotFailIfPreview() {
+  public void shouldNotFailIfDryRun() {
     settings.setProperty(GitHubPlugin.GITHUB_PULL_REQUEST, "1");
     settings.setProperty(CoreProperties.DRY_RUN, "true");
 
     pullRequestProjectBuilder.build(mock(ProjectBuilder.Context.class, withSettings().defaultAnswer(RETURNS_DEEP_STUBS)));
 
     verify(facade).init(eq(1), any(File.class));
+  }
 
+  @Test
+  public void shouldNotFailIfPreview() {
+    settings.setProperty(GitHubPlugin.GITHUB_PULL_REQUEST, "1");
+    settings.setProperty(CoreProperties.ANALYSIS_MODE, CoreProperties.ANALYSIS_MODE_PREVIEW);
+
+    pullRequestProjectBuilder.build(mock(ProjectBuilder.Context.class, withSettings().defaultAnswer(RETURNS_DEEP_STUBS)));
+
+    verify(facade).init(eq(1), any(File.class));
+  }
+
+  @Test
+  public void shouldNotFailIfIncremental() {
+    settings.setProperty(GitHubPlugin.GITHUB_PULL_REQUEST, "1");
+    settings.setProperty(CoreProperties.ANALYSIS_MODE, CoreProperties.ANALYSIS_MODE_INCREMENTAL);
+
+    pullRequestProjectBuilder.build(mock(ProjectBuilder.Context.class, withSettings().defaultAnswer(RETURNS_DEEP_STUBS)));
+
+    verify(facade).init(eq(1), any(File.class));
+  }
+
+  @Test
+  public void shouldNotFailIfIssues() {
+    settings.setProperty(GitHubPlugin.GITHUB_PULL_REQUEST, "1");
+    settings.setProperty(CoreProperties.ANALYSIS_MODE, "issues");
+
+    pullRequestProjectBuilder.build(mock(ProjectBuilder.Context.class, withSettings().defaultAnswer(RETURNS_DEEP_STUBS)));
+
+    verify(facade).init(eq(1), any(File.class));
   }
 }

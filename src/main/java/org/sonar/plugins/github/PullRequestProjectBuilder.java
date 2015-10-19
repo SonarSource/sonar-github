@@ -55,8 +55,12 @@ public class PullRequestProjectBuilder extends ProjectBuilder {
   }
 
   private void checkMode() {
-    if (!settings.getBoolean(CoreProperties.DRY_RUN)) {
-      throw MessageException.of("The GitHub plugin is only intended to be used in preview mode. Please set '" + CoreProperties.ANALYSIS_MODE + "'.");
+    boolean isIssues = settings.getBoolean(CoreProperties.DRY_RUN) || CoreProperties.ANALYSIS_MODE_PREVIEW.equals(settings.getString(CoreProperties.ANALYSIS_MODE))
+      || CoreProperties.ANALYSIS_MODE_INCREMENTAL.equals(settings.getString(CoreProperties.ANALYSIS_MODE))
+      // 5.2+
+      || "issues".equals(settings.getString(CoreProperties.ANALYSIS_MODE));
+    if (!isIssues) {
+      throw MessageException.of("The GitHub plugin is only intended to be used in preview or issues mode. Please set '" + CoreProperties.ANALYSIS_MODE + "'.");
     }
 
   }
