@@ -56,7 +56,7 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
   @Override
   public void executeOn(Project project, SensorContext context) {
     GlobalReport report = new GlobalReport(markDownUtils);
-    Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine = processIssues(context, report);
+    Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine = processIssues(report);
 
     updateReviewComments(commentsToBeAddedByLine);
 
@@ -75,7 +75,7 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
     return "GitHub Pull Request Issue Publisher";
   }
 
-  private Map<InputFile, Map<Integer, StringBuilder>> processIssues(SensorContext context, GlobalReport report) {
+  private Map<InputFile, Map<Integer, StringBuilder>> processIssues(GlobalReport report) {
     Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine = new HashMap<>();
     for (Issue issue : projectIssues.issues()) {
       String severity = issue.severity();

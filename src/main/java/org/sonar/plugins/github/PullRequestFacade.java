@@ -139,7 +139,7 @@ public class PullRequestFacade implements BatchComponent {
    * @return Map File path -> Line -> Position
    */
   private static Map<String, Map<Integer, Integer>> mapPatchPositionsToLines(GHPullRequest pr) throws IOException {
-    Map<String, Map<Integer, Integer>> patchPositionMappingByFile = new HashMap<String, Map<Integer, Integer>>();
+    Map<String, Map<Integer, Integer>> patchPositionMappingByFile = new HashMap<>();
     for (GHPullRequestFileDetail file : pr.listFiles()) {
       Map<Integer, Integer> patchLocationMapping = new HashMap<>();
       patchPositionMappingByFile.put(file.getFilename(), patchLocationMapping);
@@ -271,7 +271,7 @@ public class PullRequestFacade implements BatchComponent {
   @VisibleForTesting
   @CheckForNull
   GHCommitStatus getCommitStatusForContext(GHPullRequest pr, String context) {
-    List<GHCommitStatus> statuses = null;
+    List<GHCommitStatus> statuses;
     try {
       statuses = pr.getRepository().listCommitStatuses(pr.getHead().getSha()).asList();
     } catch (IOException e) {
