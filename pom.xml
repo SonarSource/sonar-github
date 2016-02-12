@@ -22,6 +22,9 @@
     <sonar.version>4.5.2</sonar.version>
     <sonar.pluginName>GitHub</sonar.pluginName>
     <sonar.pluginClass>org.sonar.plugins.github.GitHubPlugin</sonar.pluginClass>
+
+    <!-- used for deployment to SonarSource Artifactory -->
+    <gitRepositoryName>sonar-github</gitRepositoryName>
   </properties>
 
   <organization>
