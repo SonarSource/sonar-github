@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.sonarsource.parent</groupId>
     <artifactId>parent</artifactId>
-    <version>24</version>
+    <version>28</version>
     <relativePath />
   </parent>
 
@@ -56,6 +56,18 @@
     <system>jira</system>
     <url>http://jira.sonarsource.com/browse/SONARGITUB</url>
   </issueManagement>
+
+  <repositories>
+    <!--
+    Unfortunately this is required because thw transitive dependency org.jenkins-ci:jenkins:pom:1.26
+    is not available in Maven central repository:
+    org.kohsuke:github-api:jar:1.69 -> com.infradna.tool:bridge-method-annotation:jar:1.14 -> org.jenkins-ci:annotation-indexer:jar:1.4 -> org.jenkins-ci:jenkins:pom:1.26
+    -->
+    <repository>
+      <id>repo.jenkins-ci.org</id>
+      <url>http://repo.jenkins-ci.org/public/</url>
+    </repository>
+  </repositories>
 
   <dependencies>
     <dependency>
