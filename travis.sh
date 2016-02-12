@@ -7,6 +7,8 @@ function strongEcho {
   echo "================ $1 ================="
 }
 
+cat ~/.m2/settings.xml
+
 if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
   strongEcho 'Build and analyze commit in master'
   mvn org.jacoco:jacoco-maven-plugin:prepare-agent verify sonar:sonar \
