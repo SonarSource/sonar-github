@@ -14,3 +14,5 @@ cache:
 
 notifications:
   email: false
+  webhooks:
+    - secure: "Ca37t5rTjmisDgxR1xWFp0Lm+z5oX4uLpPTqIN7GA4/iPoDeelAH7idBWwZOWPR7K1uklY29QEVxmPLxxR79d3fMDhfPT6xFKU3B0FsYeABqQb6up4AzF2l0fMJTNXVSvzTh/6ViZ8m4FaYMZXqsByoW4QureAD2A3vskn4NT+k="
