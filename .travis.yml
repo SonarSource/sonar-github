@@ -15,4 +15,4 @@ cache:
 notifications:
   email: false
   webhooks:
-    - secure: "Ca37t5rTjmisDgxR1xWFp0Lm+z5oX4uLpPTqIN7GA4/iPoDeelAH7idBWwZOWPR7K1uklY29QEVxmPLxxR79d3fMDhfPT6xFKU3B0FsYeABqQb6up4AzF2l0fMJTNXVSvzTh/6ViZ8m4FaYMZXqsByoW4QureAD2A3vskn4NT+k="
+    - secure: "e6/3Wlr9+ArBpoy+FCwXJ3hJEnHQBe5bnfWyg60SNwqDjJj2TsSQvz2dpp/PCU4sRnf0bzlML+WZ5u7ZsW+qRFMSVu+s5flhdHCNm6cIPwTvikqdXDGquP7GMMsyYlfDyAmgpkeowg3Z2fbgAtOG1ENQIH6eM294skQvAb73yp4="
