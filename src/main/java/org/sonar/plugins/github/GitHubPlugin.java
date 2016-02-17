@@ -58,7 +58,12 @@ import org.sonar.api.SonarPlugin;
     type = PropertyType.INTEGER,
     global = false,
     project = false,
-    module = false)
+    module = false),
+    @Property(
+    key = GitHubPlugin.GITHUB_BASE_DIR,
+    name = "GitHub Base Directory",
+    description = "Base Directory for git.",
+    global = false)
 })
 public class GitHubPlugin extends SonarPlugin {
 
@@ -67,6 +72,7 @@ public class GitHubPlugin extends SonarPlugin {
   public static final String GITHUB_OAUTH = "sonar.github.oauth";
   public static final String GITHUB_REPO = "sonar.github.repository";
   public static final String GITHUB_PULL_REQUEST = "sonar.github.pullRequest";
+  public static final String GITHUB_BASE_DIR = "sonar.github.basedir";
 
   @Override
   public List getExtensions() {

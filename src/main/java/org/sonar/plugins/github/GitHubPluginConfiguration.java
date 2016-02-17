@@ -97,5 +97,9 @@ public class GitHubPluginConfiguration implements BatchComponent {
   public String endpoint() {
     return settings.getString(GitHubPlugin.GITHUB_ENDPOINT);
   }
+  
+  public String gitBaseDir() {
+	return settings.getString(GitHubPlugin.GITHUB_BASE_DIR);
+	  }
 
 }

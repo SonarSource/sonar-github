@@ -103,6 +103,9 @@ public class PullRequestFacade implements BatchComponent {
     if (baseDir == null) {
       return null;
     }
+    if(null!= config.gitBaseDir()){
+    	baseDir=new File(baseDir,config.gitBaseDir());
+    }
     if (new File(baseDir, ".git").exists()) {
       setGitBaseDir(baseDir);
       return baseDir;
