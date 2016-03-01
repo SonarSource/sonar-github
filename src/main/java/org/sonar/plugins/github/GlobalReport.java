@@ -43,17 +43,13 @@ public class GlobalReport {
     StringBuilder sb = new StringBuilder();
     printNewIssuesMarkdown(sb);
     if (hasNewIssue()) {
-      sb.append("\nWatch the comments in this conversation to review them.");
+      sb.append("\nWatch the comments in this conversation to review them.\n");
     }
     if (notReportedOnDiff.length() > 0) {
+      sb.append("\n#### Top ").append(notReportedDisplayedIssueCount).append(" unreported issues\n");
       sb.append("\nNote: the following issues could not be reported as comments because they are located on lines that are not displayed in this pull request:\n")
+        .append('\n') // Need to add an extra line break for ordered list to be displayed properly
         .append(notReportedOnDiff.toString());
-
-      if (notReportedIssueCount >= GitHubPluginConfiguration.MAX_GLOBAL_ISSUES) {
-        sb.append("* ... ")
-          .append(notReportedIssueCount - GitHubPluginConfiguration.MAX_GLOBAL_ISSUES)
-          .append(" more\n");
-      }
     }
     return sb.toString();
   }
@@ -73,6 +69,7 @@ public class GlobalReport {
   }
 
   private void printNewIssuesMarkdown(StringBuilder sb) {
+    sb.append("#### Analysis summary\n");
     sb.append("SonarQube analysis reported ");
     int newIssues = newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL) + newIssues(Severity.MAJOR) + newIssues(Severity.MINOR) + newIssues(Severity.INFO);
     if (newIssues > 0) {
@@ -130,7 +127,7 @@ public class GlobalReport {
 
       if (notReportedDisplayedIssueCount < GitHubPluginConfiguration.MAX_GLOBAL_ISSUES) {
         notReportedOnDiff
-          .append("* ")
+          .append("1. ")
           .append(markDownUtils.globalIssue(issue.severity(), issue.message(), issue.ruleKey().toString(), githubUrl, issue.componentKey()))
           .append("\n");
         notReportedDisplayedIssueCount++;
