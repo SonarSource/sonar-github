@@ -110,4 +110,8 @@ public class GitHubPluginConfiguration implements BatchComponent {
     return settings.getString(GitHubPlugin.GITHUB_ENDPOINT);
   }
 
+  public boolean tryReportIssuesInline() {
+    return !settings.getBoolean(GitHubPlugin.GITHUB_DISABLE_INLINE_COMMENTS);
+  }
+
 }

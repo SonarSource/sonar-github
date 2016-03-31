@@ -22,9 +22,7 @@ package org.sonar.plugins.github;
 import java.util.Arrays;
 import javax.annotation.CheckForNull;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.kohsuke.github.GHCommitState;
 import org.mockito.ArgumentCaptor;
 import org.sonar.api.CoreProperties;
@@ -51,9 +49,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class PullRequestIssuePostJobTest {
-
-  @Rule
-  public TemporaryFolder temp = new TemporaryFolder();
 
   private PullRequestIssuePostJob pullRequestIssuePostJob;
   private PullRequestFacade pullRequestFacade;

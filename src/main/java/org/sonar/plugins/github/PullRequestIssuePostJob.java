@@ -109,7 +109,7 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
 
   @Override
   public void executeOn(Project project, SensorContext context) {
-    GlobalReport report = new GlobalReport(markDownUtils);
+    GlobalReport report = new GlobalReport(markDownUtils, gitHubPluginConfiguration.tryReportIssuesInline());
     Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine = processIssues(report);
 
     updateReviewComments(commentsToBeAddedByLine);
@@ -141,38 +141,49 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
 
     List<Issue> issues = sortProjectIssues(projectIssues);
     for (Issue issue : issues) {
-      String severity = issue.severity();
-      boolean isNew = issue.isNew();
-      if (!isNew) {
+      if (!issue.isNew()) {
         continue;
       }
+      String severity = issue.severity();
       Integer issueLine = issue.line();
       InputFile inputFile = inputFileCache.byKey(issue.componentKey());
       if (inputFile != null && !pullRequestFacade.hasFile(inputFile)) {
-        // SONARGITUB-13 Ignore issues on files no modified by the P/R
+        // SONARGITUB-13 Ignore issues on files not modified by the P/R
         continue;
       }
-      boolean reportedInline = false;
-      if (inputFile != null && issueLine != null) {
-        int line = issueLine.intValue();
-        if (pullRequestFacade.hasFileLine(inputFile, line)) {
-          String message = issue.message();
-          String ruleKey = issue.ruleKey().toString();
-          if (!commentToBeAddedByFileAndByLine.containsKey(inputFile)) {
-            commentToBeAddedByFileAndByLine.put(inputFile, new HashMap<Integer, StringBuilder>());
-          }
-          Map<Integer, StringBuilder> commentsByLine = commentToBeAddedByFileAndByLine.get(inputFile);
-          if (!commentsByLine.containsKey(line)) {
-            commentsByLine.put(line, new StringBuilder());
-          }
-          commentsByLine.get(line).append(markDownUtils.inlineIssue(severity, message, ruleKey)).append("\n");
-          reportedInline = true;
-        }
-      }
-      report.process(issue, pullRequestFacade.getGithubUrl(inputFile, issueLine), reportedInline);
-
+      processIssue(report, commentToBeAddedByFileAndByLine, issue, severity, issueLine, inputFile);
     }
     return commentToBeAddedByFileAndByLine;
+  }
+
+  private void processIssue(GlobalReport report, Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine, Issue issue, String severity, Integer issueLine,
+    InputFile inputFile) {
+    boolean reportedInline = false;
+    if (gitHubPluginConfiguration.tryReportIssuesInline()) {
+      reportedInline = tryReportInline(commentToBeAddedByFileAndByLine, issue, severity, issueLine, inputFile);
+    }
+    report.process(issue, pullRequestFacade.getGithubUrl(inputFile, issueLine), reportedInline);
+  }
+
+  private boolean tryReportInline(Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine, Issue issue, String severity, Integer issueLine,
+    InputFile inputFile) {
+    if (inputFile != null && issueLine != null) {
+      int line = issueLine.intValue();
+      if (pullRequestFacade.hasFileLine(inputFile, line)) {
+        String message = issue.message();
+        String ruleKey = issue.ruleKey().toString();
+        if (!commentToBeAddedByFileAndByLine.containsKey(inputFile)) {
+          commentToBeAddedByFileAndByLine.put(inputFile, new HashMap<Integer, StringBuilder>());
+        }
+        Map<Integer, StringBuilder> commentsByLine = commentToBeAddedByFileAndByLine.get(inputFile);
+        if (!commentsByLine.containsKey(line)) {
+          commentsByLine.put(line, new StringBuilder());
+        }
+        commentsByLine.get(line).append(markDownUtils.inlineIssue(severity, message, ruleKey)).append("\n");
+        return true;
+      }
+    }
+    return false;
   }
 
   private void updateReviewComments(Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine) {

@@ -101,6 +101,10 @@ public class GitHubPluginConfigurationTest {
     assertThat(config.endpoint()).isEqualTo("https://api.github.com");
     settings.setProperty(GitHubPlugin.GITHUB_ENDPOINT, "http://myprivate-endpoint");
     assertThat(config.endpoint()).isEqualTo("http://myprivate-endpoint");
+
+    assertThat(config.tryReportIssuesInline()).isTrue();
+    settings.setProperty(GitHubPlugin.GITHUB_DISABLE_INLINE_COMMENTS, "true");
+    assertThat(config.tryReportIssuesInline()).isFalse();
   }
 
 }

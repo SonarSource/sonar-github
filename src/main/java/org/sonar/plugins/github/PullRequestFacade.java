@@ -138,18 +138,20 @@ public class PullRequestFacade implements BatchComponent {
    * So we have to iterate over each patch and compute corresponding file line in order to later map issues to the correct position.
    * @return Map File path -> Line -> Position
    */
-  private static Map<String, Map<Integer, Integer>> mapPatchPositionsToLines(GHPullRequest pr) throws IOException {
-    Map<String, Map<Integer, Integer>> patchPositionMappingByFile = new HashMap<>();
+  private Map<String, Map<Integer, Integer>> mapPatchPositionsToLines(GHPullRequest pr) throws IOException {
+    Map<String, Map<Integer, Integer>> result = new HashMap<>();
     for (GHPullRequestFileDetail file : pr.listFiles()) {
       Map<Integer, Integer> patchLocationMapping = new HashMap<>();
-      patchPositionMappingByFile.put(file.getFilename(), patchLocationMapping);
-      String patch = file.getPatch();
-      if (patch == null) {
-        continue;
+      result.put(file.getFilename(), patchLocationMapping);
+      if (config.tryReportIssuesInline()) {
+        String patch = file.getPatch();
+        if (patch == null) {
+          continue;
+        }
+        processPatch(patchLocationMapping, patch);
       }
-      processPatch(patchLocationMapping, patch);
     }
-    return patchPositionMappingByFile;
+    return result;
   }
 
   @VisibleForTesting
