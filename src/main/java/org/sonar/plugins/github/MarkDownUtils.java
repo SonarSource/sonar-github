@@ -22,6 +22,7 @@ package org.sonar.plugins.github;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import javax.annotation.Nullable;
+import org.apache.commons.lang3.StringUtils;
 import org.sonar.api.BatchComponent;
 import org.sonar.api.CoreProperties;
 import org.sonar.api.batch.InstantiationStrategy;
@@ -53,16 +54,24 @@ public class MarkDownUtils implements BatchComponent {
     return sb.toString();
   }
 
+  private String getLocation(String url) {
+    String filename = StringUtils.removePattern(url, ".*/");
+    if (filename.length() <= 0) {
+      filename = "Project";
+    }
+
+    return filename;
+  }
+
   public String globalIssue(String severity, String message, String ruleKey, @Nullable String url, String componentKey) {
     String ruleLink = getRuleLink(ruleKey);
     StringBuilder sb = new StringBuilder();
-    sb.append(getImageMarkdownForSeverity(severity)).append(" ");
     if (url != null) {
-      sb.append("[").append(message).append("]").append("(").append(url).append(")");
+      sb.append("[").append(getLocation(url)).append("]").append("(").append(url).append(")");
     } else {
-      sb.append(message).append(" ").append("(").append(componentKey).append(")");
+      sb.append("Project").append(" ").append("(").append(componentKey).append(")");
     }
-    sb.append(" ").append(ruleLink);
+    sb.append(": ").append(getImageMarkdownForSeverity(severity)).append(" ").append(message).append(" ").append(ruleLink);
     return sb.toString();
   }
 
