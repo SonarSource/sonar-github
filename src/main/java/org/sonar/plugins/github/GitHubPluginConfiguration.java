@@ -26,6 +26,7 @@ import org.sonar.api.BatchComponent;
 import org.sonar.api.CoreProperties;
 import org.sonar.api.batch.InstantiationStrategy;
 import org.sonar.api.config.Settings;
+import org.sonar.api.utils.MessageException;
 
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 public class GitHubPluginConfiguration implements BatchComponent {
@@ -46,29 +47,45 @@ public class GitHubPluginConfiguration implements BatchComponent {
     return settings.getInt(GitHubPlugin.GITHUB_PULL_REQUEST);
   }
 
-  @CheckForNull
   public String repository() {
-    String repo = null;
     if (settings.hasKey(GitHubPlugin.GITHUB_REPO)) {
-      String urlOrRepo = settings.getString(GitHubPlugin.GITHUB_REPO);
-      repo = parseGitUrl(urlOrRepo);
-      if (repo == null) {
-        repo = urlOrRepo;
-      }
+      return repoFromProp();
     }
-    if (repo == null && settings.hasKey(CoreProperties.LINKS_SOURCES_DEV)) {
+    if (settings.hasKey(CoreProperties.LINKS_SOURCES_DEV) || settings.hasKey(CoreProperties.LINKS_SOURCES)) {
+      return repoFromScmProps();
+    }
+    throw MessageException.of("Unable to determine GitHub repository name for this project. Please provide it using property '" + GitHubPlugin.GITHUB_REPO
+      + "' or configure property '" + CoreProperties.LINKS_SOURCES + "'.");
+  }
+
+  private String repoFromScmProps() {
+    String repo = null;
+    if (settings.hasKey(CoreProperties.LINKS_SOURCES_DEV)) {
       String url = settings.getString(CoreProperties.LINKS_SOURCES_DEV);
-      repo = parseGitUrl(url);
+      repo = extractRepoFromGitUrl(url);
     }
     if (repo == null && settings.hasKey(CoreProperties.LINKS_SOURCES)) {
       String url = settings.getString(CoreProperties.LINKS_SOURCES);
-      repo = parseGitUrl(url);
+      repo = extractRepoFromGitUrl(url);
+    }
+    if (repo == null) {
+      throw MessageException.of("Unable to parse GitHub repository name for this project. Please check configuration:\n  * " + CoreProperties.LINKS_SOURCES_DEV
+        + ": " + settings.getString(CoreProperties.LINKS_SOURCES_DEV) + "\n  * " + CoreProperties.LINKS_SOURCES + ": " + settings.getString(CoreProperties.LINKS_SOURCES));
+    }
+    return repo;
+  }
+
+  private String repoFromProp() {
+    String urlOrRepo = settings.getString(GitHubPlugin.GITHUB_REPO);
+    String repo = extractRepoFromGitUrl(urlOrRepo);
+    if (repo == null) {
+      return urlOrRepo;
     }
     return repo;
   }
 
   @CheckForNull
-  private String parseGitUrl(String urlOrRepo) {
+  private String extractRepoFromGitUrl(String urlOrRepo) {
     Matcher matcher = gitSshPattern.matcher(urlOrRepo);
     if (matcher.matches()) {
       return matcher.group(1);

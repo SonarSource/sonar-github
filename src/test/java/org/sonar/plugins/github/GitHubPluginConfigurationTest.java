@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.sonar.api.CoreProperties;
 import org.sonar.api.config.PropertyDefinitions;
 import org.sonar.api.config.Settings;
+import org.sonar.api.utils.MessageException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,16 +41,43 @@ public class GitHubPluginConfigurationTest {
 
   @Test
   public void guessRepositoryFromScmUrl() {
-    assertThat(config.repository()).isNull();
+    try {
+      config.repository();
+    } catch (Exception e) {
+      assertThat(e).isInstanceOf(MessageException.class)
+        .hasMessage("Unable to determine GitHub repository name for this project. Please provide it using property '" + GitHubPlugin.GITHUB_REPO
+          + "' or configure property '" + CoreProperties.LINKS_SOURCES + "'.");
+    }
 
-    settings.setProperty(CoreProperties.LINKS_SOURCES, "do_not_match");
-    settings.setProperty(CoreProperties.LINKS_SOURCES_DEV, "do_not_match");
-    assertThat(config.repository()).isNull();
+    settings.setProperty(CoreProperties.LINKS_SOURCES, "do_not_match_1");
+    try {
+      config.repository();
+    } catch (Exception e) {
+      assertThat(e).isInstanceOf(MessageException.class)
+        .hasMessage("Unable to parse GitHub repository name for this project. Please check configuration:\n  * " + CoreProperties.LINKS_SOURCES_DEV
+          + ": null\n  * " + CoreProperties.LINKS_SOURCES + ": do_not_match_1");
+    }
+    settings.clear();
+    settings.setProperty(CoreProperties.LINKS_SOURCES_DEV, "do_not_match_2");
+    try {
+      config.repository();
+    } catch (Exception e) {
+      assertThat(e).isInstanceOf(MessageException.class)
+        .hasMessage("Unable to parse GitHub repository name for this project. Please check configuration:\n  * " + CoreProperties.LINKS_SOURCES_DEV
+          + ": do_not_match_2\n  * " + CoreProperties.LINKS_SOURCES + ": null");
+    }
 
+    settings.clear();
     settings.setProperty(CoreProperties.LINKS_SOURCES, "scm:git:git@github.com:SonarCommunity/github-integration.git");
     assertThat(config.repository()).isEqualTo("SonarCommunity/github-integration");
 
+    settings.setProperty(CoreProperties.LINKS_SOURCES_DEV, "do_not_parse");
+    assertThat(config.repository()).isEqualTo("SonarCommunity/github-integration");
+
     settings.setProperty(CoreProperties.LINKS_SOURCES_DEV, "scm:git:git@github.com:SonarCommunity2/github-integration.git");
+    assertThat(config.repository()).isEqualTo("SonarCommunity2/github-integration");
+
+    settings.removeProperty(CoreProperties.LINKS_SOURCES);
     assertThat(config.repository()).isEqualTo("SonarCommunity2/github-integration");
 
     settings.setProperty(GitHubPlugin.GITHUB_REPO, "https://github.com/SonarCommunity/sonar-github.git");
