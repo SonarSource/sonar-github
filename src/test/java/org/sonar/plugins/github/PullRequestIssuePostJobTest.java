@@ -20,12 +20,15 @@
 package org.sonar.plugins.github;
 
 import java.util.Arrays;
+import javax.annotation.CheckForNull;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.kohsuke.github.GHCommitState;
+import org.mockito.ArgumentCaptor;
 import org.sonar.api.CoreProperties;
+import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.internal.DefaultInputFile;
 import org.sonar.api.config.PropertyDefinition;
 import org.sonar.api.config.PropertyDefinitions;
@@ -35,7 +38,11 @@ import org.sonar.api.issue.ProjectIssues;
 import org.sonar.api.rule.RuleKey;
 import org.sonar.api.rule.Severity;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalMatchers.not;
+import static org.mockito.ArgumentCaptor.forClass;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.mock;
@@ -71,7 +78,28 @@ public class PullRequestIssuePostJobTest {
     pullRequestIssuePostJob = new PullRequestIssuePostJob(config, pullRequestFacade, issues, cache, new MarkDownUtils(settings));
   }
 
-  @Test
+  private Issue newMockedIssue(String componentKey, @CheckForNull DefaultInputFile inputFile, @CheckForNull Integer line, String severity, boolean isNew, String message) {
+    Issue issue = mock(Issue.class);
+    if (inputFile != null) {
+      when(cache.byKey(componentKey)).thenReturn(inputFile);
+    }
+    when(issue.componentKey()).thenReturn(componentKey);
+    if (line != null) {
+      when(issue.line()).thenReturn(line);
+    }
+    when(issue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
+    when(issue.severity()).thenReturn(severity);
+    when(issue.isNew()).thenReturn(isNew);
+    when(issue.message()).thenReturn(message);
+
+    return issue;
+  }
+
+  private Issue newMockedIssue(String componentKey, String severity, boolean isNew, String message) {
+    return newMockedIssue(componentKey, null, null, severity, isNew, message);
+  }
+
+    @Test
   public void testPullRequestAnalysisNoIssue() {
     when(issues.issues()).thenReturn(Arrays.<Issue>asList());
     pullRequestIssuePostJob.executeOn(null, null);
@@ -82,69 +110,23 @@ public class PullRequestIssuePostJobTest {
 
   @Test
   public void testPullRequestAnalysisWithNewIssues() {
-    Issue newIssue = mock(Issue.class);
     DefaultInputFile inputFile1 = new DefaultInputFile("src/Foo.php");
-    when(cache.byKey("foo:src/Foo.php")).thenReturn(inputFile1);
-    when(newIssue.componentKey()).thenReturn("foo:src/Foo.php");
-    when(newIssue.line()).thenReturn(1);
-    when(newIssue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
-    when(newIssue.severity()).thenReturn(Severity.BLOCKER);
-    when(newIssue.isNew()).thenReturn(true);
-    when(newIssue.message()).thenReturn("msg1");
+    Issue newIssue = newMockedIssue("foo:src/Foo.php", inputFile1, 1, Severity.BLOCKER, true, "msg1");
     when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn("http://github/blob/abc123/src/Foo.php#L1");
 
-    Issue lineNotVisible = mock(Issue.class);
-    when(cache.byKey("foo:src/Foo.php")).thenReturn(inputFile1);
-    when(lineNotVisible.componentKey()).thenReturn("foo:src/Foo.php");
-    when(lineNotVisible.line()).thenReturn(2);
-    when(lineNotVisible.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
-    when(lineNotVisible.severity()).thenReturn(Severity.BLOCKER);
-    when(lineNotVisible.isNew()).thenReturn(true);
-    when(lineNotVisible.message()).thenReturn("msg2");
+    Issue lineNotVisible = newMockedIssue("foo:src/Foo.php", inputFile1, 2, Severity.BLOCKER, true, "msg2");
     when(pullRequestFacade.getGithubUrl(inputFile1, 2)).thenReturn("http://github/blob/abc123/src/Foo.php#L2");
 
-    Issue fileNotInPR = mock(Issue.class);
     DefaultInputFile inputFile2 = new DefaultInputFile("src/Foo2.php");
-    when(cache.byKey("foo:src/Foo2.php")).thenReturn(inputFile2);
-    when(fileNotInPR.componentKey()).thenReturn("foo:src/Foo2.php");
-    when(fileNotInPR.line()).thenReturn(1);
-    when(fileNotInPR.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
-    when(fileNotInPR.severity()).thenReturn(Severity.BLOCKER);
-    when(fileNotInPR.isNew()).thenReturn(true);
-    when(fileNotInPR.message()).thenReturn("msg3");
+    Issue fileNotInPR = newMockedIssue("foo:src/Foo2.php", inputFile2, 1, Severity.BLOCKER, true, "msg3");
 
-    Issue notNewIssue = mock(Issue.class);
-    when(cache.byKey("foo:src/Foo.php")).thenReturn(inputFile1);
-    when(notNewIssue.componentKey()).thenReturn("foo:src/Foo.php");
-    when(notNewIssue.line()).thenReturn(1);
-    when(notNewIssue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
-    when(notNewIssue.severity()).thenReturn(Severity.BLOCKER);
-    when(notNewIssue.isNew()).thenReturn(false);
-    when(notNewIssue.message()).thenReturn("msg");
+    Issue notNewIssue = newMockedIssue("foo:src/Foo.php", inputFile1, 1, Severity.BLOCKER, false, "msg");
 
-    Issue issueOnDir = mock(Issue.class);
-    when(cache.byKey("foo:src")).thenReturn(null);
-    when(issueOnDir.componentKey()).thenReturn("foo:src");
-    when(issueOnDir.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
-    when(issueOnDir.severity()).thenReturn(Severity.BLOCKER);
-    when(issueOnDir.isNew()).thenReturn(true);
-    when(issueOnDir.message()).thenReturn("msg4");
+    Issue issueOnDir = newMockedIssue("foo:src", Severity.BLOCKER, true, "msg4");
 
-    Issue issueOnProject = mock(Issue.class);
-    when(issueOnProject.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
-    when(issueOnProject.componentKey()).thenReturn("foo");
-    when(issueOnProject.severity()).thenReturn(Severity.BLOCKER);
-    when(issueOnProject.isNew()).thenReturn(true);
-    when(issueOnProject.message()).thenReturn("msg");
+    Issue issueOnProject = newMockedIssue("foo", Severity.BLOCKER, true, "msg");
 
-    Issue globalIssue = mock(Issue.class);
-    when(cache.byKey("foo:src/Foo.php")).thenReturn(inputFile1);
-    when(globalIssue.componentKey()).thenReturn("foo:src/Foo.php");
-    when(globalIssue.line()).thenReturn(null);
-    when(globalIssue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
-    when(globalIssue.severity()).thenReturn(Severity.BLOCKER);
-    when(globalIssue.isNew()).thenReturn(true);
-    when(globalIssue.message()).thenReturn("msg5");
+    Issue globalIssue = newMockedIssue("foo:src/Foo.php", inputFile1, null, Severity.BLOCKER, true, "msg5");
 
     when(issues.issues()).thenReturn(Arrays.<Issue>asList(newIssue, globalIssue, issueOnProject, issueOnDir, fileNotInPR, lineNotVisible, notNewIssue));
     when(pullRequestFacade.hasFile(inputFile1)).thenReturn(true);
@@ -167,16 +149,50 @@ public class PullRequestIssuePostJobTest {
   }
 
   @Test
-  public void testPullRequestAnalysisWithNewCriticalIssues() {
-    Issue newIssue = mock(Issue.class);
+  public void testSortIssues() {
+    ArgumentCaptor<String> commentCaptor = forClass(String.class);
     DefaultInputFile inputFile1 = new DefaultInputFile("src/Foo.php");
-    when(cache.byKey("foo:src/Foo.php")).thenReturn(inputFile1);
-    when(newIssue.componentKey()).thenReturn("foo:src/Foo.php");
-    when(newIssue.line()).thenReturn(1);
-    when(newIssue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
-    when(newIssue.severity()).thenReturn(Severity.CRITICAL);
-    when(newIssue.isNew()).thenReturn(true);
-    when(newIssue.message()).thenReturn("msg1");
+    DefaultInputFile inputFile2 = new DefaultInputFile("src/Foo2.php");
+
+    // Blocker and 8th line => Should be displayed in 3rd position
+    Issue newIssue = newMockedIssue("foo:src/Foo.php", inputFile1, 8, Severity.BLOCKER, true, "msg1");
+    when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn("http://github/blob/abc123/src/Foo.php#L1");
+
+    // Blocker and 2nd line (Foo2.php) => Should be displayed in 4th position
+    Issue issueInSecondFile = newMockedIssue("foo:src/Foo2.php", inputFile2, 2, Severity.BLOCKER, true, "msg2");
+    when(pullRequestFacade.getGithubUrl(inputFile1, 2)).thenReturn("http://github/blob/abc123/src/Foo.php#L2");
+
+    // Major => Should be displayed in 6th position
+    Issue newIssue2 = newMockedIssue("foo:src/Foo.php", inputFile1, 4, Severity.MAJOR, true, "msg3");
+
+    // Critical => Should be displayed in 5th position
+    Issue newIssue3 = newMockedIssue("foo:src/Foo.php", inputFile1, 3, Severity.CRITICAL, true, "msg4");
+
+    // Critical => Should be displayed in 7th position
+    Issue newIssue4 = newMockedIssue("foo:src/Foo.php", inputFile1, 13, Severity.INFO, true, "msg5");
+
+    // Blocker on project => Should be displayed 1st position
+    Issue issueOnProject = newMockedIssue("foo", Severity.BLOCKER, true, "msg6");
+
+    // Blocker and no line => Should be displayed in 2nd position
+    Issue globalIssue = newMockedIssue("foo:src/Foo.php", inputFile1, null, Severity.BLOCKER, true, "msg7");
+
+    when(issues.issues()).thenReturn(Arrays.<Issue>asList(newIssue, globalIssue, issueOnProject, newIssue4, newIssue2, issueInSecondFile, newIssue3));
+    when(pullRequestFacade.hasFile(any(InputFile.class))).thenReturn(true);
+    when(pullRequestFacade.hasFileLine(any(InputFile.class), anyInt())).thenReturn(false);
+
+    pullRequestIssuePostJob.executeOn(null, null);
+
+    verify(pullRequestFacade).addGlobalComment(commentCaptor.capture());
+
+    String comment = commentCaptor.getValue();
+    assertThat(comment).containsSequence("msg6", "msg1", "msg7", "msg2", "msg4", "msg3", "msg5");
+  }
+
+  @Test
+  public void testPullRequestAnalysisWithNewCriticalIssues() {
+    DefaultInputFile inputFile1 = new DefaultInputFile("src/Foo.php");
+    Issue newIssue = newMockedIssue("foo:src/Foo.php", inputFile1, 1, Severity.CRITICAL, true, "msg1");
     when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn("http://github/blob/abc123/src/Foo.php#L1");
 
     when(issues.issues()).thenReturn(Arrays.<Issue>asList(newIssue));
@@ -190,15 +206,8 @@ public class PullRequestIssuePostJobTest {
 
   @Test
   public void testPullRequestAnalysisWithNewIssuesNoBlockerNorCritical() {
-    Issue newIssue = mock(Issue.class);
     DefaultInputFile inputFile1 = new DefaultInputFile("src/Foo.php");
-    when(cache.byKey("foo:src/Foo.php")).thenReturn(inputFile1);
-    when(newIssue.componentKey()).thenReturn("foo:src/Foo.php");
-    when(newIssue.line()).thenReturn(1);
-    when(newIssue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
-    when(newIssue.severity()).thenReturn(Severity.MAJOR);
-    when(newIssue.isNew()).thenReturn(true);
-    when(newIssue.message()).thenReturn("msg1");
+    Issue newIssue = newMockedIssue("foo:src/Foo.php", inputFile1, 1, Severity.MAJOR, true, "msg1");
     when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn("http://github/blob/abc123/src/Foo.php#L1");
 
     when(issues.issues()).thenReturn(Arrays.<Issue>asList(newIssue));
@@ -212,25 +221,11 @@ public class PullRequestIssuePostJobTest {
 
   @Test
   public void testPullRequestAnalysisWithNewBlockerAndCriticalIssues() {
-    Issue newIssue = mock(Issue.class);
     DefaultInputFile inputFile1 = new DefaultInputFile("src/Foo.php");
-    when(cache.byKey("foo:src/Foo.php")).thenReturn(inputFile1);
-    when(newIssue.componentKey()).thenReturn("foo:src/Foo.php");
-    when(newIssue.line()).thenReturn(1);
-    when(newIssue.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
-    when(newIssue.severity()).thenReturn(Severity.CRITICAL);
-    when(newIssue.isNew()).thenReturn(true);
-    when(newIssue.message()).thenReturn("msg1");
+    Issue newIssue = newMockedIssue("foo:src/Foo.php", inputFile1, 1, Severity.CRITICAL, true, "msg1");
     when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn("http://github/blob/abc123/src/Foo.php#L1");
 
-    Issue lineNotVisible = mock(Issue.class);
-    when(cache.byKey("foo:src/Foo.php")).thenReturn(inputFile1);
-    when(lineNotVisible.componentKey()).thenReturn("foo:src/Foo.php");
-    when(lineNotVisible.line()).thenReturn(2);
-    when(lineNotVisible.ruleKey()).thenReturn(RuleKey.of("repo", "rule"));
-    when(lineNotVisible.severity()).thenReturn(Severity.BLOCKER);
-    when(lineNotVisible.isNew()).thenReturn(true);
-    when(lineNotVisible.message()).thenReturn("msg2");
+    Issue lineNotVisible = newMockedIssue("foo:src/Foo.php", inputFile1, 2, Severity.BLOCKER, true, "msg2");
     when(pullRequestFacade.getGithubUrl(inputFile1, 2)).thenReturn("http://github/blob/abc123/src/Foo.php#L2");
 
     when(issues.issues()).thenReturn(Arrays.<Issue>asList(newIssue, lineNotVisible));
