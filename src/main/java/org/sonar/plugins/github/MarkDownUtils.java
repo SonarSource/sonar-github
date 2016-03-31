@@ -21,8 +21,9 @@ package org.sonar.plugins.github;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.sonar.api.BatchComponent;
 import org.sonar.api.CoreProperties;
 import org.sonar.api.batch.InstantiationStrategy;
@@ -55,7 +56,7 @@ public class MarkDownUtils implements BatchComponent {
   }
 
   private String getLocation(String url) {
-    String filename = StringUtils.removePattern(url, ".*/");
+    String filename = Pattern.compile(".*/", Pattern.DOTALL).matcher(url).replaceAll(StringUtils.EMPTY);
     if (filename.length() <= 0) {
       filename = "Project";
     }
