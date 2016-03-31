@@ -62,9 +62,6 @@ public class GitHubPluginConfigurationTest {
 
   @Test
   public void other() {
-    settings.setProperty(GitHubPlugin.GITHUB_LOGIN, "login");
-    assertThat(config.login()).isEqualTo("login");
-
     settings.setProperty(GitHubPlugin.GITHUB_OAUTH, "oauth");
     assertThat(config.oauth()).isEqualTo("oauth");
 

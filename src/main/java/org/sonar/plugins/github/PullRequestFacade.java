@@ -77,7 +77,7 @@ public class PullRequestFacade implements BatchComponent {
       throw new IllegalStateException("Unable to find Git root directory. Is " + projectBaseDir + " part of a Git repository?");
     }
     try {
-      GitHub github = new GitHubBuilder().withEndpoint(config.endpoint()).withOAuthToken(config.oauth(), config.login()).build();
+      GitHub github = new GitHubBuilder().withEndpoint(config.endpoint()).withOAuthToken(config.oauth()).build();
       setGhRepo(github.getRepository(config.repository()));
       setPr(ghRepo.getPullRequest(pullRequestNumber));
       LOG.info("Starting analysis of pull request: " + pr.getHtmlUrl());
