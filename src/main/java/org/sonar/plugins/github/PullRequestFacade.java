@@ -20,6 +20,7 @@
 package org.sonar.plugins.github;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
@@ -30,7 +31,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
-import org.apache.commons.io.IOUtils;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHCommitStatus;
 import org.kohsuke.github.GHIssueComment;
@@ -156,7 +156,9 @@ public class PullRequestFacade implements BatchComponent {
   static void processPatch(Map<Integer, Integer> patchLocationMapping, String patch) throws IOException {
     int currentLine = -1;
     int patchLocation = 0;
-    for (String line : IOUtils.readLines(new StringReader(patch))) {
+    BufferedReader reader = new BufferedReader(new StringReader(patch));
+    String line;
+    while ((line = reader.readLine()) != null) {
       if (line.startsWith("@")) {
         // http://en.wikipedia.org/wiki/Diff_utility#Unified_format
         Matcher matcher = Pattern.compile("@@\\p{IsWhite_Space}-[0-9]+(?:,[0-9]+)?\\p{IsWhite_Space}\\+([0-9]+)(?:,[0-9]+)?\\p{IsWhite_Space}@@.*").matcher(line);
