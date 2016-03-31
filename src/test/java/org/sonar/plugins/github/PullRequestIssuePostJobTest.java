@@ -99,7 +99,7 @@ public class PullRequestIssuePostJobTest {
     return newMockedIssue(componentKey, null, null, severity, isNew, message);
   }
 
-    @Test
+  @Test
   public void testPullRequestAnalysisNoIssue() {
     when(issues.issues()).thenReturn(Arrays.<Issue>asList());
     pullRequestIssuePostJob.executeOn(null, null);
@@ -186,7 +186,7 @@ public class PullRequestIssuePostJobTest {
     verify(pullRequestFacade).addGlobalComment(commentCaptor.capture());
 
     String comment = commentCaptor.getValue();
-    assertThat(comment).containsSequence("msg6", "msg1", "msg7", "msg2", "msg4", "msg3", "msg5");
+    assertThat(comment).containsSequence("msg6", "msg7", "msg1", "msg2", "msg4", "msg3", "msg5");
   }
 
   @Test
