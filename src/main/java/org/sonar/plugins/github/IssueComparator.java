@@ -32,6 +32,7 @@ public final class IssueComparator implements Comparator<Issue> {
     if (left == right) {
       return 0;
     }
+
     System.out.println("Sample issue");
     if (left == null) {
       return 1;
