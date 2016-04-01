@@ -56,7 +56,6 @@ public class PullRequestIssuePostJobTest {
   @Before
   public void prepare() throws Exception {
     pullRequestFacade = mock(PullRequestFacade.class);
-    GitHubPluginConfiguration config = mock(GitHubPluginConfiguration.class);
     issues = mock(ProjectIssues.class);
     cache = mock(InputFileCache.class);
     Settings settings = new Settings(new PropertyDefinitions(PropertyDefinition.builder(CoreProperties.SERVER_BASE_URL)
@@ -65,6 +64,7 @@ public class PullRequestIssuePostJobTest {
       .category(CoreProperties.CATEGORY_GENERAL)
       .defaultValue(CoreProperties.SERVER_BASE_URL_DEFAULT_VALUE)
       .build()));
+    GitHubPluginConfiguration config = new GitHubPluginConfiguration(settings);
 
     settings.setProperty("sonar.host.url", "http://192.168.0.1");
     settings.setProperty(CoreProperties.SERVER_BASE_URL, "http://myserver");
