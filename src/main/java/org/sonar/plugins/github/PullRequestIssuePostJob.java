@@ -25,15 +25,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import javax.annotation.Nullable;
 import org.sonar.api.batch.CheckProject;
 import org.sonar.api.batch.SensorContext;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.issue.Issue;
 import org.sonar.api.issue.ProjectIssues;
 import org.sonar.api.resources.Project;
-import org.sonar.api.rule.Severity;
 
 /**
  * Compute comments to be added on the pull request.
@@ -46,52 +43,6 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
   private final GitHubPluginConfiguration gitHubPluginConfiguration;
   private final InputFileCache inputFileCache;
   private final MarkDownUtils markDownUtils;
-
-  private static final class IssueComparator implements Comparator<Issue> {
-    @Override
-    public int compare(Issue left, Issue right) {
-      // Most severe issues should be displayed first.
-      if (left == right) {
-        return 0;
-      }
-      if (left == null) {
-        return 1;
-      }
-      if (right == null) {
-        return -1;
-      }
-      if (Objects.equals(left.severity(), right.severity())) {
-        // When severity is the same, sort by component key to at least group issues from
-        // the same file together.
-        if (!left.componentKey().equals(right.componentKey())) {
-          return left.componentKey().compareTo(right.componentKey());
-        }
-        return compareInt(left.line(), right.line());
-      }
-      return compareSeverity(left.severity(), right.severity());
-    }
-
-    private int compareSeverity(String leftSeverity, String rightSeverity) {
-      if (Severity.ALL.indexOf(leftSeverity) > Severity.ALL.indexOf(rightSeverity)) {
-        // Display higher severity first. Relies on Severity.ALL to be sorted by severity.
-        return -1;
-      } else {
-        return 1;
-      }
-    }
-
-    private int compareInt(@Nullable Integer leftLine, @Nullable Integer rightLine) {
-      if (Objects.equals(leftLine, rightLine)) {
-        return 0;
-      } else if (leftLine == null) {
-        return -1;
-      } else if (rightLine == null) {
-        return 1;
-      } else {
-        return leftLine.compareTo(rightLine);
-      }
-    }
-  }
 
   public PullRequestIssuePostJob(GitHubPluginConfiguration gitHubPluginConfiguration, PullRequestFacade pullRequestFacade, ProjectIssues projectIssues,
     InputFileCache inputFileCache, MarkDownUtils markDownUtils) {
@@ -116,10 +67,7 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
 
     pullRequestFacade.deleteOutdatedComments();
 
-    pullRequestFacade.removePreviousGlobalComments();
-    if (report.hasNewIssue()) {
-      pullRequestFacade.addGlobalComment(report.formatForMarkdown());
-    }
+    pullRequestFacade.createOrUpdateGlobalComments(report.hasNewIssue() ? report.formatForMarkdown() : null);
 
     pullRequestFacade.createOrUpdateSonarQubeStatus(report.getStatus(), report.getStatusDescription());
   }
@@ -129,7 +77,7 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
     return "GitHub Pull Request Issue Publisher";
   }
 
-  private List<Issue> sortProjectIssues(ProjectIssues projectIssues) {
+  private static List<Issue> sortProjectIssues(ProjectIssues projectIssues) {
     // Dump issues to a new list and sort it.
     List<Issue> issues = Lists.newArrayList(projectIssues.issues());
     Collections.sort(issues, ISSUE_COMPARATOR);

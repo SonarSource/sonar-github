@@ -229,24 +229,31 @@ public class PullRequestFacade implements BatchComponent {
     }
   }
 
-  public void removePreviousGlobalComments() {
+  public void createOrUpdateGlobalComments(@Nullable String markup) {
     try {
-      for (GHIssueComment comment : pr.listComments()) {
-        if (myself.equals(comment.getUser().getLogin())) {
-          comment.delete();
-        }
+      boolean found = findAndDeleteOthers(markup);
+      if (markup != null && !found) {
+        pr.comment(markup);
       }
     } catch (IOException e) {
-      throw new IllegalStateException("Unable to comment the pull request", e);
+      throw new IllegalStateException("Unable to read the pull request comments", e);
     }
   }
 
-  public void addGlobalComment(String comment) {
-    try {
-      pr.comment(comment);
-    } catch (IOException e) {
-      throw new IllegalStateException("Unable to comment the pull request", e);
+  private boolean findAndDeleteOthers(String markup) throws IOException {
+    boolean found = false;
+    for (GHIssueComment comment : pr.listComments()) {
+      if (myself.equals(comment.getUser().getLogin())) {
+        if (markup == null || found || !markup.equals(comment.getBody())) {
+          comment.delete();
+          continue;
+        }
+        if (markup.equals(comment.getBody())) {
+          found = true;
+        }
+      }
     }
+    return found;
   }
 
   public void createOrUpdateSonarQubeStatus(GHCommitState status, String statusDescription) {

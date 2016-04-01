@@ -41,10 +41,8 @@ import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -98,8 +96,7 @@ public class PullRequestIssuePostJobTest {
   public void testPullRequestAnalysisNoIssue() {
     when(issues.issues()).thenReturn(Arrays.<Issue>asList());
     pullRequestIssuePostJob.executeOn(null, null);
-    verify(pullRequestFacade).removePreviousGlobalComments();
-    verify(pullRequestFacade, never()).addGlobalComment(anyString());
+    verify(pullRequestFacade).createOrUpdateGlobalComments(null);
     verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.SUCCESS, "SonarQube reported no issues");
   }
 
@@ -128,15 +125,14 @@ public class PullRequestIssuePostJobTest {
     when(pullRequestFacade.hasFileLine(inputFile1, 1)).thenReturn(true);
 
     pullRequestIssuePostJob.executeOn(null, null);
-    verify(pullRequestFacade).removePreviousGlobalComments();
-    verify(pullRequestFacade).addGlobalComment(contains("SonarQube analysis reported 5 issues:"));
+    verify(pullRequestFacade).createOrUpdateGlobalComments(contains("SonarQube analysis reported 5 issues:"));
     verify(pullRequestFacade)
-      .addGlobalComment(contains("* ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png) 5 blocker"));
+      .createOrUpdateGlobalComments(contains("* ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png) 5 blocker"));
     verify(pullRequestFacade)
-      .addGlobalComment(
+      .createOrUpdateGlobalComments(
         not(contains("1. [Project")));
     verify(pullRequestFacade)
-      .addGlobalComment(
+      .createOrUpdateGlobalComments(
         contains(
           "1. [Foo.php#L2](http://github/blob/abc123/src/Foo.php#L2): ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png) msg2 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule)"));
 
@@ -178,7 +174,7 @@ public class PullRequestIssuePostJobTest {
 
     pullRequestIssuePostJob.executeOn(null, null);
 
-    verify(pullRequestFacade).addGlobalComment(commentCaptor.capture());
+    verify(pullRequestFacade).createOrUpdateGlobalComments(commentCaptor.capture());
 
     String comment = commentCaptor.getValue();
     assertThat(comment).containsSequence("msg6", "msg7", "msg1", "msg2", "msg4", "msg3", "msg5");
