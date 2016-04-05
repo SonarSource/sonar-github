@@ -19,6 +19,7 @@
  */
 package org.sonar.plugins.github;
 
+import com.google.common.annotations.VisibleForTesting;
 import javax.annotation.Nullable;
 import org.kohsuke.github.GHCommitState;
 import org.sonar.api.issue.Issue;
@@ -29,11 +30,18 @@ public class GlobalReport {
   private final boolean tryReportIssuesInline;
   private int[] newIssuesBySeverity = new int[Severity.ALL.size()];
   private StringBuilder notReportedOnDiff = new StringBuilder();
-  private int notReportedDisplayedIssueCount = 0;
+  private int notReportedIssueCount = 0;
+  private int maxGlobalReportedIssues;
 
   public GlobalReport(MarkDownUtils markDownUtils, boolean tryReportIssuesInline) {
+    this(markDownUtils, tryReportIssuesInline, GitHubPluginConfiguration.MAX_GLOBAL_ISSUES);
+  }
+
+  @VisibleForTesting
+  public GlobalReport(MarkDownUtils markDownUtils, boolean tryReportIssuesInline, int maxGlobalReportedIssues) {
     this.markDownUtils = markDownUtils;
     this.tryReportIssuesInline = tryReportIssuesInline;
+    this.maxGlobalReportedIssues = maxGlobalReportedIssues;
   }
 
   private void increment(String severity) {
@@ -42,16 +50,32 @@ public class GlobalReport {
 
   public String formatForMarkdown() {
     StringBuilder sb = new StringBuilder();
-    printNewIssuesMarkdown(sb);
-    if (hasNewIssue() && tryReportIssuesInline) {
-      sb.append("\nWatch the comments in this conversation to review them.\n");
-    }
-    if (notReportedOnDiff.length() > 0) {
+    sb.append("#### Analysis summary\n");
+    sb.append("SonarQube analysis reported ");
+    int newIssues = newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL) + newIssues(Severity.MAJOR) + newIssues(Severity.MINOR) + newIssues(Severity.INFO);
+    if (newIssues > 0) {
+      sb.append(newIssues).append(" issue" + (newIssues > 1 ? "s" : "")).append(":\n");
+      if (newIssues > notReportedIssueCount || notReportedIssueCount > maxGlobalReportedIssues) {
+        printSummaryBySeverityMarkdown(sb);
+      }
       if (tryReportIssuesInline) {
-        sb.append("\n#### Top ").append(notReportedDisplayedIssueCount).append(" unreported issues\n");
+        sb.append("\nWatch the comments in this conversation to review them.\n");
+      }
+    } else {
+      sb.append("no issues.");
+    }
+
+    if (notReportedIssueCount > 0) {
+      if (tryReportIssuesInline) {
+        if (notReportedIssueCount <= maxGlobalReportedIssues) {
+          sb.append("\n#### ").append(notReportedIssueCount);
+        } else {
+          sb.append("\n#### Top ").append(maxGlobalReportedIssues);
+        }
+        sb.append(" unreported issues\n");
         sb.append("\nNote: the following issues could not be reported as comments because they are located on lines that are not displayed in this pull request:\n");
-      } else {
-        sb.append("\n#### Top ").append(notReportedDisplayedIssueCount).append(" issues\n");
+      } else if (notReportedIssueCount > maxGlobalReportedIssues) {
+        sb.append("\n#### Top ").append(maxGlobalReportedIssues).append(" issues\n");
       }
       // Need to add an extra line break for ordered list to be displayed properly
       sb.append('\n')
@@ -74,20 +98,12 @@ public class GlobalReport {
     return newIssuesBySeverity[Severity.ALL.indexOf(s)];
   }
 
-  private void printNewIssuesMarkdown(StringBuilder sb) {
-    sb.append("#### Analysis summary\n");
-    sb.append("SonarQube analysis reported ");
-    int newIssues = newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL) + newIssues(Severity.MAJOR) + newIssues(Severity.MINOR) + newIssues(Severity.INFO);
-    if (newIssues > 0) {
-      sb.append(newIssues).append(" issue" + (newIssues > 1 ? "s" : "")).append(":\n");
-      printNewIssuesForMarkdown(sb, Severity.BLOCKER);
-      printNewIssuesForMarkdown(sb, Severity.CRITICAL);
-      printNewIssuesForMarkdown(sb, Severity.MAJOR);
-      printNewIssuesForMarkdown(sb, Severity.MINOR);
-      printNewIssuesForMarkdown(sb, Severity.INFO);
-    } else {
-      sb.append("no issues.");
-    }
+  private void printSummaryBySeverityMarkdown(StringBuilder sb) {
+    printNewIssuesForMarkdown(sb, Severity.BLOCKER);
+    printNewIssuesForMarkdown(sb, Severity.CRITICAL);
+    printNewIssuesForMarkdown(sb, Severity.MAJOR);
+    printNewIssuesForMarkdown(sb, Severity.MINOR);
+    printNewIssuesForMarkdown(sb, Severity.INFO);
   }
 
   private void printNewIssuesInline(StringBuilder sb) {
@@ -128,12 +144,14 @@ public class GlobalReport {
 
   public void process(Issue issue, @Nullable String githubUrl, boolean reportedOnDiff) {
     increment(issue.severity());
-    if (!reportedOnDiff && notReportedDisplayedIssueCount < GitHubPluginConfiguration.MAX_GLOBAL_ISSUES) {
-      notReportedOnDiff
-        .append("1. ")
-        .append(markDownUtils.globalIssue(issue.severity(), issue.message(), issue.ruleKey().toString(), githubUrl, issue.componentKey()))
-        .append("\n");
-      notReportedDisplayedIssueCount++;
+    if (!reportedOnDiff) {
+      if (notReportedIssueCount < maxGlobalReportedIssues) {
+        notReportedOnDiff
+          .append("1. ")
+          .append(markDownUtils.globalIssue(issue.severity(), issue.message(), issue.ruleKey().toString(), githubUrl, issue.componentKey()))
+          .append("\n");
+      }
+      notReportedIssueCount++;
     }
   }
 

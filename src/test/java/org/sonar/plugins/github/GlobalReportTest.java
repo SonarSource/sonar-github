@@ -63,7 +63,34 @@ public class GlobalReportTest {
   }
 
   @Test
-  public void shouldFormatIssuesForMarkdown() {
+  public void noIssues() {
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
+
+    String desiredMarkdown = "#### Analysis summary\n" +
+      "SonarQube analysis reported no issues.";
+
+    String formattedGlobalReport = globalReport.formatForMarkdown();
+
+    assertThat(formattedGlobalReport).isEqualTo(desiredMarkdown);
+  }
+
+  @Test
+  public void oneIssue() {
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
+    globalReport.process(issues.get(0).setSeverity(Severity.INFO), GITHUB_URL, true);
+
+    String desiredMarkdown = "#### Analysis summary\n" +
+      "SonarQube analysis reported 1 issue:\n" +
+      "* ![INFO](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png) 1 info\n" +
+      "\nWatch the comments in this conversation to review them.\n";
+
+    String formattedGlobalReport = globalReport.formatForMarkdown();
+
+    assertThat(formattedGlobalReport).isEqualTo(desiredMarkdown);
+  }
+
+  @Test
+  public void shouldFormatIssuesForMarkdownNoInline() {
     GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
     globalReport.process(issues.get(0).setSeverity(Severity.INFO), GITHUB_URL, true);
     globalReport.process(issues.get(1).setSeverity(Severity.MINOR), GITHUB_URL, true);
@@ -86,12 +113,12 @@ public class GlobalReportTest {
   }
 
   @Test
-  public void shouldFormatIssuesForMarkdownWhenInlineCommentsDisabled() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false);
+  public void shouldFormatIssuesForMarkdownMixInlineGlobal() {
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
     globalReport.process(issues.get(0).setSeverity(Severity.INFO), GITHUB_URL, true);
-    globalReport.process(issues.get(1).setSeverity(Severity.MINOR), GITHUB_URL, true);
+    globalReport.process(issues.get(1).setSeverity(Severity.MINOR), GITHUB_URL, false);
     globalReport.process(issues.get(2).setSeverity(Severity.MAJOR), GITHUB_URL, true);
-    globalReport.process(issues.get(3).setSeverity(Severity.CRITICAL), GITHUB_URL, true);
+    globalReport.process(issues.get(3).setSeverity(Severity.CRITICAL), GITHUB_URL, false);
     globalReport.process(issues.get(4).setSeverity(Severity.BLOCKER), GITHUB_URL, true);
 
     String desiredMarkdown = "#### Analysis summary\n" +
@@ -100,7 +127,69 @@ public class GlobalReportTest {
       "* ![CRITICAL](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png) 1 critical\n" +
       "* ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png) 1 major\n" +
       "* ![MINOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png) 1 minor\n" +
-      "* ![INFO](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png) 1 info\n";
+      "* ![INFO](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png) 1 info\n" +
+      "\nWatch the comments in this conversation to review them.\n" +
+      "\n#### 2 unreported issues\n" +
+      "\nNote: the following issues could not be reported as comments because they are located on lines that are not displayed in this pull request:\n\n" +
+      "1. [sonar-github](https://github.com/SonarCommunity/sonar-github): ![MINOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png) Issue number:1 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Aissue1)\n"
+      +
+      "1. [sonar-github](https://github.com/SonarCommunity/sonar-github): ![CRITICAL](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png) Issue number:3 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Aissue3)\n";
+
+    String formattedGlobalReport = globalReport.formatForMarkdown();
+
+    assertThat(formattedGlobalReport).isEqualTo(desiredMarkdown);
+  }
+
+  @Test
+  public void shouldFormatIssuesForMarkdownWhenInlineCommentsDisabled() {
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false);
+    globalReport.process(issues.get(0).setSeverity(Severity.INFO), GITHUB_URL, false);
+    globalReport.process(issues.get(1).setSeverity(Severity.MINOR), GITHUB_URL, false);
+    globalReport.process(issues.get(2).setSeverity(Severity.MAJOR), GITHUB_URL, false);
+    globalReport.process(issues.get(3).setSeverity(Severity.CRITICAL), GITHUB_URL, false);
+    globalReport.process(issues.get(4).setSeverity(Severity.BLOCKER), GITHUB_URL, false);
+
+    String desiredMarkdown = "#### Analysis summary\n" +
+      "SonarQube analysis reported 5 issues:\n\n" +
+      "1. [sonar-github](https://github.com/SonarCommunity/sonar-github): ![INFO](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png) Issue number:0 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Aissue0)\n"
+      +
+      "1. [sonar-github](https://github.com/SonarCommunity/sonar-github): ![MINOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png) Issue number:1 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Aissue1)\n"
+      +
+      "1. [sonar-github](https://github.com/SonarCommunity/sonar-github): ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png) Issue number:2 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Aissue2)\n"
+      +
+      "1. [sonar-github](https://github.com/SonarCommunity/sonar-github): ![CRITICAL](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png) Issue number:3 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Aissue3)\n"
+      +
+      "1. [sonar-github](https://github.com/SonarCommunity/sonar-github): ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png) Issue number:4 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Aissue4)\n";
+
+    String formattedGlobalReport = globalReport.formatForMarkdown();
+
+    assertThat(formattedGlobalReport).isEqualTo(desiredMarkdown);
+  }
+
+  @Test
+  public void shouldFormatIssuesForMarkdownWhenInlineCommentsDisabledAndLimitReached() {
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false, 4);
+    globalReport.process(issues.get(0).setSeverity(Severity.INFO), GITHUB_URL, false);
+    globalReport.process(issues.get(1).setSeverity(Severity.MINOR), GITHUB_URL, false);
+    globalReport.process(issues.get(2).setSeverity(Severity.MAJOR), GITHUB_URL, false);
+    globalReport.process(issues.get(3).setSeverity(Severity.CRITICAL), GITHUB_URL, false);
+    globalReport.process(issues.get(4).setSeverity(Severity.BLOCKER), GITHUB_URL, false);
+
+    String desiredMarkdown = "#### Analysis summary\n" +
+      "SonarQube analysis reported 5 issues:\n" +
+      "* ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png) 1 blocker\n" +
+      "* ![CRITICAL](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png) 1 critical\n" +
+      "* ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png) 1 major\n" +
+      "* ![MINOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png) 1 minor\n" +
+      "* ![INFO](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png) 1 info\n" +
+      "\n#### Top 4 issues\n\n" +
+      "1. [sonar-github](https://github.com/SonarCommunity/sonar-github): ![INFO](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png) Issue number:0 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Aissue0)\n"
+      +
+      "1. [sonar-github](https://github.com/SonarCommunity/sonar-github): ![MINOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png) Issue number:1 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Aissue1)\n"
+      +
+      "1. [sonar-github](https://github.com/SonarCommunity/sonar-github): ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png) Issue number:2 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Aissue2)\n"
+      +
+      "1. [sonar-github](https://github.com/SonarCommunity/sonar-github): ![CRITICAL](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png) Issue number:3 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Aissue3)\n";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
 
