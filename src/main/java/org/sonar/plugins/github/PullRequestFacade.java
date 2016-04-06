@@ -73,9 +73,6 @@ public class PullRequestFacade implements BatchComponent {
   }
 
   public void init(int pullRequestNumber, File projectBaseDir) {
-    if (findGitBaseDir(projectBaseDir) == null) {
-      throw new IllegalStateException("Unable to find Git root directory. Is " + projectBaseDir + " part of a Git repository?");
-    }
     try {
       GitHub github = new GitHubBuilder().withEndpoint(config.endpoint()).withOAuthToken(config.oauth()).build();
       setGhRepo(github.getRepository(config.repository()));
