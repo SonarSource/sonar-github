@@ -70,7 +70,7 @@ public class MarkDownUtils implements BatchComponent {
     if (url != null) {
       sb.append("[").append(getLocation(url)).append("]").append("(").append(url).append(")");
     } else {
-      sb.append("Project").append(" ").append("(").append(componentKey).append(")");
+      sb.append(componentKey);
     }
     sb.append(": ").append(getImageMarkdownForSeverity(severity)).append(" ").append(message).append(" ").append(ruleLink);
     return sb.toString();

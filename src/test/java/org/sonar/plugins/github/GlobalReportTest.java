@@ -44,13 +44,11 @@ public class GlobalReportTest {
   @Before
   public void setup() {
     for (int i = 0; i < 20; i++) {
-      DefaultIssue issue = new DefaultIssue();
-      issue.setSeverity(Severity.MAJOR);
-      issue.setMessage("Issue number:" + i);
-      issue.setRuleKey(RuleKey.of("repo", "issue" + i));
-      issue.setComponentKey("component" + i);
-
-      issues.add(issue);
+      issues.add(new DefaultIssue()
+        .setSeverity(Severity.MAJOR)
+        .setMessage("Issue number:" + i)
+        .setRuleKey(RuleKey.of("repo", "issue" + i))
+        .setComponentKey("component" + i));
     }
     settings = new Settings(new PropertyDefinitions(PropertyDefinition.builder(CoreProperties.SERVER_BASE_URL)
       .name("Server base URL")
@@ -80,9 +78,25 @@ public class GlobalReportTest {
     globalReport.process(issues.get(0).setSeverity(Severity.INFO), GITHUB_URL, true);
 
     String desiredMarkdown = "#### Analysis summary\n" +
-      "SonarQube analysis reported 1 issue:\n" +
+      "SonarQube analysis reported 1 issue\n" +
       "* ![INFO](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png) 1 info\n" +
       "\nWatch the comments in this conversation to review them.\n";
+
+    String formattedGlobalReport = globalReport.formatForMarkdown();
+
+    assertThat(formattedGlobalReport).isEqualTo(desiredMarkdown);
+  }
+
+  @Test
+  public void oneIssueOnDir() {
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
+    globalReport.process(issues.get(0).setSeverity(Severity.INFO), null, false);
+
+    String desiredMarkdown = "#### Analysis summary\n" +
+      "SonarQube analysis reported 1 issue\n\n" +
+      "#### 1 unreported issues\n\n" +
+      "Note: the following issues could not be reported as comments because they are located on lines that are not displayed in this pull request:\n\n" +
+      "1. component0: ![INFO](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png) Issue number:0 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Aissue0)\n";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
 
@@ -99,7 +113,7 @@ public class GlobalReportTest {
     globalReport.process(issues.get(4).setSeverity(Severity.BLOCKER), GITHUB_URL, true);
 
     String desiredMarkdown = "#### Analysis summary\n" +
-      "SonarQube analysis reported 5 issues:\n" +
+      "SonarQube analysis reported 5 issues\n" +
       "* ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png) 1 blocker\n" +
       "* ![CRITICAL](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png) 1 critical\n" +
       "* ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png) 1 major\n" +
@@ -122,7 +136,7 @@ public class GlobalReportTest {
     globalReport.process(issues.get(4).setSeverity(Severity.BLOCKER), GITHUB_URL, true);
 
     String desiredMarkdown = "#### Analysis summary\n" +
-      "SonarQube analysis reported 5 issues:\n" +
+      "SonarQube analysis reported 5 issues\n" +
       "* ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png) 1 blocker\n" +
       "* ![CRITICAL](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png) 1 critical\n" +
       "* ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png) 1 major\n" +
@@ -150,7 +164,7 @@ public class GlobalReportTest {
     globalReport.process(issues.get(4).setSeverity(Severity.BLOCKER), GITHUB_URL, false);
 
     String desiredMarkdown = "#### Analysis summary\n" +
-      "SonarQube analysis reported 5 issues:\n\n" +
+      "SonarQube analysis reported 5 issues\n\n" +
       "1. [sonar-github](https://github.com/SonarCommunity/sonar-github): ![INFO](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png) Issue number:0 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Aissue0)\n"
       +
       "1. [sonar-github](https://github.com/SonarCommunity/sonar-github): ![MINOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png) Issue number:1 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Aissue1)\n"
@@ -176,7 +190,7 @@ public class GlobalReportTest {
     globalReport.process(issues.get(4).setSeverity(Severity.BLOCKER), GITHUB_URL, false);
 
     String desiredMarkdown = "#### Analysis summary\n" +
-      "SonarQube analysis reported 5 issues:\n" +
+      "SonarQube analysis reported 5 issues\n" +
       "* ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png) 1 blocker\n" +
       "* ![CRITICAL](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png) 1 critical\n" +
       "* ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png) 1 major\n" +
@@ -204,9 +218,8 @@ public class GlobalReportTest {
     }
 
     String desiredMarkdown = "#### Analysis summary\n" +
-      "SonarQube analysis reported 17 issues:\n" +
+      "SonarQube analysis reported 17 issues\n" +
       "* ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png) 17 major\n" +
-      "\nWatch the comments in this conversation to review them.\n" +
       "\n#### Top 10 unreported issues\n" +
       "\nNote: the following issues could not be reported as comments because they are located on lines that are not displayed in this pull request:\n\n" +
       "1. [File.java#L0](https://github.com/SonarCommunity/sonar-github/File.java#L0): ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png) Issue number:0 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Aissue0)\n"
@@ -242,7 +255,7 @@ public class GlobalReportTest {
     }
 
     String desiredMarkdown = "#### Analysis summary\n" +
-      "SonarQube analysis reported 17 issues:\n" +
+      "SonarQube analysis reported 17 issues\n" +
       "* ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png) 17 major\n" +
       "\n#### Top 10 issues\n\n" +
       "1. [File.java#L0](https://github.com/SonarCommunity/sonar-github/File.java#L0): ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png) Issue number:0 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Aissue0)\n"

@@ -25,6 +25,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.sonar.api.batch.CheckProject;
 import org.sonar.api.batch.SensorContext;
 import org.sonar.api.batch.fs.InputFile;
@@ -104,8 +105,9 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
     return commentToBeAddedByFileAndByLine;
   }
 
-  private void processIssue(GlobalReport report, Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine, Issue issue, String severity, Integer issueLine,
-    InputFile inputFile) {
+  private void processIssue(GlobalReport report, Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine, Issue issue, String severity,
+    @Nullable Integer issueLine,
+    @Nullable InputFile inputFile) {
     boolean reportedInline = false;
     if (gitHubPluginConfiguration.tryReportIssuesInline()) {
       reportedInline = tryReportInline(commentToBeAddedByFileAndByLine, issue, severity, issueLine, inputFile);
@@ -113,8 +115,8 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
     report.process(issue, pullRequestFacade.getGithubUrl(inputFile, issueLine), reportedInline);
   }
 
-  private boolean tryReportInline(Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine, Issue issue, String severity, Integer issueLine,
-    InputFile inputFile) {
+  private boolean tryReportInline(Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine, Issue issue, String severity, @Nullable Integer issueLine,
+    @Nullable InputFile inputFile) {
     if (inputFile != null && issueLine != null) {
       int line = issueLine.intValue();
       if (pullRequestFacade.hasFileLine(inputFile, line)) {

@@ -125,7 +125,7 @@ public class PullRequestIssuePostJobTest {
     when(pullRequestFacade.hasFileLine(inputFile1, 1)).thenReturn(true);
 
     pullRequestIssuePostJob.executeOn(null, null);
-    verify(pullRequestFacade).createOrUpdateGlobalComments(contains("SonarQube analysis reported 5 issues:"));
+    verify(pullRequestFacade).createOrUpdateGlobalComments(contains("SonarQube analysis reported 5 issues"));
     verify(pullRequestFacade)
       .createOrUpdateGlobalComments(contains("* ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png) 5 blocker"));
     verify(pullRequestFacade)

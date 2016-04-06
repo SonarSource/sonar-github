@@ -54,11 +54,11 @@ public class GlobalReport {
     sb.append("SonarQube analysis reported ");
     int newIssues = newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL) + newIssues(Severity.MAJOR) + newIssues(Severity.MINOR) + newIssues(Severity.INFO);
     if (newIssues > 0) {
-      sb.append(newIssues).append(" issue" + (newIssues > 1 ? "s" : "")).append(":\n");
+      sb.append(newIssues).append(" issue" + (newIssues > 1 ? "s" : "")).append("\n");
       if (newIssues > notReportedIssueCount || notReportedIssueCount > maxGlobalReportedIssues) {
         printSummaryBySeverityMarkdown(sb);
       }
-      if (tryReportIssuesInline) {
+      if (tryReportIssuesInline && newIssues > notReportedIssueCount) {
         sb.append("\nWatch the comments in this conversation to review them.\n");
       }
     } else {
