@@ -73,9 +73,7 @@ public class PullRequestFacade implements BatchComponent {
   }
 
   public void init(int pullRequestNumber, File projectBaseDir) {
-    if (findGitBaseDir(projectBaseDir) == null) {
-      throw new IllegalStateException("Unable to find Git root directory. Is " + projectBaseDir + " part of a Git repository?");
-    }
+    initGitBaseDir(projectBaseDir);
     try {
       GitHub github = new GitHubBuilder().withEndpoint(config.endpoint()).withOAuthToken(config.oauth()).build();
       setGhRepo(github.getRepository(config.repository()));
@@ -86,6 +84,17 @@ public class PullRequestFacade implements BatchComponent {
       patchPositionMappingByFile = mapPatchPositionsToLines(pr);
     } catch (IOException e) {
       throw new IllegalStateException("Unable to perform GitHub WS operation", e);
+    }
+  }
+
+  @VisibleForTesting
+  void initGitBaseDir(File projectBaseDir) {
+    File detectedGitBaseDir = findGitBaseDir(projectBaseDir);
+    if (detectedGitBaseDir == null) {
+      LOG.debug("Unable to find Git root directory. Is " + projectBaseDir + " part of a Git repository?");
+      setGitBaseDir(projectBaseDir);
+    } else {
+      setGitBaseDir(detectedGitBaseDir);
     }
   }
 
@@ -104,7 +113,6 @@ public class PullRequestFacade implements BatchComponent {
       return null;
     }
     if (new File(baseDir, ".git").exists()) {
-      setGitBaseDir(baseDir);
       return baseDir;
     }
     return findGitBaseDir(baseDir.getParentFile());
@@ -182,7 +190,8 @@ public class PullRequestFacade implements BatchComponent {
     }
   }
 
-  private String getPath(InputPath inputPath) {
+  @VisibleForTesting
+  String getPath(InputPath inputPath) {
     return new PathResolver().relativePath(gitBaseDir, inputPath.file());
   }
 

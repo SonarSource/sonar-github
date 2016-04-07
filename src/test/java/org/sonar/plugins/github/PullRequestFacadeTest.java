@@ -19,6 +19,14 @@
  */
 package org.sonar.plugins.github;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import org.assertj.core.data.MapEntry;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,14 +37,7 @@ import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.PagedIterable;
 import org.mockito.Mockito;
 import org.sonar.api.batch.fs.InputPath;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import org.sonar.api.batch.fs.internal.DefaultInputFile;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
@@ -129,5 +130,24 @@ public class PullRequestFacadeTest {
     when(ghCommitStatuses.asList()).thenReturn(ghCommitStatusesList);
     when(ghCommitStatusGHPRHContext.getContext()).thenReturn(PullRequestFacade.COMMIT_CONTEXT);
     assertThat(facade.getCommitStatusForContext(pr, PullRequestFacade.COMMIT_CONTEXT).getContext()).isEqualTo(PullRequestFacade.COMMIT_CONTEXT);
+  }
+
+  @Test
+  public void testInitGitBaseDirNotFound() throws Exception {
+    PullRequestFacade facade = new PullRequestFacade(mock(GitHubPluginConfiguration.class));
+    File projectBaseDir = temp.newFolder();
+    facade.initGitBaseDir(projectBaseDir);
+    assertThat(facade.getPath(new DefaultInputFile("src/main/java/Foo.java").setFile(new File(projectBaseDir, "src/main/java/Foo.java")))).isEqualTo("src/main/java/Foo.java");
+  }
+
+  @Test
+  public void testInitGitBaseDir() throws Exception {
+    PullRequestFacade facade = new PullRequestFacade(mock(GitHubPluginConfiguration.class));
+    File gitBaseDir = temp.newFolder();
+    Files.createDirectory(gitBaseDir.toPath().resolve(".git"));
+    File projectBaseDir = new File(gitBaseDir, "myProject");
+    facade.initGitBaseDir(projectBaseDir);
+    assertThat(facade.getPath(new DefaultInputFile("src/main/java/Foo.java").setFile(new File(projectBaseDir, "src/main/java/Foo.java"))))
+      .isEqualTo("myProject/src/main/java/Foo.java");
   }
 }
