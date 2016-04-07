@@ -28,6 +28,8 @@ import org.sonar.api.batch.InstantiationStrategy;
 import org.sonar.api.config.Settings;
 import org.sonar.api.utils.MessageException;
 
+import static org.apache.commons.lang.StringUtils.isNotBlank;
+
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 public class GitHubPluginConfiguration implements BatchComponent {
 
@@ -51,7 +53,7 @@ public class GitHubPluginConfiguration implements BatchComponent {
     if (settings.hasKey(GitHubPlugin.GITHUB_REPO)) {
       return repoFromProp();
     }
-    if (settings.hasKey(CoreProperties.LINKS_SOURCES_DEV) || settings.hasKey(CoreProperties.LINKS_SOURCES)) {
+    if (isNotBlank(settings.getString(CoreProperties.LINKS_SOURCES_DEV)) || isNotBlank(settings.getString(CoreProperties.LINKS_SOURCES))) {
       return repoFromScmProps();
     }
     throw MessageException.of("Unable to determine GitHub repository name for this project. Please provide it using property '" + GitHubPlugin.GITHUB_REPO
@@ -60,11 +62,11 @@ public class GitHubPluginConfiguration implements BatchComponent {
 
   private String repoFromScmProps() {
     String repo = null;
-    if (settings.hasKey(CoreProperties.LINKS_SOURCES_DEV)) {
+    if (isNotBlank(settings.getString(CoreProperties.LINKS_SOURCES_DEV))) {
       String url = settings.getString(CoreProperties.LINKS_SOURCES_DEV);
       repo = extractRepoFromGitUrl(url);
     }
-    if (repo == null && settings.hasKey(CoreProperties.LINKS_SOURCES)) {
+    if (repo == null && isNotBlank(settings.getString(CoreProperties.LINKS_SOURCES))) {
       String url = settings.getString(CoreProperties.LINKS_SOURCES);
       repo = extractRepoFromGitUrl(url);
     }

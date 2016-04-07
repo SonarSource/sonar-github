@@ -47,6 +47,7 @@ import org.sonar.api.batch.InstantiationStrategy;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.InputPath;
 import org.sonar.api.scan.filesystem.PathResolver;
+import org.sonar.api.utils.MessageException;
 
 /**
  * Facade for all WS interaction with GitHub.
@@ -83,7 +84,8 @@ public class PullRequestFacade implements BatchComponent {
       loadExistingReviewComments();
       patchPositionMappingByFile = mapPatchPositionsToLines(pr);
     } catch (IOException e) {
-      throw new IllegalStateException("Unable to perform GitHub WS operation", e);
+      LOG.debug("Unable to perform GitHub WS operation", e);
+      throw MessageException.of("Unable to perform GitHub WS operation: " + e.getMessage());
     }
   }
 
