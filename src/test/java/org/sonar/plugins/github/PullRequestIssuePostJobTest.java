@@ -134,7 +134,7 @@ public class PullRequestIssuePostJobTest {
     verify(pullRequestFacade)
       .createOrUpdateGlobalComments(
         contains(
-          "1. [Foo.php#L2](http://github/blob/abc123/src/Foo.php#L2): ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png) msg2 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule)"));
+          "1. ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png) [Foo.php#L2](http://github/blob/abc123/src/Foo.php#L2): msg2 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule)"));
 
     verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.ERROR, "SonarQube reported 5 issues, with 5 blocker");
   }

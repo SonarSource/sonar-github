@@ -30,7 +30,7 @@ public class GlobalReport {
   private final boolean tryReportIssuesInline;
   private int[] newIssuesBySeverity = new int[Severity.ALL.size()];
   private StringBuilder notReportedOnDiff = new StringBuilder();
-  private int notReportedIssueCount = 0;
+  private int extraIssueCount = 0;
   private int maxGlobalReportedIssues;
 
   public GlobalReport(MarkDownUtils markDownUtils, boolean tryReportIssuesInline) {
@@ -49,32 +49,37 @@ public class GlobalReport {
   }
 
   public String formatForMarkdown() {
-    StringBuilder sb = new StringBuilder();
-    sb.append("#### Analysis summary\n");
-    sb.append("SonarQube analysis reported ");
     int newIssues = newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL) + newIssues(Severity.MAJOR) + newIssues(Severity.MINOR) + newIssues(Severity.INFO);
-    if (newIssues > 0) {
-      sb.append(newIssues).append(" issue" + (newIssues > 1 ? "s" : "")).append("\n");
-      if (newIssues > notReportedIssueCount || notReportedIssueCount > maxGlobalReportedIssues) {
-        printSummaryBySeverityMarkdown(sb);
-      }
-      if (tryReportIssuesInline && newIssues > notReportedIssueCount) {
-        sb.append("\nWatch the comments in this conversation to review them.\n");
-      }
-    } else {
-      sb.append("no issues.");
+    if (newIssues == 0) {
+      return "SonarQube analysis reported no issues.";
+    }
+    StringBuilder sb = new StringBuilder();
+    boolean hasInlineIssues = newIssues > extraIssueCount;
+    boolean extraIssuesTruncated = extraIssueCount > maxGlobalReportedIssues;
+    sb.append("SonarQube analysis reported ").append(newIssues).append(" issue").append(newIssues > 1 ? "s" : "").append("\n");
+    if (hasInlineIssues || extraIssuesTruncated) {
+      printSummaryBySeverityMarkdown(sb);
+    }
+    if (tryReportIssuesInline && hasInlineIssues) {
+      sb.append("\nWatch the comments in this conversation to review them.\n");
     }
 
-    if (notReportedIssueCount > 0) {
+    if (extraIssueCount > 0) {
       if (tryReportIssuesInline) {
-        if (notReportedIssueCount <= maxGlobalReportedIssues) {
-          sb.append("\n#### ").append(notReportedIssueCount);
-        } else {
-          sb.append("\n#### Top ").append(maxGlobalReportedIssues);
+        if (hasInlineIssues || extraIssuesTruncated) {
+          int extraCount;
+          sb.append("\n#### ");
+          if (extraIssueCount <= maxGlobalReportedIssues) {
+            extraCount = extraIssueCount;
+          } else {
+            extraCount = maxGlobalReportedIssues;
+            sb.append("Top ");
+          }
+          sb.append(extraCount).append(" extra issue").append(extraCount > 1 ? "s" : "").append("\n");
         }
-        sb.append(" unreported issues\n");
-        sb.append("\nNote: the following issues could not be reported as comments because they are located on lines that are not displayed in this pull request:\n");
-      } else if (notReportedIssueCount > maxGlobalReportedIssues) {
+        sb.append(
+          "\nNote: The following issues were found on lines that were not modified in the pull request. Because these issues can't be reported as line comments, they are summarized here:\n");
+      } else if (extraIssuesTruncated) {
         sb.append("\n#### Top ").append(maxGlobalReportedIssues).append(" issues\n");
       }
       // Need to add an extra line break for ordered list to be displayed properly
@@ -145,13 +150,13 @@ public class GlobalReport {
   public void process(Issue issue, @Nullable String githubUrl, boolean reportedOnDiff) {
     increment(issue.severity());
     if (!reportedOnDiff) {
-      if (notReportedIssueCount < maxGlobalReportedIssues) {
+      if (extraIssueCount < maxGlobalReportedIssues) {
         notReportedOnDiff
           .append("1. ")
           .append(markDownUtils.globalIssue(issue.severity(), issue.message(), issue.ruleKey().toString(), githubUrl, issue.componentKey()))
           .append("\n");
       }
-      notReportedIssueCount++;
+      extraIssueCount++;
     }
   }
 

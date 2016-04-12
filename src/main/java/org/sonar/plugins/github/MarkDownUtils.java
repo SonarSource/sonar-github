@@ -67,12 +67,13 @@ public class MarkDownUtils implements BatchComponent {
   public String globalIssue(String severity, String message, String ruleKey, @Nullable String url, String componentKey) {
     String ruleLink = getRuleLink(ruleKey);
     StringBuilder sb = new StringBuilder();
+    sb.append(getImageMarkdownForSeverity(severity)).append(" ");
     if (url != null) {
       sb.append("[").append(getLocation(url)).append("]").append("(").append(url).append(")");
     } else {
       sb.append(componentKey);
     }
-    sb.append(": ").append(getImageMarkdownForSeverity(severity)).append(" ").append(message).append(" ").append(ruleLink);
+    sb.append(": ").append(message).append(" ").append(ruleLink);
     return sb.toString();
   }
 
