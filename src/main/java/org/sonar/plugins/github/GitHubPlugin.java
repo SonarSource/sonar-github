@@ -38,7 +38,7 @@ import org.sonar.api.SonarPlugin;
     key = GitHubPlugin.GITHUB_OAUTH,
     name = "GitHub OAuth token",
     description = "Authentication token",
-    global = false,
+    global = true,
     type = PropertyType.PASSWORD),
   @Property(
     key = GitHubPlugin.GITHUB_REPO,
