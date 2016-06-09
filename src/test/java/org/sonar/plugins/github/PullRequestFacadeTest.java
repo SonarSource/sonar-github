@@ -137,7 +137,7 @@ public class PullRequestFacadeTest {
     PullRequestFacade facade = new PullRequestFacade(mock(GitHubPluginConfiguration.class));
     File projectBaseDir = temp.newFolder();
     facade.initGitBaseDir(projectBaseDir);
-    assertThat(facade.getPath(new DefaultInputFile("src/main/java/Foo.java").setFile(new File(projectBaseDir, "src/main/java/Foo.java")))).isEqualTo("src/main/java/Foo.java");
+    assertThat(facade.getPath(new DefaultInputFile("foo", "src/main/java/Foo.java").setModuleBaseDir(projectBaseDir.toPath()))).isEqualTo("src/main/java/Foo.java");
   }
 
   @Test
@@ -147,7 +147,6 @@ public class PullRequestFacadeTest {
     Files.createDirectory(gitBaseDir.toPath().resolve(".git"));
     File projectBaseDir = new File(gitBaseDir, "myProject");
     facade.initGitBaseDir(projectBaseDir);
-    assertThat(facade.getPath(new DefaultInputFile("src/main/java/Foo.java").setFile(new File(projectBaseDir, "src/main/java/Foo.java"))))
-      .isEqualTo("myProject/src/main/java/Foo.java");
+    assertThat(facade.getPath(new DefaultInputFile("foo", "src/main/java/Foo.java").setModuleBaseDir(projectBaseDir.toPath()))).isEqualTo("myProject/src/main/java/Foo.java");
   }
 }

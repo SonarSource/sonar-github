@@ -20,6 +20,8 @@
 package org.sonar.plugins.github;
 
 import org.junit.Test;
+import org.sonar.api.Plugin;
+import org.sonar.api.utils.Version;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,7 +29,9 @@ public class GitHubPluginTest {
 
   @Test
   public void uselessTest() {
-    assertThat(new GitHubPlugin().getExtensions().size()).isGreaterThan(1);
+    Plugin.Context context = new Plugin.Context(Version.parse("5.6"));
+    new GitHubPlugin().define(context);
+    assertThat(context.getExtensions().size()).isGreaterThan(1);
   }
 
 }

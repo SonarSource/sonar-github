@@ -19,13 +19,11 @@
  */
 package org.sonar.plugins.github;
 
-import java.util.Arrays;
-import java.util.List;
 import org.sonar.api.CoreProperties;
+import org.sonar.api.Plugin;
 import org.sonar.api.Properties;
 import org.sonar.api.Property;
 import org.sonar.api.PropertyType;
-import org.sonar.api.SonarPlugin;
 
 @Properties({
   @Property(
@@ -63,7 +61,7 @@ import org.sonar.api.SonarPlugin;
     global = true,
     type = PropertyType.BOOLEAN)
 })
-public class GitHubPlugin extends SonarPlugin {
+public class GitHubPlugin implements Plugin {
 
   public static final String GITHUB_ENDPOINT = "sonar.github.endpoint";
   public static final String GITHUB_OAUTH = "sonar.github.oauth";
@@ -72,14 +70,12 @@ public class GitHubPlugin extends SonarPlugin {
   public static final String GITHUB_DISABLE_INLINE_COMMENTS = "sonar.github.disableInlineComments";
 
   @Override
-  public List getExtensions() {
-    return Arrays.asList(
+  public void define(Context context) {
+    context.addExtensions(
       PullRequestIssuePostJob.class,
       GitHubPluginConfiguration.class,
       PullRequestProjectBuilder.class,
       PullRequestFacade.class,
-      InputFileCacheSensor.class,
-      InputFileCache.class,
       MarkDownUtils.class);
   }
 

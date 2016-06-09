@@ -19,50 +19,44 @@
  */
 package org.sonar.plugins.github;
 
-import com.google.common.collect.Lists;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
-import org.sonar.api.batch.CheckProject;
-import org.sonar.api.batch.SensorContext;
+import java.util.stream.StreamSupport;
+import org.sonar.api.batch.fs.InputComponent;
 import org.sonar.api.batch.fs.InputFile;
-import org.sonar.api.issue.Issue;
-import org.sonar.api.issue.ProjectIssues;
-import org.sonar.api.resources.Project;
+import org.sonar.api.batch.postjob.PostJob;
+import org.sonar.api.batch.postjob.PostJobContext;
+import org.sonar.api.batch.postjob.PostJobDescriptor;
+import org.sonar.api.batch.postjob.issue.PostJobIssue;
 
 /**
  * Compute comments to be added on the pull request.
  */
-public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, CheckProject {
-  private static final Comparator<Issue> ISSUE_COMPARATOR = new IssueComparator();
+public class PullRequestIssuePostJob implements PostJob {
+  private static final Comparator<PostJobIssue> ISSUE_COMPARATOR = new IssueComparator();
 
   private final PullRequestFacade pullRequestFacade;
-  private final ProjectIssues projectIssues;
   private final GitHubPluginConfiguration gitHubPluginConfiguration;
-  private final InputFileCache inputFileCache;
   private final MarkDownUtils markDownUtils;
 
-  public PullRequestIssuePostJob(GitHubPluginConfiguration gitHubPluginConfiguration, PullRequestFacade pullRequestFacade, ProjectIssues projectIssues,
-    InputFileCache inputFileCache, MarkDownUtils markDownUtils) {
+  public PullRequestIssuePostJob(GitHubPluginConfiguration gitHubPluginConfiguration, PullRequestFacade pullRequestFacade, MarkDownUtils markDownUtils) {
     this.gitHubPluginConfiguration = gitHubPluginConfiguration;
     this.pullRequestFacade = pullRequestFacade;
-    this.projectIssues = projectIssues;
-    this.inputFileCache = inputFileCache;
     this.markDownUtils = markDownUtils;
   }
 
   @Override
-  public boolean shouldExecuteOnProject(Project project) {
-    return gitHubPluginConfiguration.isEnabled();
+  public void describe(PostJobDescriptor descriptor) {
+    descriptor
+      .name("GitHub Pull Request Issue Publisher")
+      .requireProperty(GitHubPlugin.GITHUB_PULL_REQUEST);
   }
 
   @Override
-  public void executeOn(Project project, SensorContext context) {
+  public void execute(PostJobContext context) {
     GlobalReport report = new GlobalReport(markDownUtils, gitHubPluginConfiguration.tryReportIssuesInline());
-    Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine = processIssues(report);
+    Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine = processIssues(report, context.issues());
 
     updateReviewComments(commentsToBeAddedByLine);
 
@@ -73,52 +67,37 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
     pullRequestFacade.createOrUpdateSonarQubeStatus(report.getStatus(), report.getStatusDescription());
   }
 
-  @Override
-  public String toString() {
-    return "GitHub Pull Request Issue Publisher";
-  }
-
-  private static List<Issue> sortProjectIssues(ProjectIssues projectIssues) {
-    // Dump issues to a new list and sort it.
-    List<Issue> issues = Lists.newArrayList(projectIssues.issues());
-    Collections.sort(issues, ISSUE_COMPARATOR);
-    return issues;
-  }
-
-  private Map<InputFile, Map<Integer, StringBuilder>> processIssues(GlobalReport report) {
+  private Map<InputFile, Map<Integer, StringBuilder>> processIssues(GlobalReport report, Iterable<PostJobIssue> issues) {
     Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine = new HashMap<>();
 
-    List<Issue> issues = sortProjectIssues(projectIssues);
-    for (Issue issue : issues) {
-      if (!issue.isNew()) {
-        continue;
-      }
-      String severity = issue.severity();
-      Integer issueLine = issue.line();
-      InputFile inputFile = inputFileCache.byKey(issue.componentKey());
-      if (inputFile != null && !pullRequestFacade.hasFile(inputFile)) {
-        // SONARGITUB-13 Ignore issues on files not modified by the P/R
-        continue;
-      }
-      processIssue(report, commentToBeAddedByFileAndByLine, issue, severity, issueLine, inputFile);
-    }
+    StreamSupport.stream(issues.spliterator(), false)
+      .filter(i -> i.isNew())
+      // SONARGITUB-13 Ignore issues on files not modified by the P/R
+      .filter(i -> {
+        InputComponent inputComponent = i.inputComponent();
+        return inputComponent == null ||
+          !inputComponent.isFile() ||
+          pullRequestFacade.hasFile((InputFile) inputComponent);
+      })
+      .sorted(ISSUE_COMPARATOR)
+      .forEach(i -> processIssue(report, commentToBeAddedByFileAndByLine, i));
     return commentToBeAddedByFileAndByLine;
+
   }
 
-  private void processIssue(GlobalReport report, Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine, Issue issue, String severity,
-    @Nullable Integer issueLine,
-    @Nullable InputFile inputFile) {
+  private void processIssue(GlobalReport report, Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine, PostJobIssue issue) {
     boolean reportedInline = false;
-    if (gitHubPluginConfiguration.tryReportIssuesInline()) {
-      reportedInline = tryReportInline(commentToBeAddedByFileAndByLine, issue, severity, issueLine, inputFile);
+    InputComponent inputComponent = issue.inputComponent();
+    if (gitHubPluginConfiguration.tryReportIssuesInline() && inputComponent != null && inputComponent.isFile()) {
+      reportedInline = tryReportInline(commentToBeAddedByFileAndByLine, issue, (InputFile) inputComponent);
     }
-    report.process(issue, pullRequestFacade.getGithubUrl(inputFile, issueLine), reportedInline);
+    report.process(issue, pullRequestFacade.getGithubUrl(inputComponent, issue.line()), reportedInline);
   }
 
-  private boolean tryReportInline(Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine, Issue issue, String severity, @Nullable Integer issueLine,
-    @Nullable InputFile inputFile) {
-    if (inputFile != null && issueLine != null) {
-      int line = issueLine.intValue();
+  private boolean tryReportInline(Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine, PostJobIssue issue, InputFile inputFile) {
+    Integer lineOrNull = issue.line();
+    if (inputFile != null && lineOrNull != null) {
+      int line = lineOrNull.intValue();
       if (pullRequestFacade.hasFileLine(inputFile, line)) {
         String message = issue.message();
         String ruleKey = issue.ruleKey().toString();
@@ -129,7 +108,7 @@ public class PullRequestIssuePostJob implements org.sonar.api.batch.PostJob, Che
         if (!commentsByLine.containsKey(line)) {
           commentsByLine.put(line, new StringBuilder());
         }
-        commentsByLine.get(line).append(markDownUtils.inlineIssue(severity, message, ruleKey)).append("\n");
+        commentsByLine.get(line).append(markDownUtils.inlineIssue(issue.severity(), message, ruleKey)).append("\n");
         return true;
       }
     }

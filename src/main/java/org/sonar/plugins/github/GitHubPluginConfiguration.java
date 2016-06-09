@@ -22,16 +22,17 @@ package org.sonar.plugins.github;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.CheckForNull;
-import org.sonar.api.BatchComponent;
 import org.sonar.api.CoreProperties;
+import org.sonar.api.batch.BatchSide;
 import org.sonar.api.batch.InstantiationStrategy;
 import org.sonar.api.config.Settings;
 import org.sonar.api.utils.MessageException;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
+@BatchSide
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
-public class GitHubPluginConfiguration implements BatchComponent {
+public class GitHubPluginConfiguration {
 
   public static final int MAX_GLOBAL_ISSUES = 10;
 

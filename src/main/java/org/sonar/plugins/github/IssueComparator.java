@@ -22,12 +22,12 @@ package org.sonar.plugins.github;
 import java.util.Comparator;
 import java.util.Objects;
 import javax.annotation.Nullable;
-import org.sonar.api.issue.Issue;
-import org.sonar.api.rule.Severity;
+import org.sonar.api.batch.postjob.issue.PostJobIssue;
+import org.sonar.api.batch.rule.Severity;
 
-public final class IssueComparator implements Comparator<Issue> {
+public final class IssueComparator implements Comparator<PostJobIssue> {
   @Override
-  public int compare(Issue left, Issue right) {
+  public int compare(PostJobIssue left, PostJobIssue right) {
     // Most severe issues should be displayed first.
     if (left == right) {
       return 0;
@@ -46,15 +46,15 @@ public final class IssueComparator implements Comparator<Issue> {
     return compareSeverity(left.severity(), right.severity());
   }
 
-  private static int compareComponentKeyAndLine(Issue left, Issue right) {
+  private static int compareComponentKeyAndLine(PostJobIssue left, PostJobIssue right) {
     if (!left.componentKey().equals(right.componentKey())) {
       return left.componentKey().compareTo(right.componentKey());
     }
     return compareInt(left.line(), right.line());
   }
 
-  private static int compareSeverity(String leftSeverity, String rightSeverity) {
-    if (Severity.ALL.indexOf(leftSeverity) > Severity.ALL.indexOf(rightSeverity)) {
+  private static int compareSeverity(Severity leftSeverity, Severity rightSeverity) {
+    if (leftSeverity.ordinal() > rightSeverity.ordinal()) {
       // Display higher severity first. Relies on Severity.ALL to be sorted by severity.
       return -1;
     } else {

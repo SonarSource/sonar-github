@@ -19,7 +19,6 @@
  */
 package org.sonar.plugins.github;
 
-import com.google.common.annotations.VisibleForTesting;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -40,24 +39,25 @@ import org.kohsuke.github.GHPullRequestReviewComment;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.sonar.api.BatchComponent;
+import org.sonar.api.batch.BatchSide;
 import org.sonar.api.batch.InstantiationStrategy;
+import org.sonar.api.batch.fs.InputComponent;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.InputPath;
 import org.sonar.api.scan.filesystem.PathResolver;
 import org.sonar.api.utils.MessageException;
+import org.sonar.api.utils.log.Logger;
+import org.sonar.api.utils.log.Loggers;
 
 /**
  * Facade for all WS interaction with GitHub.
  */
+@BatchSide
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
-public class PullRequestFacade implements BatchComponent {
+public class PullRequestFacade {
 
-  private static final Logger LOG = LoggerFactory.getLogger(PullRequestFacade.class);
+  private static final Logger LOG = Loggers.get(PullRequestFacade.class);
 
-  @VisibleForTesting
   static final String COMMIT_CONTEXT = "sonarqube";
 
   private final GitHubPluginConfiguration config;
@@ -89,7 +89,6 @@ public class PullRequestFacade implements BatchComponent {
     }
   }
 
-  @VisibleForTesting
   void initGitBaseDir(File projectBaseDir) {
     File detectedGitBaseDir = findGitBaseDir(projectBaseDir);
     if (detectedGitBaseDir == null) {
@@ -100,12 +99,10 @@ public class PullRequestFacade implements BatchComponent {
     }
   }
 
-  @VisibleForTesting
   void setGhRepo(GHRepository ghRepo) {
     this.ghRepo = ghRepo;
   }
 
-  @VisibleForTesting
   void setPr(GHPullRequest pr) {
     this.pr = pr;
   }
@@ -120,7 +117,6 @@ public class PullRequestFacade implements BatchComponent {
     return findGitBaseDir(baseDir.getParentFile());
   }
 
-  @VisibleForTesting
   void setGitBaseDir(File gitBaseDir) {
     this.gitBaseDir = gitBaseDir;
   }
@@ -164,7 +160,6 @@ public class PullRequestFacade implements BatchComponent {
     return result;
   }
 
-  @VisibleForTesting
   static void processPatch(Map<Integer, Integer> patchLocationMapping, String patch) throws IOException {
     int currentLine = -1;
     int patchLocation = 0;
@@ -192,7 +187,6 @@ public class PullRequestFacade implements BatchComponent {
     }
   }
 
-  @VisibleForTesting
   String getPath(InputPath inputPath) {
     return new PathResolver().relativePath(gitBaseDir, inputPath.file());
   }
@@ -282,15 +276,14 @@ public class PullRequestFacade implements BatchComponent {
   }
 
   @CheckForNull
-  public String getGithubUrl(@Nullable InputPath inputPath, @Nullable Integer issueLine) {
-    if (inputPath != null) {
-      String path = getPath(inputPath);
+  public String getGithubUrl(@Nullable InputComponent inputComponent, @Nullable Integer issueLine) {
+    if (inputComponent instanceof InputPath) {
+      String path = getPath((InputPath) inputComponent);
       return ghRepo.getHtmlUrl().toString() + "/blob/" + pr.getHead().getSha() + "/" + path + (issueLine != null ? ("#L" + issueLine) : "");
     }
     return null;
   }
 
-  @VisibleForTesting
   @CheckForNull
   GHCommitStatus getCommitStatusForContext(GHPullRequest pr, String context) {
     List<GHCommitStatus> statuses;

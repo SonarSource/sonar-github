@@ -21,8 +21,8 @@ package org.sonar.plugins.github;
 
 import org.kohsuke.github.GHCommitState;
 import org.sonar.api.CoreProperties;
+import org.sonar.api.batch.AnalysisMode;
 import org.sonar.api.batch.bootstrap.ProjectBuilder;
-import org.sonar.api.config.Settings;
 import org.sonar.api.utils.MessageException;
 
 /**
@@ -34,12 +34,12 @@ public class PullRequestProjectBuilder extends ProjectBuilder {
 
   private final GitHubPluginConfiguration gitHubPluginConfiguration;
   private final PullRequestFacade pullRequestFacade;
-  private final Settings settings;
+  private final AnalysisMode mode;
 
-  public PullRequestProjectBuilder(GitHubPluginConfiguration gitHubPluginConfiguration, PullRequestFacade pullRequestFacade, Settings settings) {
+  public PullRequestProjectBuilder(GitHubPluginConfiguration gitHubPluginConfiguration, PullRequestFacade pullRequestFacade, AnalysisMode mode) {
     this.gitHubPluginConfiguration = gitHubPluginConfiguration;
     this.pullRequestFacade = pullRequestFacade;
-    this.settings = settings;
+    this.mode = mode;
   }
 
   @Override
@@ -55,11 +55,7 @@ public class PullRequestProjectBuilder extends ProjectBuilder {
   }
 
   private void checkMode() {
-    boolean isIssues = settings.getBoolean(CoreProperties.DRY_RUN) || CoreProperties.ANALYSIS_MODE_PREVIEW.equals(settings.getString(CoreProperties.ANALYSIS_MODE))
-      || CoreProperties.ANALYSIS_MODE_INCREMENTAL.equals(settings.getString(CoreProperties.ANALYSIS_MODE))
-      // 5.2+
-      || "issues".equals(settings.getString(CoreProperties.ANALYSIS_MODE));
-    if (!isIssues) {
+    if (!mode.isIssues()) {
       throw MessageException.of("The GitHub plugin is only intended to be used in preview or issues mode. Please set '" + CoreProperties.ANALYSIS_MODE + "'.");
     }
 

@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.sonarsource.parent</groupId>
     <artifactId>parent</artifactId>
-    <version>31</version>
+    <version>34</version>
     <relativePath />
   </parent>
 
@@ -19,7 +19,7 @@
   <inceptionYear>2015</inceptionYear>
   
   <properties>
-    <sonar.version>4.5.2</sonar.version>
+    <sonar.version>5.6</sonar.version>
     <sonar.pluginName>GitHub</sonar.pluginName>
     <sonar.pluginClass>org.sonar.plugins.github.GitHubPlugin</sonar.pluginClass>
 
@@ -62,9 +62,9 @@
 
   <repositories>
     <!--
-    Unfortunately this is required because thw transitive dependency org.jenkins-ci:jenkins:pom:1.26
+    Unfortunately this is required because the transitive dependency org.jenkins-ci:jenkins:pom:1.26
     is not available in Maven central repository:
-    org.kohsuke:github-api:jar:1.69 -> com.infradna.tool:bridge-method-annotation:jar:1.14 -> org.jenkins-ci:annotation-indexer:jar:1.4 -> org.jenkins-ci:jenkins:pom:1.26
+    org.kohsuke:github-api:jar:1.76 -> com.infradna.tool:bridge-method-annotation:jar:1.14 -> org.jenkins-ci:annotation-indexer:jar:1.4 -> org.jenkins-ci:jenkins:pom:1.26
     -->
     <repository>
       <id>repo.jenkins-ci.org</id>
@@ -74,7 +74,7 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.codehaus.sonar</groupId>
+      <groupId>org.sonarsource.sonarqube</groupId>
       <artifactId>sonar-plugin-api</artifactId>
       <version>${sonar.version}</version>
       <scope>provided</scope>
@@ -88,17 +88,16 @@
     <dependency>
       <groupId>org.kohsuke</groupId>
       <artifactId>github-api</artifactId>
-      <version>1.73</version>
+      <version>1.76</version>
     </dependency>
-
-    <!-- unit tests -->
     <!-- Override version used by GitHub API -->
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>2.4</version>
-      <scope>test</scope>
     </dependency>
+
+    <!-- unit tests -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -115,12 +114,6 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
       <version>1.9.5</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.1.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
