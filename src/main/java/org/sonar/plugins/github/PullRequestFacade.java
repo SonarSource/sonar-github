@@ -21,6 +21,7 @@ package org.sonar.plugins.github;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
@@ -270,6 +271,13 @@ public class PullRequestFacade {
         targetUrl = lastStatus.getTargetUrl();
       }
       ghRepo.createCommitStatus(pr.getHead().getSha(), status, targetUrl, statusDescription, COMMIT_CONTEXT);
+    } catch (FileNotFoundException e) {
+      String msg = "Unable to set pull request status. GitHub account probably miss push permission on the repository.";
+      if (LOG.isDebugEnabled()) {
+        LOG.warn(msg, e);
+      } else {
+        LOG.warn(msg);
+      }
     } catch (IOException e) {
       throw new IllegalStateException("Unable to update commit status", e);
     }
