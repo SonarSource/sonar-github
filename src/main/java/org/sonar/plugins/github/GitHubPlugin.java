@@ -30,7 +30,7 @@ import org.sonar.api.PropertyType;
     key = GitHubPlugin.GITHUB_ENDPOINT,
     defaultValue = "https://api.github.com",
     name = "GitHub API Endpoint",
-    description = "URL to access GitHub WS API. Deafult value is fine for public GitHub. Can be modified for GitHub enterprise.",
+    description = "URL to access GitHub WS API. Default value is fine for public GitHub. Can be modified for GitHub enterprise.",
     global = true),
   @Property(
     key = GitHubPlugin.GITHUB_OAUTH,
