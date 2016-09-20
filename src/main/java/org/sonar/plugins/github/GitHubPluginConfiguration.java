@@ -123,7 +123,12 @@ public class GitHubPluginConfiguration {
   }
 
   public boolean isProxyConnectionEnabled() {
-    return settings.getBoolean(GitHubPlugin.GITHUB_USE_PROXY);
+    boolean proxyEnabled = settings.getBoolean(GitHubPlugin.GITHUB_USE_PROXY);
+    if (proxyEnabled && System.getProperty("http.proxyHost") == null)
+    {
+      return false;
+    }
+    return proxyEnabled;
   }
 
 
