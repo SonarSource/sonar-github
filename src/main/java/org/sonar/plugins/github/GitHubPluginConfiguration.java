@@ -27,6 +27,10 @@ import org.sonar.api.batch.BatchSide;
 import org.sonar.api.batch.InstantiationStrategy;
 import org.sonar.api.config.Settings;
 import org.sonar.api.utils.MessageException;
+import org.sonar.api.utils.log.Logger;
+import org.sonar.api.utils.log.Loggers;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
@@ -35,6 +39,7 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 public class GitHubPluginConfiguration {
 
   public static final int MAX_GLOBAL_ISSUES = 10;
+  private static final Logger LOG = Loggers.get(GitHubPluginConfiguration.class);
 
   private Settings settings;
   private Pattern gitSshPattern;
@@ -116,5 +121,24 @@ public class GitHubPluginConfiguration {
   public boolean tryReportIssuesInline() {
     return !settings.getBoolean(GitHubPlugin.GITHUB_DISABLE_INLINE_COMMENTS);
   }
+
+  public boolean isProxyConnectionEnabled() {
+    return settings.getBoolean(GitHubPlugin.GITHUB_USE_PROXY);
+  }
+
+
+  public Proxy getHttpProxy() {
+    try{
+      Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.valueOf(System.getProperty("http.proxyPort"))));
+      return proxy;
+    }
+    catch(NullPointerException e)
+    {
+      LOG.debug("Unable to perform GitHub WS operation - proxy is not defined in sonarQube, check http.proxyHost, http.proxyPort", e);
+      throw MessageException.of("Unable to perform GitHub WS operation - proxy is not defined in sonarQube, check http.proxyHost, http.proxyPort: " + e.getMessage());
+    }
+
+  }
+
 
 }
