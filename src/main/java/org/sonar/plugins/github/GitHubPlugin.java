@@ -59,14 +59,6 @@ import org.sonar.api.PropertyType;
     description = "Issues will not be reported as inline comments but only in the global summary comment",
     project = true,
     global = true,
-    type = PropertyType.BOOLEAN),
-  @Property(
-    key = GitHubPlugin.GITHUB_USE_PROXY,
-    defaultValue = "false",
-    name = "Use proxy while connecting to github",
-    description = "will connect to GitHub using the proxy defined in SonarQube",
-    project = true,
-    global = true,
     type = PropertyType.BOOLEAN)
 })
 public class GitHubPlugin implements Plugin {
@@ -76,7 +68,6 @@ public class GitHubPlugin implements Plugin {
   public static final String GITHUB_REPO = "sonar.github.repository";
   public static final String GITHUB_PULL_REQUEST = "sonar.github.pullRequest";
   public static final String GITHUB_DISABLE_INLINE_COMMENTS = "sonar.github.disableInlineComments";
-  public static final String GITHUB_USE_PROXY = "sonar.github.useHttpProxy";
 
 
   @Override

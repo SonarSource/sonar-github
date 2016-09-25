@@ -19,6 +19,7 @@
  */
 package org.sonar.plugins.github;
 
+import java.net.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.CheckForNull;
@@ -29,8 +30,6 @@ import org.sonar.api.config.Settings;
 import org.sonar.api.utils.MessageException;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
@@ -122,28 +121,42 @@ public class GitHubPluginConfiguration {
     return !settings.getBoolean(GitHubPlugin.GITHUB_DISABLE_INLINE_COMMENTS);
   }
 
+    /**
+     * Checks if a proxy was passed with command line parameters or configured in the system.
+     * If only an HTTP proxy was configured then it's properties are copied to the HTTPS proxy (like SonarQube configuration)
+     * @return True iff a proxy was configured to be used in the plugin.
+     */
   public boolean isProxyConnectionEnabled() {
-    boolean proxyEnabled = settings.getBoolean(GitHubPlugin.GITHUB_USE_PROXY);
-    if (proxyEnabled && System.getProperty("http.proxyHost") == null)
+    if (System.getProperty("http.proxyHost") != null || System.getProperty("https.proxyHost") != null ||
+            System.getProperty("socksProxyHost") != null)
     {
-      return false;
+        return true;
     }
-    return proxyEnabled;
+    return false;
   }
 
 
   public Proxy getHttpProxy() {
     try{
-      Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(System.getProperty("http.proxyHost"), Integer.valueOf(System.getProperty("http.proxyPort"))));
-      return proxy;
+        if(System.getProperty("http.proxyHost") != null && System.getProperty("https.proxyHost") == null)
+        {
+            System.setProperty("https.proxyHost",System.getProperty("http.proxyHost"));
+        }
+        Proxy selectedProxy = ProxySelector.getDefault().select(new URI(endpoint())).get(0);
+        LOG.info("A proxy has been configured - " + selectedProxy.toString());
+        return selectedProxy;
     }
     catch(NullPointerException e)
     {
       LOG.debug("Unable to perform GitHub WS operation - proxy is not defined in sonarQube, check http.proxyHost, http.proxyPort", e);
       throw MessageException.of("Unable to perform GitHub WS operation - proxy is not defined in sonarQube, check http.proxyHost, http.proxyPort: " + e.getMessage());
     }
-
+    catch (URISyntaxException e)
+    {
+        e.printStackTrace();
+        LOG.debug("Unable to perform GitHub WS operation - proxy address syntax is in the wrong format (Doesn't fit http,https,ftp or socks format);", e);
+        throw MessageException.of("Unable to perform GitHub WS operation - no proxy found" + e.getMessage());
+    }
   }
-
 
 }
