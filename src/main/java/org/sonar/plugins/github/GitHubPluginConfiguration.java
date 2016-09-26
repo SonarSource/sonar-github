@@ -137,10 +137,27 @@ public class GitHubPluginConfiguration {
 
 
   public Proxy getHttpProxy() {
-    try{
+    try
+    {
         if(System.getProperty("http.proxyHost") != null && System.getProperty("https.proxyHost") == null)
         {
-            System.setProperty("https.proxyHost",System.getProperty("http.proxyHost"));
+            System.setProperty("https.proxyHost", System.getProperty("http.proxyHost"));
+        }
+
+        String proxyUser;
+        String proxyPass;
+
+        if(((proxyUser = System.getProperty("http.proxyUser")) != null && (proxyPass = System.getProperty("http.proxyPassword")) != null))
+        {
+            Authenticator.setDefault(
+                    new Authenticator() {
+                        @Override
+                        public PasswordAuthentication getPasswordAuthentication() {
+                            return new PasswordAuthentication(
+                                    proxyUser, proxyPass.toCharArray());
+                        }
+                    }
+            );
         }
         Proxy selectedProxy = ProxySelector.getDefault().select(new URI(endpoint())).get(0);
         LOG.info("A proxy has been configured - " + selectedProxy.toString());
