@@ -20,6 +20,7 @@
 package org.sonar.plugins.github;
 
 import java.net.*;
+import java.util.IllegalFormatException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.CheckForNull;
@@ -142,12 +143,14 @@ public class GitHubPluginConfiguration {
         if(System.getProperty("http.proxyHost") != null && System.getProperty("https.proxyHost") == null)
         {
             System.setProperty("https.proxyHost", System.getProperty("http.proxyHost"));
+            System.setProperty("https.proxyPort", System.getProperty("http.proxyHost"));
+
         }
 
-        String proxyUser;
-        String proxyPass;
+        String proxyUser = System.getProperty("http.proxyUser");
+        String proxyPass = System.getProperty("http.proxyPassword");
 
-        if(((proxyUser = System.getProperty("http.proxyUser")) != null && (proxyPass = System.getProperty("http.proxyPassword")) != null))
+        if(proxyUser != null && proxyPass != null)
         {
             Authenticator.setDefault(
                     new Authenticator() {
@@ -159,21 +162,20 @@ public class GitHubPluginConfiguration {
                     }
             );
         }
+
         Proxy selectedProxy = ProxySelector.getDefault().select(new URI(endpoint())).get(0);
+
+        if(selectedProxy.type() == Proxy.Type.DIRECT)
+        {
+            LOG.debug("There was no suitable proxy found to connect to GitHub - direct connection is used ");
+        }
+
         LOG.info("A proxy has been configured - " + selectedProxy.toString());
         return selectedProxy;
+    } catch (URISyntaxException e)
+        {
+            throw new IllegalArgumentException("Unable to perform GitHub WS operation - endpoint in wrong format: " + endpoint() + e.getMessage());
+        }
     }
-    catch(NullPointerException e)
-    {
-      LOG.debug("Unable to perform GitHub WS operation - proxy is not defined in sonarQube, check http.proxyHost, http.proxyPort", e);
-      throw MessageException.of("Unable to perform GitHub WS operation - proxy is not defined in sonarQube, check http.proxyHost, http.proxyPort: " + e.getMessage());
-    }
-    catch (URISyntaxException e)
-    {
-        e.printStackTrace();
-        LOG.debug("Unable to perform GitHub WS operation - proxy address syntax is in the wrong format (Doesn't fit http,https,ftp or socks format);", e);
-        throw MessageException.of("Unable to perform GitHub WS operation - no proxy found" + e.getMessage());
-    }
-  }
 
 }
