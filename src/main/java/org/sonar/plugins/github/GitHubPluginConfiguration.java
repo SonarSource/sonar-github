@@ -19,11 +19,6 @@
  */
 package org.sonar.plugins.github;
 
-import java.net.*;
-import java.util.IllegalFormatException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.annotation.CheckForNull;
 import org.sonar.api.CoreProperties;
 import org.sonar.api.batch.BatchSide;
 import org.sonar.api.batch.InstantiationStrategy;
@@ -33,15 +28,31 @@ import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import javax.annotation.CheckForNull;
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
+import java.net.Proxy;
+import java.net.ProxySelector;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @BatchSide
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 public class GitHubPluginConfiguration {
 
   public static final int MAX_GLOBAL_ISSUES = 10;
-  private static final Logger LOG = Loggers.get(GitHubPluginConfiguration.class);
+    private static final Logger LOG = Loggers.get(GitHubPluginConfiguration.class);
+    public static final String HTTP_PROXY_HOSTNAME = "http.proxyHost";
+    public static final String HTTPS_PROXY_HOSTNAME = "https.proxyHost";
+    public static final String PROXY_SOCKS_HOSTNAME = "socksProxyHost";
+    public static final String HTTP_PROXY_PORT = "http.proxyPort";
+    public static final String HTTPS_PROXY_PORT = "https.proxyPort";
+    public static final String HTTP_PROXY_USER = "http.proxyUser";
+    public static final String HTTP_PROXY_PASS = "http.proxyPassword";
 
-  private Settings settings;
+    private Settings settings;
   private Pattern gitSshPattern;
   private Pattern gitHttpPattern;
 
@@ -128,8 +139,8 @@ public class GitHubPluginConfiguration {
      * @return True iff a proxy was configured to be used in the plugin.
      */
   public boolean isProxyConnectionEnabled() {
-    if (System.getProperty("http.proxyHost") != null || System.getProperty("https.proxyHost") != null ||
-            System.getProperty("socksProxyHost") != null)
+    if (System.getProperty(HTTP_PROXY_HOSTNAME) != null || System.getProperty(HTTPS_PROXY_HOSTNAME) != null ||
+            System.getProperty(PROXY_SOCKS_HOSTNAME) != null)
     {
         return true;
     }
@@ -140,15 +151,15 @@ public class GitHubPluginConfiguration {
   public Proxy getHttpProxy() {
     try
     {
-        if(System.getProperty("http.proxyHost") != null && System.getProperty("https.proxyHost") == null)
+        if(System.getProperty(HTTP_PROXY_HOSTNAME) != null && System.getProperty(HTTPS_PROXY_HOSTNAME) == null)
         {
-            System.setProperty("https.proxyHost", System.getProperty("http.proxyHost"));
-            System.setProperty("https.proxyPort", System.getProperty("http.proxyHost"));
+            System.setProperty(HTTPS_PROXY_HOSTNAME, System.getProperty(HTTP_PROXY_HOSTNAME));
+            System.setProperty(HTTPS_PROXY_PORT, System.getProperty(HTTP_PROXY_PORT));
 
         }
 
-        String proxyUser = System.getProperty("http.proxyUser");
-        String proxyPass = System.getProperty("http.proxyPassword");
+        String proxyUser = System.getProperty(HTTP_PROXY_USER);
+        String proxyPass = System.getProperty(HTTP_PROXY_PASS);
 
         if(proxyUser != null && proxyPass != null)
         {
