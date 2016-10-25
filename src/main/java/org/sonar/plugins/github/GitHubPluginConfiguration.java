@@ -19,22 +19,38 @@
  */
 package org.sonar.plugins.github;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.annotation.CheckForNull;
 import org.sonar.api.CoreProperties;
 import org.sonar.api.batch.BatchSide;
 import org.sonar.api.batch.InstantiationStrategy;
 import org.sonar.api.config.Settings;
 import org.sonar.api.utils.MessageException;
+import org.sonar.api.utils.log.Logger;
+import org.sonar.api.utils.log.Loggers;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
+import javax.annotation.CheckForNull;
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
+import java.net.Proxy;
+import java.net.ProxySelector;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @BatchSide
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 public class GitHubPluginConfiguration {
 
   public static final int MAX_GLOBAL_ISSUES = 10;
+  private static final Logger LOG = Loggers.get(GitHubPluginConfiguration.class);
+  public static final String HTTP_PROXY_HOSTNAME = "http.proxyHost";
+  public static final String HTTPS_PROXY_HOSTNAME = "https.proxyHost";
+  public static final String PROXY_SOCKS_HOSTNAME = "socksProxyHost";
+  public static final String HTTP_PROXY_PORT = "http.proxyPort";
+  public static final String HTTPS_PROXY_PORT = "https.proxyPort";
+  public static final String HTTP_PROXY_USER = "http.proxyUser";
+  public static final String HTTP_PROXY_PASS = "http.proxyPassword";
 
   private Settings settings;
   private Pattern gitSshPattern;
@@ -115,6 +131,54 @@ public class GitHubPluginConfiguration {
 
   public boolean tryReportIssuesInline() {
     return !settings.getBoolean(GitHubPlugin.GITHUB_DISABLE_INLINE_COMMENTS);
+  }
+
+  /**
+   * Checks if a proxy was passed with command line parameters or configured in the system.
+   * If only an HTTP proxy was configured then it's properties are copied to the HTTPS proxy (like SonarQube configuration)
+   * @return True iff a proxy was configured to be used in the plugin.
+   */
+  public boolean isProxyConnectionEnabled() {
+    if (System.getProperty(HTTP_PROXY_HOSTNAME) != null || System.getProperty(HTTPS_PROXY_HOSTNAME) != null ||
+      System.getProperty(PROXY_SOCKS_HOSTNAME) != null) {
+      return true;
+    }
+    return false;
+  }
+
+  public Proxy getHttpProxy() {
+    try {
+      if (System.getProperty(HTTP_PROXY_HOSTNAME) != null && System.getProperty(HTTPS_PROXY_HOSTNAME) == null) {
+        System.setProperty(HTTPS_PROXY_HOSTNAME, System.getProperty(HTTP_PROXY_HOSTNAME));
+        System.setProperty(HTTPS_PROXY_PORT, System.getProperty(HTTP_PROXY_PORT));
+
+      }
+
+      String proxyUser = System.getProperty(HTTP_PROXY_USER);
+      String proxyPass = System.getProperty(HTTP_PROXY_PASS);
+
+      if (proxyUser != null && proxyPass != null) {
+        Authenticator.setDefault(
+          new Authenticator() {
+            @Override
+            public PasswordAuthentication getPasswordAuthentication() {
+              return new PasswordAuthentication(
+                proxyUser, proxyPass.toCharArray());
+            }
+          });
+      }
+
+      Proxy selectedProxy = ProxySelector.getDefault().select(new URI(endpoint())).get(0);
+
+      if (selectedProxy.type() == Proxy.Type.DIRECT) {
+        LOG.debug("There was no suitable proxy found to connect to GitHub - direct connection is used ");
+      }
+
+      LOG.info("A proxy has been configured - " + selectedProxy.toString());
+      return selectedProxy;
+    } catch (URISyntaxException e) {
+      throw new IllegalArgumentException("Unable to perform GitHub WS operation - endpoint in wrong format: " + endpoint(), e);
+    }
   }
 
 }

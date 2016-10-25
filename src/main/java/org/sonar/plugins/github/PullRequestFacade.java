@@ -77,7 +77,15 @@ public class PullRequestFacade {
   public void init(int pullRequestNumber, File projectBaseDir) {
     initGitBaseDir(projectBaseDir);
     try {
-      GitHub github = new GitHubBuilder().withEndpoint(config.endpoint()).withOAuthToken(config.oauth()).build();
+      GitHub github;
+      if(config.isProxyConnectionEnabled())
+      {
+          github = new GitHubBuilder().withProxy(config.getHttpProxy()).withEndpoint(config.endpoint()).withOAuthToken(config.oauth()).build();
+      }
+      else
+      {
+          github = new GitHubBuilder().withEndpoint(config.endpoint()).withOAuthToken(config.oauth()).build();
+      }
       setGhRepo(github.getRepository(config.repository()));
       setPr(ghRepo.getPullRequest(pullRequestNumber));
       LOG.info("Starting analysis of pull request: " + pr.getHtmlUrl());

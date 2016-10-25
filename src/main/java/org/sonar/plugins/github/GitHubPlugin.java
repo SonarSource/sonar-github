@@ -69,6 +69,7 @@ public class GitHubPlugin implements Plugin {
   public static final String GITHUB_PULL_REQUEST = "sonar.github.pullRequest";
   public static final String GITHUB_DISABLE_INLINE_COMMENTS = "sonar.github.disableInlineComments";
 
+
   @Override
   public void define(Context context) {
     context.addExtensions(
