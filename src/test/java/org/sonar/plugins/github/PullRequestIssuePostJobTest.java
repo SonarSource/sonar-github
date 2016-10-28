@@ -35,6 +35,7 @@ import org.sonar.api.config.PropertyDefinition;
 import org.sonar.api.config.PropertyDefinitions;
 import org.sonar.api.config.Settings;
 import org.sonar.api.rule.RuleKey;
+import org.sonar.api.utils.System2;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.AdditionalMatchers.not;
@@ -61,7 +62,7 @@ public class PullRequestIssuePostJobTest {
       .category(CoreProperties.CATEGORY_GENERAL)
       .defaultValue(CoreProperties.SERVER_BASE_URL_DEFAULT_VALUE)
       .build()));
-    GitHubPluginConfiguration config = new GitHubPluginConfiguration(settings);
+    GitHubPluginConfiguration config = new GitHubPluginConfiguration(settings, new System2());
     context = mock(PostJobContext.class);
 
     settings.setProperty("sonar.host.url", "http://192.168.0.1");

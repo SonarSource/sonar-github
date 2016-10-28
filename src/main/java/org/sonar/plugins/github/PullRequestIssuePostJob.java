@@ -71,7 +71,7 @@ public class PullRequestIssuePostJob implements PostJob {
     Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine = new HashMap<>();
 
     StreamSupport.stream(issues.spliterator(), false)
-      .filter(i -> i.isNew())
+      .filter(PostJobIssue::isNew)
       // SONARGITUB-13 Ignore issues on files not modified by the P/R
       .filter(i -> {
         InputComponent inputComponent = i.inputComponent();

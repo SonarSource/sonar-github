@@ -78,13 +78,10 @@ public class PullRequestFacade {
     initGitBaseDir(projectBaseDir);
     try {
       GitHub github;
-      if(config.isProxyConnectionEnabled())
-      {
-          github = new GitHubBuilder().withProxy(config.getHttpProxy()).withEndpoint(config.endpoint()).withOAuthToken(config.oauth()).build();
-      }
-      else
-      {
-          github = new GitHubBuilder().withEndpoint(config.endpoint()).withOAuthToken(config.oauth()).build();
+      if (config.isProxyConnectionEnabled()) {
+        github = new GitHubBuilder().withProxy(config.getHttpProxy()).withEndpoint(config.endpoint()).withOAuthToken(config.oauth()).build();
+      } else {
+        github = new GitHubBuilder().withEndpoint(config.endpoint()).withOAuthToken(config.oauth()).build();
       }
       setGhRepo(github.getRepository(config.repository()));
       setPr(ghRepo.getPullRequest(pullRequestNumber));

@@ -29,6 +29,7 @@ import org.sonar.api.batch.bootstrap.ProjectBuilder;
 import org.sonar.api.config.PropertyDefinitions;
 import org.sonar.api.config.Settings;
 import org.sonar.api.utils.MessageException;
+import org.sonar.api.utils.System2;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -54,7 +55,7 @@ public class PullRequestProjectBuilderTest {
     settings = new Settings(new PropertyDefinitions(GitHubPlugin.class));
     facade = mock(PullRequestFacade.class);
     mode = mock(AnalysisMode.class);
-    pullRequestProjectBuilder = new PullRequestProjectBuilder(new GitHubPluginConfiguration(settings), facade, mode);
+    pullRequestProjectBuilder = new PullRequestProjectBuilder(new GitHubPluginConfiguration(settings, new System2()), facade, mode);
 
   }
 

@@ -43,7 +43,7 @@ public class GlobalReport {
     this.maxGlobalReportedIssues = maxGlobalReportedIssues;
   }
 
-  private void increment(org.sonar.api.batch.rule.Severity severity) {
+  private void increment(Severity severity) {
     this.newIssuesBySeverity[severity.ordinal()]++;
   }
 
@@ -64,29 +64,33 @@ public class GlobalReport {
     }
 
     if (extraIssueCount > 0) {
-      if (tryReportIssuesInline) {
-        if (hasInlineIssues || extraIssuesTruncated) {
-          int extraCount;
-          sb.append("\n#### ");
-          if (extraIssueCount <= maxGlobalReportedIssues) {
-            extraCount = extraIssueCount;
-          } else {
-            extraCount = maxGlobalReportedIssues;
-            sb.append("Top ");
-          }
-          sb.append(extraCount).append(" extra issue").append(extraCount > 1 ? "s" : "").append("\n");
-        }
-        sb.append(
-          "\nNote: The following issues were found on lines that were not modified in the pull request. "
-            + "Because these issues can't be reported as line comments, they are summarized here:\n");
-      } else if (extraIssuesTruncated) {
-        sb.append("\n#### Top ").append(maxGlobalReportedIssues).append(" issues\n");
-      }
-      // Need to add an extra line break for ordered list to be displayed properly
-      sb.append('\n')
-        .append(notReportedOnDiff.toString());
+      appendExtraIssues(sb, hasInlineIssues, extraIssuesTruncated);
     }
     return sb.toString();
+  }
+
+  private void appendExtraIssues(StringBuilder sb, boolean hasInlineIssues, boolean extraIssuesTruncated) {
+    if (tryReportIssuesInline) {
+      if (hasInlineIssues || extraIssuesTruncated) {
+        int extraCount;
+        sb.append("\n#### ");
+        if (extraIssueCount <= maxGlobalReportedIssues) {
+          extraCount = extraIssueCount;
+        } else {
+          extraCount = maxGlobalReportedIssues;
+          sb.append("Top ");
+        }
+        sb.append(extraCount).append(" extra issue").append(extraCount > 1 ? "s" : "").append("\n");
+      }
+      sb.append(
+        "\nNote: The following issues were found on lines that were not modified in the pull request. "
+          + "Because these issues can't be reported as line comments, they are summarized here:\n");
+    } else if (extraIssuesTruncated) {
+      sb.append("\n#### Top ").append(maxGlobalReportedIssues).append(" issues\n");
+    }
+    // Need to add an extra line break for ordered list to be displayed properly
+    sb.append('\n')
+      .append(notReportedOnDiff.toString());
   }
 
   public String getStatusDescription() {

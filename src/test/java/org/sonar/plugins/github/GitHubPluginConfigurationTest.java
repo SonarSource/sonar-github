@@ -19,16 +19,25 @@
  */
 package org.sonar.plugins.github;
 
+import java.net.Proxy;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.sonar.api.CoreProperties;
 import org.sonar.api.config.PropertyDefinitions;
 import org.sonar.api.config.Settings;
 import org.sonar.api.utils.MessageException;
+import org.sonar.api.utils.System2;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class GitHubPluginConfigurationTest {
+
+  @Rule
+  public ExpectedException thrown = ExpectedException.none();
 
   private Settings settings;
   private GitHubPluginConfiguration config;
@@ -36,7 +45,7 @@ public class GitHubPluginConfigurationTest {
   @Before
   public void prepare() {
     settings = new Settings(new PropertyDefinitions(GitHubPlugin.class));
-    config = new GitHubPluginConfiguration(settings);
+    config = new GitHubPluginConfiguration(settings, new System2());
   }
 
   @Test
@@ -105,6 +114,21 @@ public class GitHubPluginConfigurationTest {
     assertThat(config.tryReportIssuesInline()).isTrue();
     settings.setProperty(GitHubPlugin.GITHUB_DISABLE_INLINE_COMMENTS, "true");
     assertThat(config.tryReportIssuesInline()).isFalse();
+  }
+
+  @Test
+  public void testProxyConfiguration() {
+    System2 system2 = mock(System2.class);
+    config = new GitHubPluginConfiguration(settings, system2);
+    assertThat(config.isProxyConnectionEnabled()).isFalse();
+    when(system2.property("http.proxyHost")).thenReturn("foo");
+    assertThat(config.isProxyConnectionEnabled()).isTrue();
+    when(system2.property("https.proxyHost")).thenReturn("bar");
+    assertThat(config.getHttpProxy()).isEqualTo(Proxy.NO_PROXY);
+
+    settings.setProperty(GitHubPlugin.GITHUB_ENDPOINT, "wrong url");
+    thrown.expect(IllegalArgumentException.class);
+    config.getHttpProxy();
   }
 
 }

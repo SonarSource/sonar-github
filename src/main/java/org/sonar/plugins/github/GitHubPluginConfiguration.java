@@ -19,16 +19,6 @@
  */
 package org.sonar.plugins.github;
 
-import org.sonar.api.CoreProperties;
-import org.sonar.api.batch.BatchSide;
-import org.sonar.api.batch.InstantiationStrategy;
-import org.sonar.api.config.Settings;
-import org.sonar.api.utils.MessageException;
-import org.sonar.api.utils.log.Logger;
-import org.sonar.api.utils.log.Loggers;
-
-import static org.apache.commons.lang.StringUtils.isNotBlank;
-import javax.annotation.CheckForNull;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.net.Proxy;
@@ -37,6 +27,17 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.CheckForNull;
+import org.sonar.api.CoreProperties;
+import org.sonar.api.batch.BatchSide;
+import org.sonar.api.batch.InstantiationStrategy;
+import org.sonar.api.config.Settings;
+import org.sonar.api.utils.MessageException;
+import org.sonar.api.utils.System2;
+import org.sonar.api.utils.log.Logger;
+import org.sonar.api.utils.log.Loggers;
+
+import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 @BatchSide
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
@@ -52,12 +53,14 @@ public class GitHubPluginConfiguration {
   public static final String HTTP_PROXY_USER = "http.proxyUser";
   public static final String HTTP_PROXY_PASS = "http.proxyPassword";
 
-  private Settings settings;
-  private Pattern gitSshPattern;
-  private Pattern gitHttpPattern;
+  private final Settings settings;
+  private final System2 system2;
+  private final Pattern gitSshPattern;
+  private final Pattern gitHttpPattern;
 
-  public GitHubPluginConfiguration(Settings settings) {
+  public GitHubPluginConfiguration(Settings settings, System2 system2) {
     this.settings = settings;
+    this.system2 = system2;
     this.gitSshPattern = Pattern.compile(".*@github\\.com:(.*/.*)\\.git");
     this.gitHttpPattern = Pattern.compile("https?://github\\.com/(.*/.*)\\.git");
   }
@@ -139,23 +142,20 @@ public class GitHubPluginConfiguration {
    * @return True iff a proxy was configured to be used in the plugin.
    */
   public boolean isProxyConnectionEnabled() {
-    if (System.getProperty(HTTP_PROXY_HOSTNAME) != null || System.getProperty(HTTPS_PROXY_HOSTNAME) != null ||
-      System.getProperty(PROXY_SOCKS_HOSTNAME) != null) {
-      return true;
-    }
-    return false;
+    return system2.property(HTTP_PROXY_HOSTNAME) != null
+      || system2.property(HTTPS_PROXY_HOSTNAME) != null
+      || system2.property(PROXY_SOCKS_HOSTNAME) != null;
   }
 
   public Proxy getHttpProxy() {
     try {
-      if (System.getProperty(HTTP_PROXY_HOSTNAME) != null && System.getProperty(HTTPS_PROXY_HOSTNAME) == null) {
-        System.setProperty(HTTPS_PROXY_HOSTNAME, System.getProperty(HTTP_PROXY_HOSTNAME));
-        System.setProperty(HTTPS_PROXY_PORT, System.getProperty(HTTP_PROXY_PORT));
-
+      if (system2.property(HTTP_PROXY_HOSTNAME) != null && system2.property(HTTPS_PROXY_HOSTNAME) == null) {
+        System.setProperty(HTTPS_PROXY_HOSTNAME, system2.property(HTTP_PROXY_HOSTNAME));
+        System.setProperty(HTTPS_PROXY_PORT, system2.property(HTTP_PROXY_PORT));
       }
 
-      String proxyUser = System.getProperty(HTTP_PROXY_USER);
-      String proxyPass = System.getProperty(HTTP_PROXY_PASS);
+      String proxyUser = system2.property(HTTP_PROXY_USER);
+      String proxyPass = system2.property(HTTP_PROXY_PASS);
 
       if (proxyUser != null && proxyPass != null) {
         Authenticator.setDefault(
@@ -174,7 +174,7 @@ public class GitHubPluginConfiguration {
         LOG.debug("There was no suitable proxy found to connect to GitHub - direct connection is used ");
       }
 
-      LOG.info("A proxy has been configured - " + selectedProxy.toString());
+      LOG.info("A proxy has been configured - {}", selectedProxy.toString());
       return selectedProxy;
     } catch (URISyntaxException e) {
       throw new IllegalArgumentException("Unable to perform GitHub WS operation - endpoint in wrong format: " + endpoint(), e);
