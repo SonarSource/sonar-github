@@ -251,7 +251,7 @@ public class PullRequestFacade {
     }
   }
 
-  private boolean findAndDeleteOthers(String markup) throws IOException {
+  private boolean findAndDeleteOthers(@Nullable String markup) throws IOException {
     boolean found = false;
     for (GHIssueComment comment : pr.listComments()) {
       if (myself.equals(comment.getUser().getLogin())) {

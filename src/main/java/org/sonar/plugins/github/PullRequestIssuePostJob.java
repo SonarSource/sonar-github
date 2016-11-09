@@ -96,7 +96,7 @@ public class PullRequestIssuePostJob implements PostJob {
 
   private boolean tryReportInline(Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine, PostJobIssue issue, InputFile inputFile) {
     Integer lineOrNull = issue.line();
-    if (inputFile != null && lineOrNull != null) {
+    if (lineOrNull != null) {
       int line = lineOrNull.intValue();
       if (pullRequestFacade.hasFileLine(inputFile, line)) {
         String message = issue.message();

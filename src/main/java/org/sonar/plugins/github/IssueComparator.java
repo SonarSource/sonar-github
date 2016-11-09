@@ -27,7 +27,7 @@ import org.sonar.api.batch.rule.Severity;
 
 public final class IssueComparator implements Comparator<PostJobIssue> {
   @Override
-  public int compare(PostJobIssue left, PostJobIssue right) {
+  public int compare(@Nullable PostJobIssue left, @Nullable PostJobIssue right) {
     // Most severe issues should be displayed first.
     if (left == right) {
       return 0;
