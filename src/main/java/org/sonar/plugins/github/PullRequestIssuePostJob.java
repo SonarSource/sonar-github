@@ -60,7 +60,9 @@ public class PullRequestIssuePostJob implements PostJob {
 
     updateReviewComments(commentsToBeAddedByLine);
 
-    pullRequestFacade.deleteOutdatedComments();
+    if (gitHubPluginConfiguration.shouldDeleteOutdatedInlineComments()) {
+      pullRequestFacade.deleteOutdatedComments();
+    }
 
     pullRequestFacade.createOrUpdateGlobalComments(report.hasNewIssue() ? report.formatForMarkdown() : null);
 
