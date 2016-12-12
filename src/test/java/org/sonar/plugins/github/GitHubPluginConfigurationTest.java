@@ -114,6 +114,11 @@ public class GitHubPluginConfigurationTest {
     assertThat(config.tryReportIssuesInline()).isTrue();
     settings.setProperty(GitHubPlugin.GITHUB_DISABLE_INLINE_COMMENTS, "true");
     assertThat(config.tryReportIssuesInline()).isFalse();
+
+    assertThat(config.disableSummaryComments()).isFalse();
+    settings.setProperty(GitHubPlugin.GITHUB_DISABLE_SUMMARY_COMMENTS, "true");
+    assertThat(config.disableSummaryComments()).isTrue();
+
   }
 
   @Test
