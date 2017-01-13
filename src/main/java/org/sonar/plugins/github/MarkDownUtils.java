@@ -94,7 +94,10 @@ public class MarkDownUtils {
   }
 
   public static String getImageMarkdownForSeverity(Severity severity) {
-    return "![" + severity.name() + "](" + IMAGES_ROOT_URL + "severity-" + severity.name().toLowerCase(Locale.ENGLISH) + ".png)";
+    return String.format("![%s](%s \"Severity: %s\")", severity.name(), getImagePathForSeverity(severity), severity.name());
   }
 
+  private static String getImagePathForSeverity(Severity severity) {
+    return IMAGES_ROOT_URL + "severity-" + severity.name().toLowerCase(Locale.ENGLISH) + ".png";
+  }
 }
