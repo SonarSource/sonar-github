@@ -20,6 +20,8 @@
 package org.sonar.plugins.github;
 
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.kohsuke.github.GHCommitState;
 import org.sonar.api.batch.postjob.issue.PostJobIssue;
@@ -66,7 +68,21 @@ public class GlobalReport {
     if (extraIssueCount > 0) {
       appendExtraIssues(sb, hasInlineIssues, extraIssuesTruncated);
     }
+
+    appendReferenceDefinitions(sb);
     return sb.toString();
+  }
+
+  protected static void appendReferenceDefinitions(StringBuilder sb) {
+    String s = sb.toString();
+
+    for (Severity severity : Severity.values()) {
+      Pattern pattern = Pattern.compile(String.format("!\\[%s\\]\\[%s\\]", severity.name(), severity.name()));
+      Matcher matcher = pattern.matcher(s);
+      if (matcher.find()) {
+        sb.append("\n").append(MarkDownUtils.getImageMarkdownForSeverityDefinition(severity));
+      }
+    }
   }
 
   private void appendExtraIssues(StringBuilder sb, boolean hasInlineIssues, boolean extraIssuesTruncated) {
@@ -147,7 +163,7 @@ public class GlobalReport {
   private void printNewIssuesForMarkdown(StringBuilder sb, Severity severity) {
     int issueCount = newIssues(severity);
     if (issueCount > 0) {
-      sb.append("* ").append(MarkDownUtils.getImageMarkdownForSeverity(severity)).append(" ").append(issueCount).append(" ").append(severity.name().toLowerCase(Locale.ENGLISH))
+      sb.append("* ").append(MarkDownUtils.getImageMarkdownForSeverityReference(severity)).append(" ").append(issueCount).append(" ").append(severity.name().toLowerCase(Locale.ENGLISH))
         .append("\n");
     }
   }

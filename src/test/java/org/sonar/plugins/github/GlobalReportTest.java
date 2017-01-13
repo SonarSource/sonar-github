@@ -34,6 +34,7 @@ import org.sonar.api.rule.RuleKey;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.sonar.plugins.github.GlobalReport.appendReferenceDefinitions;
 
 public class GlobalReportTest {
 
@@ -86,8 +87,9 @@ public class GlobalReportTest {
     globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue", "rule"), GITHUB_URL, true);
 
     String desiredMarkdown = "SonarQube analysis reported 1 issue\n" +
-      "* ![INFO](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\") 1 info\n" +
-      "\nWatch the comments in this conversation to review them.\n";
+      "* ![INFO][INFO] 1 info\n" +
+      "\nWatch the comments in this conversation to review them.\n" +
+      "\n[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
 
@@ -102,7 +104,8 @@ public class GlobalReportTest {
     String desiredMarkdown = "SonarQube analysis reported 1 issue\n\n" +
       "Note: The following issues were found on lines that were not modified in the pull request. Because these issues can't be reported as line comments, they are summarized here:\n\n"
       +
-      "1. ![INFO](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\") component0: Issue0 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule0)\n";
+      "1. ![INFO][INFO] component0: Issue0 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule0)\n" +
+      "\n[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
 
@@ -119,12 +122,18 @@ public class GlobalReportTest {
     globalReport.process(newMockedIssue("component", null, null, Severity.BLOCKER, true, "Issue", "rule"), GITHUB_URL, true);
 
     String desiredMarkdown = "SonarQube analysis reported 5 issues\n" +
-      "* ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\") 1 blocker\n" +
-      "* ![CRITICAL](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png \"Severity: CRITICAL\") 1 critical\n" +
-      "* ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") 1 major\n" +
-      "* ![MINOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\") 1 minor\n" +
-      "* ![INFO](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\") 1 info\n" +
-      "\nWatch the comments in this conversation to review them.\n";
+      "* ![BLOCKER][BLOCKER] 1 blocker\n" +
+      "* ![CRITICAL][CRITICAL] 1 critical\n" +
+      "* ![MAJOR][MAJOR] 1 major\n" +
+      "* ![MINOR][MINOR] 1 minor\n" +
+      "* ![INFO][INFO] 1 info\n" +
+      "\nWatch the comments in this conversation to review them.\n"
+      + "\n"
+      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"\n"
+      + "[MINOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\"\n"
+      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"\n"
+      + "[CRITICAL]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png \"Severity: CRITICAL\"\n"
+      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\"";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
 
@@ -141,18 +150,24 @@ public class GlobalReportTest {
     globalReport.process(newMockedIssue("component", null, null, Severity.BLOCKER, true, "Issue 4", "rule4"), GITHUB_URL, true);
 
     String desiredMarkdown = "SonarQube analysis reported 5 issues\n" +
-      "* ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\") 1 blocker\n" +
-      "* ![CRITICAL](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png \"Severity: CRITICAL\") 1 critical\n" +
-      "* ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") 1 major\n" +
-      "* ![MINOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\") 1 minor\n" +
-      "* ![INFO](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\") 1 info\n" +
+      "* ![BLOCKER][BLOCKER] 1 blocker\n" +
+      "* ![CRITICAL][CRITICAL] 1 critical\n" +
+      "* ![MAJOR][MAJOR] 1 major\n" +
+      "* ![MINOR][MINOR] 1 minor\n" +
+      "* ![INFO][INFO] 1 info\n" +
       "\nWatch the comments in this conversation to review them.\n" +
       "\n#### 2 extra issues\n" +
       "\nNote: The following issues were found on lines that were not modified in the pull request. Because these issues can't be reported as line comments, they are summarized here:\n\n"
       +
-      "1. ![MINOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\") [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 1 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule1)\n"
+      "1. ![MINOR][MINOR] [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 1 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule1)\n"
       +
-      "1. ![CRITICAL](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png \"Severity: CRITICAL\") [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 3 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule3)\n";
+      "1. ![CRITICAL][CRITICAL] [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 3 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule3)\n"
+      + "\n"
+      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"\n"
+      + "[MINOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\"\n"
+      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"\n"
+      + "[CRITICAL]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png \"Severity: CRITICAL\"\n"
+      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\"";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
 
@@ -169,15 +184,21 @@ public class GlobalReportTest {
     globalReport.process(newMockedIssue("component", null, null, Severity.BLOCKER, true, "Issue 4", "rule4"), GITHUB_URL, false);
 
     String desiredMarkdown = "SonarQube analysis reported 5 issues\n\n" +
-      "1. ![INFO](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\") [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 0 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule0)\n"
+      "1. ![INFO][INFO] [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 0 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule0)\n"
       +
-      "1. ![MINOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\") [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 1 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule1)\n"
+      "1. ![MINOR][MINOR] [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 1 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule1)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 2 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule2)\n"
+      "1. ![MAJOR][MAJOR] [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 2 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule2)\n"
       +
-      "1. ![CRITICAL](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png \"Severity: CRITICAL\") [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 3 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule3)\n"
+      "1. ![CRITICAL][CRITICAL] [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 3 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule3)\n"
       +
-      "1. ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\") [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 4 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule4)\n";
+      "1. ![BLOCKER][BLOCKER] [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 4 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule4)\n"
+      + "\n"
+      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"\n"
+      + "[MINOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\"\n"
+      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"\n"
+      + "[CRITICAL]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png \"Severity: CRITICAL\"\n"
+      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\"";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
 
@@ -194,19 +215,25 @@ public class GlobalReportTest {
     globalReport.process(newMockedIssue("component", null, null, Severity.BLOCKER, true, "Issue 4", "rule4"), GITHUB_URL, false);
 
     String desiredMarkdown = "SonarQube analysis reported 5 issues\n" +
-      "* ![BLOCKER](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\") 1 blocker\n" +
-      "* ![CRITICAL](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png \"Severity: CRITICAL\") 1 critical\n" +
-      "* ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") 1 major\n" +
-      "* ![MINOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\") 1 minor\n" +
-      "* ![INFO](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\") 1 info\n" +
+      "* ![BLOCKER][BLOCKER] 1 blocker\n" +
+      "* ![CRITICAL][CRITICAL] 1 critical\n" +
+      "* ![MAJOR][MAJOR] 1 major\n" +
+      "* ![MINOR][MINOR] 1 minor\n" +
+      "* ![INFO][INFO] 1 info\n" +
       "\n#### Top 4 issues\n\n" +
-      "1. ![INFO](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\") [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 0 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule0)\n"
+      "1. ![INFO][INFO] [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 0 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule0)\n"
       +
-      "1. ![MINOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\") [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 1 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule1)\n"
+      "1. ![MINOR][MINOR] [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 1 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule1)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 2 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule2)\n"
+      "1. ![MAJOR][MAJOR] [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 2 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule2)\n"
       +
-      "1. ![CRITICAL](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png \"Severity: CRITICAL\") [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 3 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule3)\n";
+      "1. ![CRITICAL][CRITICAL] [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 3 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule3)\n"
+      + "\n"
+      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"\n"
+      + "[MINOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\"\n"
+      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"\n"
+      + "[CRITICAL]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png \"Severity: CRITICAL\"\n"
+      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\"";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
 
@@ -221,29 +248,31 @@ public class GlobalReportTest {
     }
 
     String desiredMarkdown = "SonarQube analysis reported 17 issues\n" +
-      "* ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") 17 major\n" +
+      "* ![MAJOR][MAJOR] 17 major\n" +
       "\n#### Top 10 extra issues\n" +
       "\nNote: The following issues were found on lines that were not modified in the pull request. Because these issues can't be reported as line comments, they are summarized here:\n\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L0](https://github.com/SonarCommunity/sonar-github/File.java#L0): Issue number:0 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule0)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L0](https://github.com/SonarCommunity/sonar-github/File.java#L0): Issue number:0 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule0)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L1](https://github.com/SonarCommunity/sonar-github/File.java#L1): Issue number:1 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule1)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L1](https://github.com/SonarCommunity/sonar-github/File.java#L1): Issue number:1 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule1)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L2](https://github.com/SonarCommunity/sonar-github/File.java#L2): Issue number:2 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule2)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L2](https://github.com/SonarCommunity/sonar-github/File.java#L2): Issue number:2 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule2)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L3](https://github.com/SonarCommunity/sonar-github/File.java#L3): Issue number:3 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule3)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L3](https://github.com/SonarCommunity/sonar-github/File.java#L3): Issue number:3 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule3)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L4](https://github.com/SonarCommunity/sonar-github/File.java#L4): Issue number:4 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule4)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L4](https://github.com/SonarCommunity/sonar-github/File.java#L4): Issue number:4 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule4)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L5](https://github.com/SonarCommunity/sonar-github/File.java#L5): Issue number:5 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule5)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L5](https://github.com/SonarCommunity/sonar-github/File.java#L5): Issue number:5 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule5)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L6](https://github.com/SonarCommunity/sonar-github/File.java#L6): Issue number:6 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule6)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L6](https://github.com/SonarCommunity/sonar-github/File.java#L6): Issue number:6 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule6)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L7](https://github.com/SonarCommunity/sonar-github/File.java#L7): Issue number:7 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule7)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L7](https://github.com/SonarCommunity/sonar-github/File.java#L7): Issue number:7 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule7)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L8](https://github.com/SonarCommunity/sonar-github/File.java#L8): Issue number:8 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule8)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L8](https://github.com/SonarCommunity/sonar-github/File.java#L8): Issue number:8 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule8)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L9](https://github.com/SonarCommunity/sonar-github/File.java#L9): Issue number:9 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule9)\n";
+      "1. ![MAJOR][MAJOR] [File.java#L9](https://github.com/SonarCommunity/sonar-github/File.java#L9): Issue number:9 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule9)\n"
+      + "\n"
+      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
 
@@ -258,30 +287,85 @@ public class GlobalReportTest {
     }
 
     String desiredMarkdown = "SonarQube analysis reported 17 issues\n" +
-      "* ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") 17 major\n" +
+      "* ![MAJOR][MAJOR] 17 major\n" +
       "\n#### Top 10 issues\n\n" +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L0](https://github.com/SonarCommunity/sonar-github/File.java#L0): Issue number:0 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule0)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L0](https://github.com/SonarCommunity/sonar-github/File.java#L0): Issue number:0 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule0)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L1](https://github.com/SonarCommunity/sonar-github/File.java#L1): Issue number:1 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule1)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L1](https://github.com/SonarCommunity/sonar-github/File.java#L1): Issue number:1 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule1)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L2](https://github.com/SonarCommunity/sonar-github/File.java#L2): Issue number:2 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule2)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L2](https://github.com/SonarCommunity/sonar-github/File.java#L2): Issue number:2 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule2)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L3](https://github.com/SonarCommunity/sonar-github/File.java#L3): Issue number:3 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule3)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L3](https://github.com/SonarCommunity/sonar-github/File.java#L3): Issue number:3 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule3)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L4](https://github.com/SonarCommunity/sonar-github/File.java#L4): Issue number:4 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule4)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L4](https://github.com/SonarCommunity/sonar-github/File.java#L4): Issue number:4 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule4)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L5](https://github.com/SonarCommunity/sonar-github/File.java#L5): Issue number:5 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule5)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L5](https://github.com/SonarCommunity/sonar-github/File.java#L5): Issue number:5 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule5)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L6](https://github.com/SonarCommunity/sonar-github/File.java#L6): Issue number:6 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule6)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L6](https://github.com/SonarCommunity/sonar-github/File.java#L6): Issue number:6 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule6)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L7](https://github.com/SonarCommunity/sonar-github/File.java#L7): Issue number:7 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule7)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L7](https://github.com/SonarCommunity/sonar-github/File.java#L7): Issue number:7 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule7)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L8](https://github.com/SonarCommunity/sonar-github/File.java#L8): Issue number:8 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule8)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L8](https://github.com/SonarCommunity/sonar-github/File.java#L8): Issue number:8 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule8)\n"
       +
-      "1. ![MAJOR](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\") [File.java#L9](https://github.com/SonarCommunity/sonar-github/File.java#L9): Issue number:9 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule9)\n";
+      "1. ![MAJOR][MAJOR] [File.java#L9](https://github.com/SonarCommunity/sonar-github/File.java#L9): Issue number:9 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule9)\n"
+      + "\n"
+      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
 
     assertThat(formattedGlobalReport).isEqualTo(desiredMarkdown);
+  }
+
+  @Test
+  public void appendReferenceDefinitions_should_append_nothing_if_no_references() {
+    String s = "![MAJOR][not-matching reference] blah\n"
+      + "![non-matching ALT][MAJOR] blah\n"
+      + "[MAJOR][MAJOR] missing ! at front\n"
+      + "![MAJOR][garbage in between][MAJOR] blah\n"
+      + "![MAJOR][nested [MAJOR]] blah\n"
+      + "![NOTUSED][NOTUSED] blah\n";
+
+    StringBuilder sb = new StringBuilder(s);
+    appendReferenceDefinitions(sb);
+
+    assertThat(sb.toString()).isEqualTo(s);
+  }
+
+  @Test
+  public void appendReferenceDefinitions_should_append_once_per_reference() {
+    String s = "![MAJOR][MAJOR] important stuff!\n"
+      + "![MAJOR][MAJOR] even more important stuff\n"
+      + "![INFO][INFO] just FYI";
+
+    StringBuilder sb = new StringBuilder(s);
+    appendReferenceDefinitions(sb);
+
+    String refDefinitions = "\n"
+      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"\n"
+      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"";
+
+    assertThat(sb.toString()).isEqualTo(s + refDefinitions);
+  }
+
+  @Test
+  public void appendReferenceDefinitions_should_append_for_all_known_severity() {
+    String s = "![BLOCKER][BLOCKER] blocker stuff!\n"
+      + "![CRITICAL][CRITICAL] critical stuff\n"
+      + "![MAJOR][MAJOR] very important stuff\n"
+      + "![MINOR][MINOR] minor stuff\n"
+      + "![UNKNOWN][UNKNOWN] unknown stuff\n"
+      + "![INFO][INFO] just FYI";
+
+    StringBuilder sb = new StringBuilder(s);
+    appendReferenceDefinitions(sb);
+
+    String refDefinitions = "\n"
+      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"\n"
+      + "[MINOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\"\n"
+      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"\n"
+      + "[CRITICAL]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png \"Severity: CRITICAL\"\n"
+      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\"";
+
+    assertThat(sb.toString()).isEqualTo(s + refDefinitions);
   }
 }

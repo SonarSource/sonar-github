@@ -50,7 +50,7 @@ public class MarkDownUtils {
   public String inlineIssue(Severity severity, String message, String ruleKey) {
     String ruleLink = getRuleLink(ruleKey);
     StringBuilder sb = new StringBuilder();
-    sb.append(getImageMarkdownForSeverity(severity))
+    sb.append(getImageMarkdownForSeverityReference(severity))
       .append(" ")
       .append(message)
       .append(" ")
@@ -70,7 +70,7 @@ public class MarkDownUtils {
   public String globalIssue(Severity severity, String message, String ruleKey, @Nullable String url, String componentKey) {
     String ruleLink = getRuleLink(ruleKey);
     StringBuilder sb = new StringBuilder();
-    sb.append(getImageMarkdownForSeverity(severity)).append(" ");
+    sb.append(getImageMarkdownForSeverityReference(severity)).append(" ");
     if (url != null) {
       sb.append("[").append(getLocation(url)).append("]").append("(").append(url).append(")");
     } else {
@@ -93,8 +93,12 @@ public class MarkDownUtils {
     }
   }
 
-  public static String getImageMarkdownForSeverity(Severity severity) {
-    return String.format("![%s](%s \"Severity: %s\")", severity.name(), getImagePathForSeverity(severity), severity.name());
+  public static String getImageMarkdownForSeverityReference(Severity severity) {
+    return String.format("![%s][%s]", severity.name(), severity.name());
+  }
+
+  public static String getImageMarkdownForSeverityDefinition(Severity severity) {
+    return String.format("[%s]: %s \"Severity: %s\"", severity.name(), getImagePathForSeverity(severity), severity.name());
   }
 
   private static String getImagePathForSeverity(Severity severity) {
