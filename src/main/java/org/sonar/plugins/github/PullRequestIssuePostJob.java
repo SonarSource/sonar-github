@@ -55,6 +55,8 @@ public class PullRequestIssuePostJob implements PostJob {
 
   @Override
   public void execute(PostJobContext context) {
+
+    CommitStatusResolver statusResolver = new CommitStatusResolver(gitHubPluginConfiguration.maxSeverityAcceptedOfPullRequest());
     GlobalReport report = new GlobalReport(markDownUtils, gitHubPluginConfiguration.tryReportIssuesInline());
     Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine = processIssues(report, context.issues());
 
@@ -64,7 +66,7 @@ public class PullRequestIssuePostJob implements PostJob {
 
     pullRequestFacade.createOrUpdateGlobalComments(report.hasNewIssue() ? report.formatForMarkdown() : null);
 
-    pullRequestFacade.createOrUpdateSonarQubeStatus(report.getStatus(), report.getStatusDescription());
+    pullRequestFacade.createOrUpdateSonarQubeStatus(report.getStatus(statusResolver), report.getStatusDescription());
   }
 
   private Map<InputFile, Map<Integer, StringBuilder>> processIssues(GlobalReport report, Iterable<PostJobIssue> issues) {
