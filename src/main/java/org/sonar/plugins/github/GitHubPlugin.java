@@ -59,7 +59,15 @@ import org.sonar.api.PropertyType;
     description = "Issues will not be reported as inline comments but only in the global summary comment",
     project = true,
     global = true,
-    type = PropertyType.BOOLEAN)
+    type = PropertyType.BOOLEAN),
+  @Property(
+    key = GitHubPlugin.GITHUB_MAX_SEVERITY_ACCEPTED_OF_PR,
+    defaultValue = "MAJOR",
+    name = "Set severity level",
+    description = "Set the max level accepted for an issue",
+    project = true,
+    global = true,
+    type = PropertyType.STRING)
 })
 public class GitHubPlugin implements Plugin {
 
@@ -68,7 +76,7 @@ public class GitHubPlugin implements Plugin {
   public static final String GITHUB_REPO = "sonar.github.repository";
   public static final String GITHUB_PULL_REQUEST = "sonar.github.pullRequest";
   public static final String GITHUB_DISABLE_INLINE_COMMENTS = "sonar.github.disableInlineComments";
-
+  public static final String GITHUB_MAX_SEVERITY_ACCEPTED_OF_PR = "sonar.github.maxSeverityAcceptedOfPr";
 
   @Override
   public void define(Context context) {
