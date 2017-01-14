@@ -99,8 +99,8 @@ public class GlobalReport {
     return sb.toString();
   }
 
-  public GHCommitState getStatus() {
-    return (newIssues(Severity.BLOCKER) > 0 || newIssues(Severity.CRITICAL) > 0) ? GHCommitState.ERROR : GHCommitState.SUCCESS;
+  public GHCommitState getStatus(CommitStatusResolver commitStatusResolver) {
+    return commitStatusResolver.getStatus(newIssuesBySeverity);
   }
 
   private int newIssues(Severity s) {
