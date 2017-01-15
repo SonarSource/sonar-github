@@ -19,13 +19,18 @@
  */
 package org.sonar.plugins.github;
 
+import java.util.Arrays;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.logging.Logger;
+import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import org.kohsuke.github.GHCommitState;
 import org.sonar.api.batch.postjob.issue.PostJobIssue;
 import org.sonar.api.batch.rule.Severity;
 
 public class GlobalReport {
+  private Logger log = Logger.getLogger(this.getClass().getName());
   private final MarkDownUtils markDownUtils;
   private final boolean tryReportIssuesInline;
   private int[] newIssuesBySeverity = new int[Severity.values().length];
@@ -108,11 +113,9 @@ public class GlobalReport {
   }
 
   private void printSummaryBySeverityMarkdown(StringBuilder sb) {
-    printNewIssuesForMarkdown(sb, Severity.BLOCKER);
-    printNewIssuesForMarkdown(sb, Severity.CRITICAL);
-    printNewIssuesForMarkdown(sb, Severity.MAJOR);
-    printNewIssuesForMarkdown(sb, Severity.MINOR);
-    printNewIssuesForMarkdown(sb, Severity.INFO);
+    int from = 0;
+    int to = Severity.values().length - 1;
+    IntStream.rangeClosed(from, to).forEach(j -> printNewIssuesForMarkdown(sb, Severity.values()[to - j]));
   }
 
   private void printNewIssuesInline(StringBuilder sb) {
