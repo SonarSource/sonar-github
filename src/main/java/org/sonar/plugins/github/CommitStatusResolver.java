@@ -29,16 +29,16 @@ public class CommitStatusResolver {
 
     private String maxLevelSeverityPullRequest;
 
-    public Severity getMaxSeveriry(){
-        return Severity.valueOf(Optional.ofNullable(maxLevelSeverityPullRequest).orElse(Severity.MAJOR.name()));
-    }
-
     public CommitStatusResolver(String maxLevelSeverityPullRequest){
         this.maxLevelSeverityPullRequest = maxLevelSeverityPullRequest;
     }
 
+    public Severity getMaxSeveriry(){
+        return Severity.valueOf(Optional.ofNullable(maxLevelSeverityPullRequest).orElse(Severity.MAJOR.name()));
+    }
+
     public GHCommitState statusBySeverity(int[] existentIssues){
-        Boolean hayErrores = IntStream.rangeClosed(this.getMaxSeveriry().ordinal() + 1, Severity.BLOCKER.ordinal()).anyMatch(i -> (existentIssues[i] > 0));
+        Boolean hayErrores = IntStream.rangeClosed(this.getMaxSeveriry().ordinal() + 1, Severity.BLOCKER.ordinal()).anyMatch(i -> existentIssues[i] > 0);
         return hayErrores? GHCommitState.ERROR : GHCommitState.SUCCESS;
     }
 
