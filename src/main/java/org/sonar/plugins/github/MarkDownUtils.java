@@ -50,7 +50,7 @@ public class MarkDownUtils {
   public String inlineIssue(Severity severity, String message, String ruleKey) {
     String ruleLink = getRuleLink(ruleKey);
     StringBuilder sb = new StringBuilder();
-    sb.append(getImageMarkdownForSeverity(severity))
+    sb.append(formatImageLink(severity))
       .append(" ")
       .append(message)
       .append(" ")
@@ -67,15 +67,14 @@ public class MarkDownUtils {
     return filename;
   }
 
-  public String globalIssue(Severity severity, String message, String ruleKey, @Nullable String url, String componentKey) {
-    String ruleLink = getRuleLink(ruleKey);
+  public String globalIssue(String message, String ruleKey, @Nullable String url, String componentKey) {
     StringBuilder sb = new StringBuilder();
-    sb.append(getImageMarkdownForSeverity(severity)).append(" ");
     if (url != null) {
       sb.append("[").append(getLocation(url)).append("]").append("(").append(url).append(")");
     } else {
       sb.append(componentKey);
     }
+    String ruleLink = getRuleLink(ruleKey);
     sb.append(": ").append(message).append(" ").append(ruleLink);
     return sb.toString();
   }
@@ -93,11 +92,11 @@ public class MarkDownUtils {
     }
   }
 
-  public static String getImageMarkdownForSeverity(Severity severity) {
-    return String.format("![%s](%s \"Severity: %s\")", severity.name(), getImagePathForSeverity(severity), severity.name());
+  static String getImageUrl(Severity severity) {
+    return IMAGES_ROOT_URL + "severity-" + severity.name().toLowerCase(Locale.ENGLISH) + ".png";
   }
 
-  private static String getImagePathForSeverity(Severity severity) {
-    return IMAGES_ROOT_URL + "severity-" + severity.name().toLowerCase(Locale.ENGLISH) + ".png";
+  static String formatImageLink(Severity severity) {
+    return String.format("![%s](%s \"Severity: %s\")", severity.name(), getImageUrl(severity), severity.name());
   }
 }
