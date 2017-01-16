@@ -88,8 +88,7 @@ public class GlobalReport {
     } else if (extraIssuesTruncated) {
       builder.append("\n#### Top ").append(maxGlobalReportedIssues).append(" issues\n");
     }
-    // Need to add an extra line break for ordered list to be displayed properly
-    builder.append('\n').appendExtraIssues();
+    builder.appendExtraIssues();
   }
 
   public String getStatusDescription() {

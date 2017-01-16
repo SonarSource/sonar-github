@@ -79,6 +79,8 @@ public class MarkDownReportBuilder implements ReportBuilder {
 
   @Override
   public ReportBuilder appendExtraIssues() {
+    // need a blank line before lists to be displayed correctly
+    sb.append("\n");
     for (IssueHolder holder : extraIssues) {
       PostJobIssue issue = holder.issue;
       links.add(formatImageLinkDefinition(issue.severity()));

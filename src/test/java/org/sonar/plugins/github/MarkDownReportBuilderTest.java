@@ -97,9 +97,11 @@ public class MarkDownReportBuilderTest {
     builder.registerExtraIssue(postJobIssue, "http://github.com/dummy");
     builder.appendExtraIssues();
 
-    builder.append("Check comments too!\n");
+    builder.append("\nCheck comments too!\n");
     assertThat(builder.toString()).isEqualTo("![BLOCKER][BLOCKER] fix the leak!\n"
+      + "\n"
       + "1. ![INFO][INFO] null\n"
+      + "\n"
       + "Check comments too!\n"
       + "\n"
       + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\"\n"
