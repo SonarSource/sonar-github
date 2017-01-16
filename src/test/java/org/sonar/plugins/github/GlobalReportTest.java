@@ -34,7 +34,6 @@ import org.sonar.api.rule.RuleKey;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.sonar.plugins.github.GlobalReport.appendReferenceDefinitions;
 
 public class GlobalReportTest {
 
@@ -129,11 +128,11 @@ public class GlobalReportTest {
       "* ![INFO][INFO] 1 info\n" +
       "\nWatch the comments in this conversation to review them.\n"
       + "\n"
-      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"\n"
-      + "[MINOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\"\n"
-      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"\n"
+      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\"\n"
       + "[CRITICAL]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png \"Severity: CRITICAL\"\n"
-      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\"";
+      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"\n"
+      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"\n"
+      + "[MINOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\"";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
 
@@ -163,11 +162,11 @@ public class GlobalReportTest {
       +
       "1. ![CRITICAL][CRITICAL] [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 3 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule3)\n"
       + "\n"
-      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"\n"
-      + "[MINOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\"\n"
-      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"\n"
+      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\"\n"
       + "[CRITICAL]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png \"Severity: CRITICAL\"\n"
-      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\"";
+      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"\n"
+      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"\n"
+      + "[MINOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\"";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
 
@@ -194,11 +193,11 @@ public class GlobalReportTest {
       +
       "1. ![BLOCKER][BLOCKER] [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 4 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule4)\n"
       + "\n"
-      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"\n"
-      + "[MINOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\"\n"
-      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"\n"
+      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\"\n"
       + "[CRITICAL]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png \"Severity: CRITICAL\"\n"
-      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\"";
+      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"\n"
+      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"\n"
+      + "[MINOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\"";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
 
@@ -229,11 +228,11 @@ public class GlobalReportTest {
       +
       "1. ![CRITICAL][CRITICAL] [sonar-github](https://github.com/SonarCommunity/sonar-github): Issue 3 [![rule](https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule3)\n"
       + "\n"
-      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"\n"
-      + "[MINOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\"\n"
-      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"\n"
+      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\"\n"
       + "[CRITICAL]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png \"Severity: CRITICAL\"\n"
-      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\"";
+      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"\n"
+      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"\n"
+      + "[MINOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\"";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
 
@@ -314,58 +313,5 @@ public class GlobalReportTest {
     String formattedGlobalReport = globalReport.formatForMarkdown();
 
     assertThat(formattedGlobalReport).isEqualTo(desiredMarkdown);
-  }
-
-  @Test
-  public void appendReferenceDefinitions_should_append_nothing_if_no_references() {
-    String s = "![MAJOR][not-matching reference] blah\n"
-      + "![non-matching ALT][MAJOR] blah\n"
-      + "[MAJOR][MAJOR] missing ! at front\n"
-      + "![MAJOR][garbage in between][MAJOR] blah\n"
-      + "![MAJOR][nested [MAJOR]] blah\n"
-      + "![NOTUSED][NOTUSED] blah\n";
-
-    StringBuilder sb = new StringBuilder(s);
-    appendReferenceDefinitions(sb);
-
-    assertThat(sb.toString()).isEqualTo(s);
-  }
-
-  @Test
-  public void appendReferenceDefinitions_should_append_once_per_reference() {
-    String s = "![MAJOR][MAJOR] important stuff!\n"
-      + "![MAJOR][MAJOR] even more important stuff\n"
-      + "![INFO][INFO] just FYI";
-
-    StringBuilder sb = new StringBuilder(s);
-    appendReferenceDefinitions(sb);
-
-    String refDefinitions = "\n"
-      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"\n"
-      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"";
-
-    assertThat(sb.toString()).isEqualTo(s + refDefinitions);
-  }
-
-  @Test
-  public void appendReferenceDefinitions_should_append_for_all_known_severity() {
-    String s = "![BLOCKER][BLOCKER] blocker stuff!\n"
-      + "![CRITICAL][CRITICAL] critical stuff\n"
-      + "![MAJOR][MAJOR] very important stuff\n"
-      + "![MINOR][MINOR] minor stuff\n"
-      + "![UNKNOWN][UNKNOWN] unknown stuff\n"
-      + "![INFO][INFO] just FYI";
-
-    StringBuilder sb = new StringBuilder(s);
-    appendReferenceDefinitions(sb);
-
-    String refDefinitions = "\n"
-      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"\n"
-      + "[MINOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png \"Severity: MINOR\"\n"
-      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png \"Severity: MAJOR\"\n"
-      + "[CRITICAL]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png \"Severity: CRITICAL\"\n"
-      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\"";
-
-    assertThat(sb.toString()).isEqualTo(s + refDefinitions);
   }
 }
