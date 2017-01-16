@@ -34,7 +34,17 @@ public class MarkDownReportBuilder implements ReportBuilder {
   // note: ordered implementation for consistent user experience and testability
   private final Set<String> links = new TreeSet<>();
 
-  private final List<String> extraIssues = new ArrayList<>();
+  private final List<IssueHolder> extraIssues = new ArrayList<>();
+
+  private static class IssueHolder {
+    private final PostJobIssue issue;
+    private final String gitHubUrl;
+
+    private IssueHolder(PostJobIssue issue, String gitHubUrl) {
+      this.issue = issue;
+      this.gitHubUrl = gitHubUrl;
+    }
+  }
 
   MarkDownReportBuilder(MarkDownUtils markDownUtils) {
     this.markDownUtils = markDownUtils;
@@ -63,17 +73,19 @@ public class MarkDownReportBuilder implements ReportBuilder {
 
   @Override
   public ReportBuilder registerExtraIssue(PostJobIssue issue, String gitHubUrl) {
-    links.add(formatImageLinkDefinition(issue.severity()));
-    String image = formatImageLinkReference(issue.severity());
-    String text = markDownUtils.globalIssue(issue.message(), issue.ruleKey().toString(), gitHubUrl, issue.componentKey());
-    extraIssues.add("1. " + image + " " + text + "\n");
-
+    extraIssues.add(new IssueHolder(issue, gitHubUrl));
     return this;
   }
 
   @Override
   public ReportBuilder appendExtraIssues() {
-    extraIssues.forEach(sb::append);
+    for (IssueHolder holder : extraIssues) {
+      PostJobIssue issue = holder.issue;
+      links.add(formatImageLinkDefinition(issue.severity()));
+      String image = formatImageLinkReference(issue.severity());
+      String text = markDownUtils.globalIssue(issue.message(), issue.ruleKey().toString(), holder.gitHubUrl, issue.componentKey());
+      sb.append("1. ").append(image).append(" ").append(text).append("\n");
+    }
     return this;
   }
 

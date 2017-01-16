@@ -105,4 +105,21 @@ public class MarkDownReportBuilderTest {
       + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\"\n"
       + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png \"Severity: INFO\"");
   }
+
+  @Test
+  public void should_append_reference_definitions_for_extra_issues_only_if_used() {
+    ReportBuilder builder = new MarkDownReportBuilder(mock(MarkDownUtils.class));
+    builder.append(Severity.BLOCKER).append(" fix the leak!\n");
+
+    PostJobIssue postJobIssue = mock(PostJobIssue.class);
+    when(postJobIssue.severity()).thenReturn(Severity.INFO);
+    when(postJobIssue.ruleKey()).thenReturn(mock(RuleKey.class));
+    builder.registerExtraIssue(postJobIssue, "http://github.com/dummy");
+
+    builder.append("Check comments too!\n");
+    assertThat(builder.toString()).isEqualTo("![BLOCKER][BLOCKER] fix the leak!\n"
+      + "Check comments too!\n"
+      + "\n"
+      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png \"Severity: BLOCKER\"");
+  }
 }
