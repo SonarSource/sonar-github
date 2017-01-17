@@ -64,7 +64,7 @@ public class MarkDownReportBuilder implements ReportBuilder {
   }
 
   private static String formatImageLinkDefinition(Severity severity) {
-    return String.format("[%s]: %s \"Severity: %s\"", severity.name(), MarkDownUtils.getImageUrl(severity), severity.name());
+    return String.format("[%s]: %s 'Severity: %s'", severity.name(), MarkDownUtils.getImageUrl(severity), severity.name());
   }
 
   private static String formatImageLinkReference(Severity severity) {
