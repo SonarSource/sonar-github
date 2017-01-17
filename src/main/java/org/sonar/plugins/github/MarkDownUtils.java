@@ -97,6 +97,6 @@ public class MarkDownUtils {
   }
 
   static String formatImageLink(Severity severity) {
-    return String.format("![%s](%s \"Severity: %s\")", severity.name(), getImageUrl(severity), severity.name());
+    return String.format("![%s](%s 'Severity: %s')", severity.name(), getImageUrl(severity), severity.name());
   }
 }
