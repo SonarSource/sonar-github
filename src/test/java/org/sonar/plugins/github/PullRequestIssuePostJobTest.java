@@ -225,4 +225,15 @@ public class PullRequestIssuePostJobTest {
 
     verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.ERROR, "SonarQube reported 2 issues, with 1 critical and 1 blocker");
   }
+
+  @Test
+  public void should_update_sonarqube_status_even_if_unexpected_errors_were_raised() {
+    String innerMsg = "Failed to get issues";
+    // not really realistic unexpected error, but good enough for this test
+    when(context.issues()).thenThrow(new IllegalStateException(innerMsg));
+    pullRequestIssuePostJob.execute(context);
+
+    String msg = "SonarQube failed to complete the review of this pull request: " + innerMsg;
+    verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.ERROR, msg);
+  }
 }
