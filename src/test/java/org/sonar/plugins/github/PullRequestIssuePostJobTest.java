@@ -231,6 +231,6 @@ public class PullRequestIssuePostJobTest {
     // raises an NPE due to improper mock setup; not realistic, but good enough for this test
     pullRequestIssuePostJob.execute(context);
 
-    verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.ERROR, "unexpected error occurred while posting comments");
+    verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.ERROR, "SonarQube failed to complete the review of this pull request");
   }
 }

@@ -72,7 +72,7 @@ public class PullRequestIssuePostJob implements PostJob {
 
       pullRequestFacade.createOrUpdateSonarQubeStatus(report.getStatus(), report.getStatusDescription());
     } catch (Exception e) {
-      String msg = "unexpected error occurred while posting comments";
+      String msg = "SonarQube failed to complete the review of this pull request";
       LOG.error(msg, e);
       pullRequestFacade.createOrUpdateSonarQubeStatus(GHCommitState.ERROR, msg);
     }
