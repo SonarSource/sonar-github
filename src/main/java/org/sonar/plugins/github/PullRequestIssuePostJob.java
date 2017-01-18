@@ -74,7 +74,7 @@ public class PullRequestIssuePostJob implements PostJob {
     } catch (Exception e) {
       String msg = "SonarQube failed to complete the review of this pull request";
       LOG.error(msg, e);
-      pullRequestFacade.createOrUpdateSonarQubeStatus(GHCommitState.ERROR, msg);
+      pullRequestFacade.createOrUpdateSonarQubeStatus(GHCommitState.ERROR, msg + ": " + e.getMessage());
     }
   }
 

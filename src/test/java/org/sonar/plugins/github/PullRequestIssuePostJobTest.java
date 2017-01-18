@@ -228,9 +228,12 @@ public class PullRequestIssuePostJobTest {
 
   @Test
   public void should_update_sonarqube_status_even_if_unexpected_errors_were_raised() {
-    // raises an NPE due to improper mock setup; not realistic, but good enough for this test
+    String innerMsg = "Failed to get issues";
+    // not really realistic unexpected error, but good enough for this test
+    when(context.issues()).thenThrow(new IllegalStateException(innerMsg));
     pullRequestIssuePostJob.execute(context);
 
-    verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.ERROR, "SonarQube failed to complete the review of this pull request");
+    String msg = "SonarQube failed to complete the review of this pull request: " + innerMsg;
+    verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.ERROR, msg);
   }
 }
