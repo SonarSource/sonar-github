@@ -20,6 +20,7 @@
 package org.sonar.plugins.github;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import javax.annotation.CheckForNull;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,8 +45,10 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.contains;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.sonar.plugins.github.GitHubPlugin.GITHUB_DELETE_OUTDATED_INLINE_COMMENTS;
 
 public class PullRequestIssuePostJobTest {
 
@@ -55,6 +58,10 @@ public class PullRequestIssuePostJobTest {
 
   @Before
   public void prepare() throws Exception {
+    setupWithSettings(new HashMap<>());
+  }
+
+  private void setupWithSettings(HashMap<String, String> setProperties) {
     pullRequestFacade = mock(PullRequestFacade.class);
     Settings settings = new Settings(new PropertyDefinitions(PropertyDefinition.builder(CoreProperties.SERVER_BASE_URL)
       .name("Server base URL")
@@ -67,6 +74,7 @@ public class PullRequestIssuePostJobTest {
 
     settings.setProperty("sonar.host.url", "http://192.168.0.1");
     settings.setProperty(CoreProperties.SERVER_BASE_URL, "http://myserver");
+    settings.addProperties(setProperties);
     pullRequestIssuePostJob = new PullRequestIssuePostJob(config, pullRequestFacade, new MarkDownUtils(settings));
   }
 
@@ -92,10 +100,28 @@ public class PullRequestIssuePostJobTest {
 
   @Test
   public void testPullRequestAnalysisNoIssue() {
+    final HashMap<String, String> setProperties = new HashMap<>();
+    setProperties.put(GITHUB_DELETE_OUTDATED_INLINE_COMMENTS, "true");
+    setupWithSettings(setProperties);
+
     when(context.issues()).thenReturn(Arrays.<PostJobIssue>asList());
     pullRequestIssuePostJob.execute(context);
     verify(pullRequestFacade).createOrUpdateGlobalComments(null);
     verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.SUCCESS, "SonarQube reported no issues");
+    verify(pullRequestFacade).deleteOutdatedComments();
+  }
+
+  @Test
+  public void testPullRequestAnalysisWontDeleteOutdatedCommentsAfterComplete() {
+    final HashMap<String, String> setProperties = new HashMap<>();
+    setProperties.put(GITHUB_DELETE_OUTDATED_INLINE_COMMENTS, "false");
+    setupWithSettings(setProperties);
+
+    when(context.issues()).thenReturn(Arrays.<PostJobIssue>asList());
+    pullRequestIssuePostJob.execute(context);
+    verify(pullRequestFacade).createOrUpdateGlobalComments(null);
+    verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.SUCCESS, "SonarQube reported no issues");
+    verify(pullRequestFacade, times(0)).deleteOutdatedComments();
   }
 
   @Test
