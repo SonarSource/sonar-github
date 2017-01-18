@@ -225,4 +225,12 @@ public class PullRequestIssuePostJobTest {
 
     verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.ERROR, "SonarQube reported 2 issues, with 1 critical and 1 blocker");
   }
+
+  @Test
+  public void should_update_sonarqube_status_even_if_unexpected_errors_were_raised() {
+    // raises an NPE due to improper mock setup; not realistic, but good enough for this test
+    pullRequestIssuePostJob.execute(context);
+
+    verify(pullRequestFacade).createOrUpdateSonarQubeStatus(GHCommitState.ERROR, "unexpected error occurred while posting comments");
+  }
 }
