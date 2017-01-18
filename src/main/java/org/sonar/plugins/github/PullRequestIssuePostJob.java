@@ -62,7 +62,7 @@ public class PullRequestIssuePostJob implements PostJob {
 
     pullRequestFacade.deleteOutdatedComments();
 
-    pullRequestFacade.createOrUpdateGlobalComments(report.hasNewIssue() ? report.formatForMarkdown() : null);
+    pullRequestFacade.createOrUpdateGlobalComments(report.hasNewIssue() && !gitHubPluginConfiguration.disableSummaryComments() ? report.formatForMarkdown() : null);
 
     pullRequestFacade.createOrUpdateSonarQubeStatus(report.getStatus(), report.getStatusDescription());
   }
