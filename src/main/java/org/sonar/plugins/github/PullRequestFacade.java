@@ -31,6 +31,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
+
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHCommitStatus;
 import org.kohsuke.github.GHIssueComment;
@@ -72,6 +74,7 @@ public class PullRequestFacade {
 
   public PullRequestFacade(GitHubPluginConfiguration config) {
     this.config = config;
+
   }
 
   public void init(int pullRequestNumber, File projectBaseDir) {
@@ -134,6 +137,10 @@ public class PullRequestFacade {
     for (GHPullRequestReviewComment comment : pr.listReviewComments()) {
       if (!myself.equals(comment.getUser().getLogin())) {
         // Ignore comments from other users
+        continue;
+      }
+      if (!StringUtils.isEmpty(config.projectId()) && !comment.getBody().startsWith(MarkDownUtils.projectId(config.projectId()))) {
+        // Ignore comments that don't contain projectId
         continue;
       }
       if (!existingReviewCommentsByLocationByFile.containsKey(comment.getPath())) {
@@ -255,6 +262,10 @@ public class PullRequestFacade {
     boolean found = false;
     for (GHIssueComment comment : pr.listComments()) {
       if (myself.equals(comment.getUser().getLogin())) {
+        if (!StringUtils.isEmpty(config.projectId()) && !comment.getBody().startsWith(MarkDownUtils.projectId(config.projectId()))) {
+          // Ignore comments that don't contain projectId
+          continue;
+        }
         if (markup == null || found || !markup.equals(comment.getBody())) {
           comment.delete();
           continue;

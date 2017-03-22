@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.StreamSupport;
 import org.apache.commons.lang.StringUtils;
+
 import org.kohsuke.github.GHCommitState;
 import org.sonar.api.batch.fs.InputComponent;
 import org.sonar.api.batch.fs.InputFile;
@@ -61,7 +62,7 @@ public class PullRequestIssuePostJob implements PostJob {
 
   @Override
   public void execute(PostJobContext context) {
-    GlobalReport report = new GlobalReport(markDownUtils, gitHubPluginConfiguration.tryReportIssuesInline());
+    GlobalReport report = new GlobalReport(markDownUtils, gitHubPluginConfiguration.tryReportIssuesInline(), gitHubPluginConfiguration.projectId());
     try {
       Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine = processIssues(report, context.issues());
 
@@ -117,7 +118,11 @@ public class PullRequestIssuePostJob implements PostJob {
         }
         Map<Integer, StringBuilder> commentsByLine = commentToBeAddedByFileAndByLine.get(inputFile);
         if (!commentsByLine.containsKey(line)) {
-          commentsByLine.put(line, new StringBuilder());
+          StringBuilder stringBuilder = new StringBuilder();
+          if (!StringUtils.isEmpty(gitHubPluginConfiguration.projectId())) {
+            stringBuilder.append(markDownUtils.projectId(gitHubPluginConfiguration.projectId())).append("\n");
+          }
+          commentsByLine.put(line, stringBuilder);
         }
         commentsByLine.get(line).append(markDownUtils.inlineIssue(issue.severity(), message, ruleKey)).append("\n");
         return true;
