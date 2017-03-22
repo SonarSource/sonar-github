@@ -136,6 +136,10 @@ public class GitHubPluginConfiguration {
     return !settings.getBoolean(GitHubPlugin.GITHUB_DISABLE_INLINE_COMMENTS);
   }
 
+  public boolean isDeleteOldCommentsEnabled() {
+    return settings.getBoolean(GitHubPlugin.GITHUB_DELETE_OLD_COMMENTS);
+  }
+
   /**
    * Checks if a proxy was passed with command line parameters or configured in the system.
    * If only an HTTP proxy was configured then it's properties are copied to the HTTPS proxy (like SonarQube configuration)

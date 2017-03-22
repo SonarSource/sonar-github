@@ -59,6 +59,14 @@ import org.sonar.api.PropertyType;
     description = "Issues will not be reported as inline comments but only in the global summary comment",
     project = true,
     global = true,
+    type = PropertyType.BOOLEAN),
+  @Property(
+    key = GitHubPlugin.GITHUB_DELETE_OLD_COMMENTS,
+    defaultValue = "true",
+    name = "Delete old comments",
+    description = "Old comments with no corresponding issues will not be deleted",
+    project = true,
+    global = true,
     type = PropertyType.BOOLEAN)
 })
 public class GitHubPlugin implements Plugin {
@@ -68,6 +76,7 @@ public class GitHubPlugin implements Plugin {
   public static final String GITHUB_REPO = "sonar.github.repository";
   public static final String GITHUB_PULL_REQUEST = "sonar.github.pullRequest";
   public static final String GITHUB_DISABLE_INLINE_COMMENTS = "sonar.github.disableInlineComments";
+  public static final String GITHUB_DELETE_OLD_COMMENTS = "sonar.github.deleteOldComments";
 
 
   @Override

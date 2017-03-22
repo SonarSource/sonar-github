@@ -114,6 +114,10 @@ public class GitHubPluginConfigurationTest {
     assertThat(config.tryReportIssuesInline()).isTrue();
     settings.setProperty(GitHubPlugin.GITHUB_DISABLE_INLINE_COMMENTS, "true");
     assertThat(config.tryReportIssuesInline()).isFalse();
+
+    assertThat(config.isDeleteOldCommentsEnabled()).isTrue();
+    settings.setProperty(GitHubPlugin.GITHUB_DELETE_OLD_COMMENTS, "false");
+    assertThat(config.isDeleteOldCommentsEnabled()).isFalse();
   }
 
   @Test
