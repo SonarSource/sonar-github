@@ -22,6 +22,8 @@ package org.sonar.plugins.github;
 import java.net.URL;
 import java.util.Locale;
 import javax.annotation.Nullable;
+
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.github.GHCommitState;
 import org.sonar.api.batch.postjob.issue.PostJobIssue;
 import org.sonar.api.batch.rule.Severity;
@@ -31,15 +33,17 @@ public class GlobalReport {
   private int[] newIssuesBySeverity = new int[Severity.values().length];
   private int extraIssueCount = 0;
   private int maxGlobalReportedIssues;
+  private String projectId;
   private final ReportBuilder builder;
 
-  public GlobalReport(MarkDownUtils markDownUtils, boolean tryReportIssuesInline) {
-    this(markDownUtils, tryReportIssuesInline, GitHubPluginConfiguration.MAX_GLOBAL_ISSUES);
+  public GlobalReport(MarkDownUtils markDownUtils, boolean tryReportIssuesInline, String projectId) {
+    this(markDownUtils, tryReportIssuesInline, GitHubPluginConfiguration.MAX_GLOBAL_ISSUES, projectId);
   }
 
-  public GlobalReport(MarkDownUtils markDownUtils, boolean tryReportIssuesInline, int maxGlobalReportedIssues) {
+  public GlobalReport(MarkDownUtils markDownUtils, boolean tryReportIssuesInline, int maxGlobalReportedIssues, String projectId) {
     this.tryReportIssuesInline = tryReportIssuesInline;
     this.maxGlobalReportedIssues = maxGlobalReportedIssues;
+    this.projectId = projectId;
     this.builder = new MarkDownReportBuilder(markDownUtils);
   }
 
@@ -49,13 +53,18 @@ public class GlobalReport {
 
   public String formatForMarkdown() {
     int newIssues = newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL) + newIssues(Severity.MAJOR) + newIssues(Severity.MINOR) + newIssues(Severity.INFO);
-    if (newIssues == 0) {
-      return "SonarQube analysis reported no issues.";
-    }
 
     boolean hasInlineIssues = newIssues > extraIssueCount;
     boolean extraIssuesTruncated = extraIssueCount > maxGlobalReportedIssues;
-    builder.append("SonarQube analysis reported ").append(newIssues).append(" issue").append(newIssues > 1 ? "s" : "").append("\n");
+    if (!StringUtils.isEmpty(projectId)) {
+      builder.appendProjectId(projectId).append(" ");
+    }
+    if (newIssues == 0) {
+      builder.append("SonarQube analysis reported no issues.");
+      return builder.toString();
+    } else {
+      builder.append("SonarQube analysis reported ").append(newIssues).append(" issue").append(newIssues > 1 ? "s" : "").append("\n");
+    }
     if (hasInlineIssues || extraIssuesTruncated) {
       appendSummaryBySeverity(builder);
     }
