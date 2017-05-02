@@ -51,7 +51,7 @@ public class MarkDownReportBuilderTest {
     assertThat(builder.toString()).isEqualTo("![BLOCKER][BLOCKER] fix the leak!\n"
       + "Check comments too!\n"
       + "\n"
-      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png 'Severity: BLOCKER'");
+      + "[BLOCKER]: https://raw.githubusercontent.com/SonarSource/sonar-github/master/images/severity-blocker.png 'Severity: BLOCKER'");
   }
 
   @Test
@@ -64,7 +64,7 @@ public class MarkDownReportBuilderTest {
       + "![BLOCKER][BLOCKER] fix the leak!\n"
       + "Check comments too!\n"
       + "\n"
-      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png 'Severity: BLOCKER'");
+      + "[BLOCKER]: https://raw.githubusercontent.com/SonarSource/sonar-github/master/images/severity-blocker.png 'Severity: BLOCKER'");
   }
 
   @Test
@@ -79,11 +79,11 @@ public class MarkDownReportBuilderTest {
       + "![CRITICAL][CRITICAL] a CRITICAL-level issue\n"
       + "![BLOCKER][BLOCKER] a BLOCKER-level issue\n"
       + "\n"
-      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png 'Severity: BLOCKER'\n"
-      + "[CRITICAL]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-critical.png 'Severity: CRITICAL'\n"
-      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png 'Severity: INFO'\n"
-      + "[MAJOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-major.png 'Severity: MAJOR'\n"
-      + "[MINOR]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-minor.png 'Severity: MINOR'");
+      + "[BLOCKER]: https://raw.githubusercontent.com/SonarSource/sonar-github/master/images/severity-blocker.png 'Severity: BLOCKER'\n"
+      + "[CRITICAL]: https://raw.githubusercontent.com/SonarSource/sonar-github/master/images/severity-critical.png 'Severity: CRITICAL'\n"
+      + "[INFO]: https://raw.githubusercontent.com/SonarSource/sonar-github/master/images/severity-info.png 'Severity: INFO'\n"
+      + "[MAJOR]: https://raw.githubusercontent.com/SonarSource/sonar-github/master/images/severity-major.png 'Severity: MAJOR'\n"
+      + "[MINOR]: https://raw.githubusercontent.com/SonarSource/sonar-github/master/images/severity-minor.png 'Severity: MINOR'");
   }
 
   @Test
@@ -104,8 +104,8 @@ public class MarkDownReportBuilderTest {
       + "\n"
       + "Check comments too!\n"
       + "\n"
-      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png 'Severity: BLOCKER'\n"
-      + "[INFO]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-info.png 'Severity: INFO'");
+      + "[BLOCKER]: https://raw.githubusercontent.com/SonarSource/sonar-github/master/images/severity-blocker.png 'Severity: BLOCKER'\n"
+      + "[INFO]: https://raw.githubusercontent.com/SonarSource/sonar-github/master/images/severity-info.png 'Severity: INFO'");
   }
 
   @Test
@@ -122,6 +122,6 @@ public class MarkDownReportBuilderTest {
     assertThat(builder.toString()).isEqualTo("![BLOCKER][BLOCKER] fix the leak!\n"
       + "Check comments too!\n"
       + "\n"
-      + "[BLOCKER]: https://raw.githubusercontent.com/SonarCommunity/sonar-github/master/images/severity-blocker.png 'Severity: BLOCKER'");
+      + "[BLOCKER]: https://raw.githubusercontent.com/SonarSource/sonar-github/master/images/severity-blocker.png 'Severity: BLOCKER'");
   }
 }
