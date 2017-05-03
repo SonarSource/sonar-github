@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.StreamSupport;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.github.GHCommitState;
 import org.sonar.api.batch.fs.InputComponent;
 import org.sonar.api.batch.fs.InputFile;
@@ -72,9 +73,8 @@ public class PullRequestIssuePostJob implements PostJob {
 
       pullRequestFacade.createOrUpdateSonarQubeStatus(report.getStatus(), report.getStatusDescription());
     } catch (Exception e) {
-      String msg = "SonarQube failed to complete the review of this pull request";
-      LOG.error(msg, e);
-      pullRequestFacade.createOrUpdateSonarQubeStatus(GHCommitState.ERROR, msg + ": " + e.getMessage());
+      LOG.error("SonarQube analysis failed to complete the review of this pull request", e);
+      pullRequestFacade.createOrUpdateSonarQubeStatus(GHCommitState.ERROR, StringUtils.abbreviate("SonarQube analysis failed: " + e.getMessage(), 140));
     }
   }
 
