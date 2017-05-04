@@ -44,6 +44,7 @@ public class MarkDownUtils {
     if (!baseUrl.endsWith("/")) {
       baseUrl += "/";
     }
+    System.out.println("Create issue");
     this.ruleUrlPrefix = baseUrl;
   }
 
