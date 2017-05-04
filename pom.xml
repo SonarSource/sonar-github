@@ -13,7 +13,7 @@
   <artifactId>sonar-github-plugin</artifactId>
   <name>SonarQube :: GitHub Plugin</name>
   <packaging>sonar-plugin</packaging>
-  <version>1.4.1-SNAPSHOT</version>
+  <version>1.5-SNAPSHOT</version>
   <description>Provide some integration between GitHub and SonarQube</description>
   <url>http://redirect.sonarsource.com/plugins/github.html</url>
   <inceptionYear>2015</inceptionYear>
