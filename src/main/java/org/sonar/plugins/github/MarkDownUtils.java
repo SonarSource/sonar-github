@@ -35,7 +35,7 @@ import org.sonar.api.config.Settings;
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 public class MarkDownUtils {
 
-  private static final String IMAGES_ROOT_URL = "http://sonarsource.github.io/sonar-github/";
+  private static final String IMAGES_ROOT_URL = "https://sonarsource.github.io/sonar-github/";
   private final String ruleUrlPrefix;
 
   public MarkDownUtils(Settings settings) {
