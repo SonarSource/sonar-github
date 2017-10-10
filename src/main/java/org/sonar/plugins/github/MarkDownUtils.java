@@ -70,7 +70,7 @@ public class MarkDownUtils {
   public String globalIssue(String message, String ruleKey, @Nullable String url, String componentKey) {
     StringBuilder sb = new StringBuilder();
     if (url != null) {
-      sb.append("[").append(getLocation(url)).append("]").append("(").append(url).append(")");
+      sb.append("[").append(getLocation(url)).append("]").append("(").append(encodeSpacesForUrl(url)).append(")");
     } else {
       sb.append(componentKey);
     }
@@ -81,6 +81,10 @@ public class MarkDownUtils {
 
   String getRuleLink(String ruleKey) {
     return "[![rule](" + IMAGES_ROOT_URL + "rule.png)](" + ruleUrlPrefix + "coding_rules#rule_key=" + encodeForUrl(ruleKey) + ")";
+  }
+
+  static String encodeSpacesForUrl(String url) {
+    return url.replaceAll(" ","%20");
   }
 
   static String encodeForUrl(String url) {
