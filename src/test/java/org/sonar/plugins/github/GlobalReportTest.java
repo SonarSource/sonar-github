@@ -71,7 +71,7 @@ public class GlobalReportTest {
 
   @Test
   public void noIssues() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, "");
 
     String desiredMarkdown = "SonarQube analysis reported no issues.";
 
@@ -81,8 +81,19 @@ public class GlobalReportTest {
   }
 
   @Test
+  public void noIssuesWithProjectId() {
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, "project-id");
+
+    String desiredMarkdown = "[project-id] SonarQube analysis reported no issues.";
+
+    String formattedGlobalReport = globalReport.formatForMarkdown();
+
+    assertThat(formattedGlobalReport).isEqualTo(desiredMarkdown);
+  }
+
+  @Test
   public void oneIssue() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, "");
     globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue", "rule"), GITHUB_URL, true);
 
     String desiredMarkdown = "SonarQube analysis reported 1 issue\n" +
@@ -96,8 +107,23 @@ public class GlobalReportTest {
   }
 
   @Test
+  public void oneIssueWithProjectId() {
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, "project-id");
+    globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue", "rule"), GITHUB_URL, true);
+
+    String desiredMarkdown = "[project-id] SonarQube analysis reported 1 issue\n" +
+            "* ![INFO][INFO] 1 info\n" +
+            "\nWatch the comments in this conversation to review them.\n" +
+            "\n[INFO]: https://sonarsource.github.io/sonar-github/severity-info.png 'Severity: INFO'";
+
+    String formattedGlobalReport = globalReport.formatForMarkdown();
+
+    assertThat(formattedGlobalReport).isEqualTo(desiredMarkdown);
+  }
+
+  @Test
   public void oneIssueOnDir() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, "");
     globalReport.process(newMockedIssue("component0", null, null, Severity.INFO, true, "Issue0", "rule0"), null, false);
 
     String desiredMarkdown = "SonarQube analysis reported 1 issue\n\n" +
@@ -113,7 +139,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldFormatIssuesForMarkdownNoInline() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, "");
     globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue", "rule"), GITHUB_URL, true);
     globalReport.process(newMockedIssue("component", null, null, Severity.MINOR, true, "Issue", "rule"), GITHUB_URL, true);
     globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue", "rule"), GITHUB_URL, true);
@@ -141,7 +167,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldFormatIssuesForMarkdownMixInlineGlobal() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, "");
     globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue 0", "rule0"), GITHUB_URL, true);
     globalReport.process(newMockedIssue("component", null, null, Severity.MINOR, true, "Issue 1", "rule1"), GITHUB_URL, false);
     globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue 2", "rule2"), GITHUB_URL, true);
@@ -175,7 +201,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldFormatIssuesForMarkdownWhenInlineCommentsDisabled() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false, "");
     globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue 0", "rule0"), GITHUB_URL, false);
     globalReport.process(newMockedIssue("component", null, null, Severity.MINOR, true, "Issue 1", "rule1"), GITHUB_URL, false);
     globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue 2", "rule2"), GITHUB_URL, false);
@@ -206,7 +232,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldFormatIssuesForMarkdownWhenInlineCommentsDisabledAndLimitReached() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false, 4);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false, 4, "");
     globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue 0", "rule0"), GITHUB_URL, false);
     globalReport.process(newMockedIssue("component", null, null, Severity.MINOR, true, "Issue 1", "rule1"), GITHUB_URL, false);
     globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue 2", "rule2"), GITHUB_URL, false);
@@ -241,7 +267,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldLimitGlobalIssues() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, "");
     for (int i = 0; i < 17; i++) {
       globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue number:" + i, "rule" + i), GITHUB_URL + "/File.java#L" + i, false);
     }
@@ -280,7 +306,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldLimitGlobalIssuesWhenInlineCommentsDisabled() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false, "");
     for (int i = 0; i < 17; i++) {
       globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue number:" + i, "rule" + i), GITHUB_URL + "/File.java#L" + i, false);
     }
