@@ -32,17 +32,17 @@ public class GlobalReport {
   private int[] newIssuesBySeverity = new int[Severity.values().length];
   private int extraIssueCount = 0;
   private int maxGlobalReportedIssues;
-  private String projectId;
+  private String projectKey;
   private final ReportBuilder builder;
 
-  public GlobalReport(MarkDownUtils markDownUtils, boolean tryReportIssuesInline, String projectId) {
-    this(markDownUtils, tryReportIssuesInline, GitHubPluginConfiguration.MAX_GLOBAL_ISSUES, projectId);
+  public GlobalReport(MarkDownUtils markDownUtils, boolean tryReportIssuesInline, @Nullable String projectKey) {
+    this(markDownUtils, tryReportIssuesInline, GitHubPluginConfiguration.MAX_GLOBAL_ISSUES, projectKey);
   }
 
-  public GlobalReport(MarkDownUtils markDownUtils, boolean tryReportIssuesInline, int maxGlobalReportedIssues, String projectId) {
+  public GlobalReport(MarkDownUtils markDownUtils, boolean tryReportIssuesInline, int maxGlobalReportedIssues, @Nullable String projectKey) {
     this.tryReportIssuesInline = tryReportIssuesInline;
     this.maxGlobalReportedIssues = maxGlobalReportedIssues;
-    this.projectId = projectId;
+    this.projectKey = projectKey;
     this.builder = new MarkDownReportBuilder(markDownUtils);
   }
 
@@ -55,15 +55,14 @@ public class GlobalReport {
 
     boolean hasInlineIssues = newIssues > extraIssueCount;
     boolean extraIssuesTruncated = extraIssueCount > maxGlobalReportedIssues;
-    if (!StringUtils.isEmpty(projectId)) {
-      builder.appendProjectId(projectId).append(" ");
-    }
+
     if (newIssues == 0) {
-      builder.append("SonarQube analysis reported no issues.");
+      builder.append("SonarQube analysis reported no issues.").appendProjectId(projectKey);
       return builder.toString();
-    } else {
-      builder.append("SonarQube analysis reported ").append(newIssues).append(" issue").append(newIssues > 1 ? "s" : "").append("\n");
     }
+
+    builder.append("SonarQube analysis reported ").append(newIssues).append(" issue").append(newIssues > 1 ? "s" : "").append("\n");
+
     if (hasInlineIssues || extraIssuesTruncated) {
       appendSummaryBySeverity(builder);
     }
@@ -75,7 +74,7 @@ public class GlobalReport {
       appendExtraIssues(builder, hasInlineIssues, extraIssuesTruncated);
     }
 
-    return builder.toString();
+    return builder.appendProjectId(projectKey).toString();
   }
 
   private void appendExtraIssues(ReportBuilder builder, boolean hasInlineIssues, boolean extraIssuesTruncated) {

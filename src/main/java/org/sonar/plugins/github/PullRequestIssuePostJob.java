@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.StreamSupport;
+import javax.annotation.Nullable;
 import org.apache.commons.lang.StringUtils;
 
 import org.kohsuke.github.GHCommitState;
@@ -62,9 +63,11 @@ public class PullRequestIssuePostJob implements PostJob {
 
   @Override
   public void execute(PostJobContext context) {
-    GlobalReport report = new GlobalReport(markDownUtils, gitHubPluginConfiguration.tryReportIssuesInline(), gitHubPluginConfiguration.projectId());
+    String projectKey = gitHubPluginConfiguration.projectKey();
+
+    GlobalReport report = new GlobalReport(markDownUtils, gitHubPluginConfiguration.tryReportIssuesInline(), projectKey);
     try {
-      Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine = processIssues(report, context.issues());
+      Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine = processIssues(report, context.issues(), projectKey);
 
       updateReviewComments(commentsToBeAddedByLine);
 
@@ -79,7 +82,8 @@ public class PullRequestIssuePostJob implements PostJob {
     }
   }
 
-  private Map<InputFile, Map<Integer, StringBuilder>> processIssues(GlobalReport report, Iterable<PostJobIssue> issues) {
+  private Map<InputFile, Map<Integer, StringBuilder>> processIssues(
+          GlobalReport report, Iterable<PostJobIssue> issues, @Nullable String projectKey) {
     Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine = new HashMap<>();
 
     StreamSupport.stream(issues.spliterator(), false)
@@ -92,21 +96,21 @@ public class PullRequestIssuePostJob implements PostJob {
           pullRequestFacade.hasFile((InputFile) inputComponent);
       })
       .sorted(ISSUE_COMPARATOR)
-      .forEach(i -> processIssue(report, commentToBeAddedByFileAndByLine, i));
+      .forEach(i -> processIssue(report, commentToBeAddedByFileAndByLine, i, projectKey));
     return commentToBeAddedByFileAndByLine;
 
   }
 
-  private void processIssue(GlobalReport report, Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine, PostJobIssue issue) {
+  private void processIssue(GlobalReport report, Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine, PostJobIssue issue, @Nullable String projectKey) {
     boolean reportedInline = false;
     InputComponent inputComponent = issue.inputComponent();
     if (gitHubPluginConfiguration.tryReportIssuesInline() && inputComponent != null && inputComponent.isFile()) {
-      reportedInline = tryReportInline(commentToBeAddedByFileAndByLine, issue, (InputFile) inputComponent);
+      reportedInline = tryReportInline(commentToBeAddedByFileAndByLine, issue, (InputFile) inputComponent, projectKey);
     }
     report.process(issue, pullRequestFacade.getGithubUrl(inputComponent, issue.line()), reportedInline);
   }
 
-  private boolean tryReportInline(Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine, PostJobIssue issue, InputFile inputFile) {
+  private boolean tryReportInline(Map<InputFile, Map<Integer, StringBuilder>> commentToBeAddedByFileAndByLine, PostJobIssue issue, InputFile inputFile, @Nullable String projectKey) {
     Integer lineOrNull = issue.line();
     if (lineOrNull != null) {
       int line = lineOrNull.intValue();
@@ -114,17 +118,21 @@ public class PullRequestIssuePostJob implements PostJob {
         String message = issue.message();
         String ruleKey = issue.ruleKey().toString();
         if (!commentToBeAddedByFileAndByLine.containsKey(inputFile)) {
-          commentToBeAddedByFileAndByLine.put(inputFile, new HashMap<Integer, StringBuilder>());
+          commentToBeAddedByFileAndByLine.put(inputFile, new HashMap<>());
         }
         Map<Integer, StringBuilder> commentsByLine = commentToBeAddedByFileAndByLine.get(inputFile);
+
         if (!commentsByLine.containsKey(line)) {
           StringBuilder stringBuilder = new StringBuilder();
-          if (!StringUtils.isEmpty(gitHubPluginConfiguration.projectId())) {
-            stringBuilder.append(markDownUtils.projectId(gitHubPluginConfiguration.projectId())).append("\n");
-          }
           commentsByLine.put(line, stringBuilder);
         }
+
         commentsByLine.get(line).append(markDownUtils.inlineIssue(issue.severity(), message, ruleKey)).append("\n");
+
+        if (!StringUtils.isEmpty(projectKey)) {
+          commentsByLine.get(line).append(MarkDownUtils.projectId(projectKey)).append("\n");
+        }
+
         return true;
       }
     }

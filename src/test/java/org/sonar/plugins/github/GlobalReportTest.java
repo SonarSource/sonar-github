@@ -36,7 +36,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class GlobalReportTest {
-
+  private static final String PROJECT_KEY = "test.key";
   private static final String GITHUB_URL = "https://github.com/SonarSource/sonar-github";
 
   private Settings settings;
@@ -70,36 +70,10 @@ public class GlobalReportTest {
   }
 
   @Test
-  public void noIssues() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, "");
-
-    String desiredMarkdown = "SonarQube analysis reported no issues.";
-
-    String formattedGlobalReport = globalReport.formatForMarkdown();
-
-    assertThat(formattedGlobalReport).isEqualTo(desiredMarkdown);
-  }
-
-  @Test
   public void noIssuesWithProjectId() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, "project-id");
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, PROJECT_KEY);
 
-    String desiredMarkdown = "[project-id] SonarQube analysis reported no issues.";
-
-    String formattedGlobalReport = globalReport.formatForMarkdown();
-
-    assertThat(formattedGlobalReport).isEqualTo(desiredMarkdown);
-  }
-
-  @Test
-  public void oneIssue() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, "");
-    globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue", "rule"), GITHUB_URL, true);
-
-    String desiredMarkdown = "SonarQube analysis reported 1 issue\n" +
-      "* ![INFO][INFO] 1 info\n" +
-      "\nWatch the comments in this conversation to review them.\n" +
-      "\n[INFO]: https://sonarsource.github.io/sonar-github/severity-info.png 'Severity: INFO'";
+    String desiredMarkdown = "SonarQube analysis reported no issues.\n[project-id]: test.key";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
 
@@ -108,12 +82,13 @@ public class GlobalReportTest {
 
   @Test
   public void oneIssueWithProjectId() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, "project-id");
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, PROJECT_KEY);
     globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue", "rule"), GITHUB_URL, true);
 
-    String desiredMarkdown = "[project-id] SonarQube analysis reported 1 issue\n" +
+    String desiredMarkdown = "SonarQube analysis reported 1 issue\n" +
             "* ![INFO][INFO] 1 info\n" +
             "\nWatch the comments in this conversation to review them.\n" +
+            "\n[project-id]: test.key" +
             "\n[INFO]: https://sonarsource.github.io/sonar-github/severity-info.png 'Severity: INFO'";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
@@ -123,13 +98,14 @@ public class GlobalReportTest {
 
   @Test
   public void oneIssueOnDir() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, "");
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, PROJECT_KEY);
     globalReport.process(newMockedIssue("component0", null, null, Severity.INFO, true, "Issue0", "rule0"), null, false);
 
     String desiredMarkdown = "SonarQube analysis reported 1 issue\n\n" +
       "Note: The following issues were found on lines that were not modified in the pull request. Because these issues can't be reported as line comments, they are summarized here:\n\n"
       +
       "1. ![INFO][INFO] component0: Issue0 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule0)\n" +
+      "\n[project-id]: test.key" +
       "\n[INFO]: https://sonarsource.github.io/sonar-github/severity-info.png 'Severity: INFO'";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
@@ -139,7 +115,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldFormatIssuesForMarkdownNoInline() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, "");
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, PROJECT_KEY);
     globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue", "rule"), GITHUB_URL, true);
     globalReport.process(newMockedIssue("component", null, null, Severity.MINOR, true, "Issue", "rule"), GITHUB_URL, true);
     globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue", "rule"), GITHUB_URL, true);
@@ -154,6 +130,7 @@ public class GlobalReportTest {
       "* ![INFO][INFO] 1 info\n" +
       "\nWatch the comments in this conversation to review them.\n"
       + "\n"
+      + "[project-id]: test.key\n"
       + "[BLOCKER]: https://sonarsource.github.io/sonar-github/severity-blocker.png 'Severity: BLOCKER'\n"
       + "[CRITICAL]: https://sonarsource.github.io/sonar-github/severity-critical.png 'Severity: CRITICAL'\n"
       + "[INFO]: https://sonarsource.github.io/sonar-github/severity-info.png 'Severity: INFO'\n"
@@ -167,7 +144,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldFormatIssuesForMarkdownMixInlineGlobal() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, "");
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, PROJECT_KEY);
     globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue 0", "rule0"), GITHUB_URL, true);
     globalReport.process(newMockedIssue("component", null, null, Severity.MINOR, true, "Issue 1", "rule1"), GITHUB_URL, false);
     globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue 2", "rule2"), GITHUB_URL, true);
@@ -188,6 +165,7 @@ public class GlobalReportTest {
       +
       "1. ![CRITICAL][CRITICAL] [sonar-github](https://github.com/SonarSource/sonar-github): Issue 3 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule3)\n"
       + "\n"
+      + "[project-id]: test.key\n"
       + "[BLOCKER]: https://sonarsource.github.io/sonar-github/severity-blocker.png 'Severity: BLOCKER'\n"
       + "[CRITICAL]: https://sonarsource.github.io/sonar-github/severity-critical.png 'Severity: CRITICAL'\n"
       + "[INFO]: https://sonarsource.github.io/sonar-github/severity-info.png 'Severity: INFO'\n"
@@ -201,7 +179,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldFormatIssuesForMarkdownWhenInlineCommentsDisabled() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false, "");
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false, PROJECT_KEY);
     globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue 0", "rule0"), GITHUB_URL, false);
     globalReport.process(newMockedIssue("component", null, null, Severity.MINOR, true, "Issue 1", "rule1"), GITHUB_URL, false);
     globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue 2", "rule2"), GITHUB_URL, false);
@@ -219,6 +197,7 @@ public class GlobalReportTest {
       +
       "1. ![BLOCKER][BLOCKER] [sonar-github](https://github.com/SonarSource/sonar-github): Issue 4 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule4)\n"
       + "\n"
+      + "[project-id]: test.key\n"
       + "[BLOCKER]: https://sonarsource.github.io/sonar-github/severity-blocker.png 'Severity: BLOCKER'\n"
       + "[CRITICAL]: https://sonarsource.github.io/sonar-github/severity-critical.png 'Severity: CRITICAL'\n"
       + "[INFO]: https://sonarsource.github.io/sonar-github/severity-info.png 'Severity: INFO'\n"
@@ -232,7 +211,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldFormatIssuesForMarkdownWhenInlineCommentsDisabledAndLimitReached() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false, 4, "");
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false, 4, PROJECT_KEY);
     globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue 0", "rule0"), GITHUB_URL, false);
     globalReport.process(newMockedIssue("component", null, null, Severity.MINOR, true, "Issue 1", "rule1"), GITHUB_URL, false);
     globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue 2", "rule2"), GITHUB_URL, false);
@@ -254,6 +233,7 @@ public class GlobalReportTest {
       +
       "1. ![CRITICAL][CRITICAL] [sonar-github](https://github.com/SonarSource/sonar-github): Issue 3 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule3)\n"
       + "\n"
+      + "[project-id]: test.key\n"
       + "[BLOCKER]: https://sonarsource.github.io/sonar-github/severity-blocker.png 'Severity: BLOCKER'\n"
       + "[CRITICAL]: https://sonarsource.github.io/sonar-github/severity-critical.png 'Severity: CRITICAL'\n"
       + "[INFO]: https://sonarsource.github.io/sonar-github/severity-info.png 'Severity: INFO'\n"
@@ -267,7 +247,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldLimitGlobalIssues() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, "");
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, PROJECT_KEY);
     for (int i = 0; i < 17; i++) {
       globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue number:" + i, "rule" + i), GITHUB_URL + "/File.java#L" + i, false);
     }
@@ -297,6 +277,7 @@ public class GlobalReportTest {
       +
       "1. ![MAJOR][MAJOR] [File.java#L9](https://github.com/SonarSource/sonar-github/File.java#L9): Issue number:9 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule9)\n"
       + "\n"
+      + "[project-id]: test.key\n"
       + "[MAJOR]: https://sonarsource.github.io/sonar-github/severity-major.png 'Severity: MAJOR'";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();
@@ -306,7 +287,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldLimitGlobalIssuesWhenInlineCommentsDisabled() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false, "");
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false, PROJECT_KEY);
     for (int i = 0; i < 17; i++) {
       globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue number:" + i, "rule" + i), GITHUB_URL + "/File.java#L" + i, false);
     }
@@ -334,6 +315,7 @@ public class GlobalReportTest {
       +
       "1. ![MAJOR][MAJOR] [File.java#L9](https://github.com/SonarSource/sonar-github/File.java#L9): Issue number:9 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule9)\n"
       + "\n"
+      + "[project-id]: test.key\n"
       + "[MAJOR]: https://sonarsource.github.io/sonar-github/severity-major.png 'Severity: MAJOR'";
 
     String formattedGlobalReport = globalReport.formatForMarkdown();

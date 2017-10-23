@@ -139,12 +139,12 @@ public class PullRequestFacade {
         // Ignore comments from other users
         continue;
       }
-      if (!StringUtils.isEmpty(config.projectId()) && !comment.getBody().startsWith(MarkDownUtils.projectId(config.projectId()))) {
+      if (!StringUtils.isEmpty(config.projectKey()) && !comment.getBody().contains(MarkDownUtils.projectId(config.projectKey()))) {
         // Ignore comments that don't contain projectId
         continue;
       }
       if (!existingReviewCommentsByLocationByFile.containsKey(comment.getPath())) {
-        existingReviewCommentsByLocationByFile.put(comment.getPath(), new HashMap<Integer, GHPullRequestReviewComment>());
+        existingReviewCommentsByLocationByFile.put(comment.getPath(), new HashMap<>());
       }
       // By default all previous comments will be marked for deletion
       reviewCommentToBeDeletedById.put(comment.getId(), comment);
@@ -262,7 +262,7 @@ public class PullRequestFacade {
     boolean found = false;
     for (GHIssueComment comment : pr.listComments()) {
       if (myself.equals(comment.getUser().getLogin())) {
-        if (!StringUtils.isEmpty(config.projectId()) && !comment.getBody().startsWith(MarkDownUtils.projectId(config.projectId()))) {
+        if (!StringUtils.isEmpty(config.projectKey()) && !comment.getBody().contains(MarkDownUtils.projectId(config.projectKey()))) {
           // Ignore comments that don't contain projectId
           continue;
         }

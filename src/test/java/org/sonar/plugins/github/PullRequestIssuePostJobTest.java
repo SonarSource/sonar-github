@@ -63,7 +63,7 @@ public class PullRequestIssuePostJobTest {
         .category(CoreProperties.CATEGORY_GENERAL)
         .defaultValue(CoreProperties.SERVER_BASE_URL_DEFAULT_VALUE)
         .build(),
-      PropertyDefinition.builder(GitHubPlugin.GITHUB_PROJECT_ID)
+      PropertyDefinition.builder(CoreProperties.PROJECT_KEY_PROPERTY)
         .name("Project Id")
         .description("Project Id")
         .category(CoreProperties.CATEGORY_GENERAL)
@@ -74,7 +74,7 @@ public class PullRequestIssuePostJobTest {
 
     settings.setProperty("sonar.host.url", "http://192.168.0.1");
     settings.setProperty(CoreProperties.SERVER_BASE_URL, "http://myserver");
-    settings.setProperty(GitHubPlugin.GITHUB_PROJECT_ID, "project-id");
+    settings.setProperty(CoreProperties.PROJECT_KEY_PROPERTY, "project-id");
     pullRequestIssuePostJob = new PullRequestIssuePostJob(config, pullRequestFacade, new MarkDownUtils(settings));
   }
 
