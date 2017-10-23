@@ -77,11 +77,11 @@ public class GitHubPluginConfigurationTest {
     }
 
     settings.clear();
-    settings.setProperty(CoreProperties.LINKS_SOURCES, "scm:git:git@github.com:SonarCommunity/github-integration.git");
-    assertThat(config.repository()).isEqualTo("SonarCommunity/github-integration");
+    settings.setProperty(CoreProperties.LINKS_SOURCES, "scm:git:git@github.com:SonarSource/github-integration.git");
+    assertThat(config.repository()).isEqualTo("SonarSource/github-integration");
 
     settings.setProperty(CoreProperties.LINKS_SOURCES_DEV, "do_not_parse");
-    assertThat(config.repository()).isEqualTo("SonarCommunity/github-integration");
+    assertThat(config.repository()).isEqualTo("SonarSource/github-integration");
 
     settings.setProperty(CoreProperties.LINKS_SOURCES_DEV, "scm:git:git@github.com:SonarCommunity2/github-integration.git");
     assertThat(config.repository()).isEqualTo("SonarCommunity2/github-integration");
@@ -89,10 +89,10 @@ public class GitHubPluginConfigurationTest {
     settings.removeProperty(CoreProperties.LINKS_SOURCES);
     assertThat(config.repository()).isEqualTo("SonarCommunity2/github-integration");
 
-    settings.setProperty(GitHubPlugin.GITHUB_REPO, "https://github.com/SonarCommunity/sonar-github.git");
-    assertThat(config.repository()).isEqualTo("SonarCommunity/sonar-github");
-    settings.setProperty(GitHubPlugin.GITHUB_REPO, "http://github.com/SonarCommunity/sonar-github.git");
-    assertThat(config.repository()).isEqualTo("SonarCommunity/sonar-github");
+    settings.setProperty(GitHubPlugin.GITHUB_REPO, "https://github.com/SonarSource/sonar-github.git");
+    assertThat(config.repository()).isEqualTo("SonarSource/sonar-github");
+    settings.setProperty(GitHubPlugin.GITHUB_REPO, "http://github.com/SonarSource/sonar-github.git");
+    assertThat(config.repository()).isEqualTo("SonarSource/sonar-github");
     settings.setProperty(GitHubPlugin.GITHUB_REPO, "SonarCommunity3/github-integration");
     assertThat(config.repository()).isEqualTo("SonarCommunity3/github-integration");
   }

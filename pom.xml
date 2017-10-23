@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.sonarsource.parent</groupId>
     <artifactId>parent</artifactId>
-    <version>38</version>
+    <version>40</version>
     <relativePath />
   </parent>
 
@@ -13,7 +13,7 @@
   <artifactId>sonar-github-plugin</artifactId>
   <name>SonarQube :: GitHub Plugin</name>
   <packaging>sonar-plugin</packaging>
-  <version>1.4-SNAPSHOT</version>
+  <version>1.5-SNAPSHOT</version>
   <description>Provide some integration between GitHub and SonarQube</description>
   <url>http://redirect.sonarsource.com/plugins/github.html</url>
   <inceptionYear>2015</inceptionYear>
@@ -31,7 +31,7 @@
 
   <organization>
     <name>SonarSource</name>
-    <url>http://www.sonarsource.com</url>
+    <url>https://www.sonarsource.com</url>
   </organization>
 
   <licenses>
