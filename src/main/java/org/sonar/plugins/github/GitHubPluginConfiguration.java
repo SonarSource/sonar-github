@@ -132,6 +132,10 @@ public class GitHubPluginConfiguration {
     return settings.getString(GitHubPlugin.GITHUB_ENDPOINT);
   }
 
+  public String maxSeverityAcceptedOfPullRequest() {
+    return settings.getString(GitHubPlugin.GITHUB_MAX_SEVERITY_ACCEPTED_OF_PR);
+  }
+
   public boolean tryReportIssuesInline() {
     return !settings.getBoolean(GitHubPlugin.GITHUB_DISABLE_INLINE_COMMENTS);
   }

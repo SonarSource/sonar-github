@@ -1,0 +1,49 @@
+/*
+ * SonarQube :: GitHub Plugin
+ * Copyright (C) 2015-2017 SonarSource SA
+ * mailto:info AT sonarsource DOT com
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+package org.sonar.plugins.github;
+
+import org.kohsuke.github.GHCommitState;
+import org.sonar.api.batch.rule.Severity;
+
+import java.util.Optional;
+import java.util.stream.IntStream;
+
+public class CommitStatusResolver {
+
+    private String maxLevelSeverityPullRequest;
+
+    public CommitStatusResolver(String maxLevelSeverityPullRequest){
+        this.maxLevelSeverityPullRequest = maxLevelSeverityPullRequest;
+    }
+
+    public Severity getMaxSeveriry(){
+        return Severity.valueOf(Optional.ofNullable(maxLevelSeverityPullRequest).orElse(Severity.MAJOR.name()));
+    }
+
+    public GHCommitState statusBySeverity(int[] existentIssues){
+        Boolean hayErrores = IntStream.rangeClosed(this.getMaxSeveriry().ordinal() + 1, Severity.BLOCKER.ordinal()).anyMatch(i -> existentIssues[i] > 0);
+        return hayErrores? GHCommitState.ERROR : GHCommitState.SUCCESS;
+    }
+
+    public GHCommitState getStatus(int[] existentIssues){
+        return statusBySeverity(existentIssues);
+    }
+}
+

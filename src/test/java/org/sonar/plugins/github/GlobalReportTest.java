@@ -22,6 +22,7 @@ package org.sonar.plugins.github;
 import javax.annotation.CheckForNull;
 import org.junit.Before;
 import org.junit.Test;
+import org.kohsuke.github.GHCommitState;
 import org.sonar.api.CoreProperties;
 import org.sonar.api.batch.fs.internal.DefaultInputFile;
 import org.sonar.api.batch.postjob.issue.PostJobIssue;
@@ -44,12 +45,19 @@ public class GlobalReportTest {
   @Before
   public void setup() {
     settings = new Settings(new PropertyDefinitions(PropertyDefinition.builder(CoreProperties.SERVER_BASE_URL)
-      .name("Server base URL")
-      .description("HTTP URL of this SonarQube server, such as <i>http://yourhost.yourdomain/sonar</i>. This value is used i.e. to create links in emails.")
-      .category(CoreProperties.CATEGORY_GENERAL)
-      .defaultValue(CoreProperties.SERVER_BASE_URL_DEFAULT_VALUE)
-      .build()));
-
+        .name("Server base URL")
+        .description("HTTP URL of this SonarQube server, such as <i>http://yourhost.yourdomain/sonar</i>. This value is used i.e. to create links in emails.")
+        .category(CoreProperties.CATEGORY_GENERAL)
+        .defaultValue(CoreProperties.SERVER_BASE_URL_DEFAULT_VALUE)
+        .build(),
+      PropertyDefinition.builder(GitHubPlugin.GITHUB_MAX_SEVERITY_ACCEPTED_OF_PR)
+        .name("Set severity level")
+        .description("Set the max level accepted for an issue")
+        .category(CoreProperties.CATEGORY_GENERAL)
+        .build()
+      )
+    );
+    settings.setProperty(GitHubPlugin.GITHUB_MAX_SEVERITY_ACCEPTED_OF_PR, Severity.MINOR.name());
     settings.setProperty("sonar.host.url", "http://myserver");
   }
 
@@ -314,4 +322,19 @@ public class GlobalReportTest {
 
     assertThat(formattedGlobalReport).isEqualTo(desiredMarkdown);
   }
+
+  @Test
+  public void shouldGetErrorStatus() {
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false);
+    globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue number:" + 1, "rule" + 1), GITHUB_URL + "/File.java#L" + 1, false);
+    assertThat(globalReport.getStatus(new CommitStatusResolver(settings.getString(GitHubPlugin.GITHUB_MAX_SEVERITY_ACCEPTED_OF_PR)))).isEqualTo(GHCommitState.ERROR);
+  }
+
+  @Test
+  public void shouldGetOkStatus() {
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false);
+    globalReport.process(newMockedIssue("component", null, null, Severity.MINOR, true, "Issue number:" + 1, "rule" + 1), GITHUB_URL + "/File.java#L" + 1, false);
+    assertThat(globalReport.getStatus(new CommitStatusResolver(settings.getString(GitHubPlugin.GITHUB_MAX_SEVERITY_ACCEPTED_OF_PR)))).isEqualTo(GHCommitState.SUCCESS);
+  }
+
 }

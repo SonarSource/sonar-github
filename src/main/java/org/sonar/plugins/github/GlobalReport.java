@@ -19,11 +19,13 @@
  */
 package org.sonar.plugins.github;
 
-import java.util.Locale;
-import javax.annotation.Nullable;
 import org.kohsuke.github.GHCommitState;
 import org.sonar.api.batch.postjob.issue.PostJobIssue;
 import org.sonar.api.batch.rule.Severity;
+
+import javax.annotation.Nullable;
+import java.util.Locale;
+import java.util.stream.IntStream;
 
 public class GlobalReport {
   private final boolean tryReportIssuesInline;
@@ -97,8 +99,8 @@ public class GlobalReport {
     return sb.toString();
   }
 
-  public GHCommitState getStatus() {
-    return (newIssues(Severity.BLOCKER) > 0 || newIssues(Severity.CRITICAL) > 0) ? GHCommitState.ERROR : GHCommitState.SUCCESS;
+  public GHCommitState getStatus(CommitStatusResolver commitStatusResolver) {
+    return commitStatusResolver.getStatus(newIssuesBySeverity);
   }
 
   private int newIssues(Severity s) {
@@ -106,11 +108,9 @@ public class GlobalReport {
   }
 
   private void appendSummaryBySeverity(ReportBuilder builder) {
-    appendNewIssues(builder, Severity.BLOCKER);
-    appendNewIssues(builder, Severity.CRITICAL);
-    appendNewIssues(builder, Severity.MAJOR);
-    appendNewIssues(builder, Severity.MINOR);
-    appendNewIssues(builder, Severity.INFO);
+    int from = 0;
+    int to = Severity.values().length - 1;
+    IntStream.rangeClosed(from, to).forEach(j -> appendNewIssues(builder, Severity.values()[to - j]));
   }
 
   private void appendNewIssuesInline(StringBuilder sb) {
