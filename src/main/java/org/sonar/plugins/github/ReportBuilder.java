@@ -25,6 +25,14 @@ import org.sonar.api.batch.rule.Severity;
 
 public interface ReportBuilder {
   /**
+   * Append project id to the report.
+   *
+   * @param projectId Project id to append
+   * @return a reference to this object
+     */
+  ReportBuilder appendProjectId(String projectId);
+
+  /**
    * Append an object to the report, using its toString() method.
    *
    * @param o object to append

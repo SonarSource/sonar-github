@@ -56,17 +56,25 @@ public class PullRequestIssuePostJobTest {
   @Before
   public void prepare() throws Exception {
     pullRequestFacade = mock(PullRequestFacade.class);
-    Settings settings = new Settings(new PropertyDefinitions(PropertyDefinition.builder(CoreProperties.SERVER_BASE_URL)
-      .name("Server base URL")
-      .description("HTTP URL of this SonarQube server, such as <i>http://yourhost.yourdomain/sonar</i>. This value is used i.e. to create links in emails.")
-      .category(CoreProperties.CATEGORY_GENERAL)
-      .defaultValue(CoreProperties.SERVER_BASE_URL_DEFAULT_VALUE)
-      .build()));
+    Settings settings = new Settings(new PropertyDefinitions(
+      PropertyDefinition.builder(CoreProperties.SERVER_BASE_URL)
+        .name("Server base URL")
+        .description("HTTP URL of this SonarQube server, such as <i>http://yourhost.yourdomain/sonar</i>. This value is used i.e. to create links in emails.")
+        .category(CoreProperties.CATEGORY_GENERAL)
+        .defaultValue(CoreProperties.SERVER_BASE_URL_DEFAULT_VALUE)
+        .build(),
+      PropertyDefinition.builder(CoreProperties.PROJECT_KEY_PROPERTY)
+        .name("Project Id")
+        .description("Project Id")
+        .category(CoreProperties.CATEGORY_GENERAL)
+        .defaultValue("")
+        .build()));
     GitHubPluginConfiguration config = new GitHubPluginConfiguration(settings, new System2());
     context = mock(PostJobContext.class);
 
     settings.setProperty("sonar.host.url", "http://192.168.0.1");
     settings.setProperty(CoreProperties.SERVER_BASE_URL, "http://myserver");
+    settings.setProperty(CoreProperties.PROJECT_KEY_PROPERTY, "project-id");
     pullRequestIssuePostJob = new PullRequestIssuePostJob(config, pullRequestFacade, new MarkDownUtils(settings));
   }
 

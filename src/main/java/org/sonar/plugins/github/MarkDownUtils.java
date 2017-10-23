@@ -47,6 +47,12 @@ public class MarkDownUtils {
     this.ruleUrlPrefix = baseUrl;
   }
 
+  public static String projectId(String projectId) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("\n[project-id]: ").append(projectId);
+    return sb.toString();
+  }
+
   public String inlineIssue(Severity severity, String message, String ruleKey) {
     String ruleLink = getRuleLink(ruleKey);
     StringBuilder sb = new StringBuilder();

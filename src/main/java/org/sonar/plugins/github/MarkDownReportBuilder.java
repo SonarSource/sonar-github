@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import org.apache.commons.lang.StringUtils;
 import org.sonar.api.batch.postjob.issue.PostJobIssue;
 import org.sonar.api.batch.rule.Severity;
 
@@ -48,6 +49,15 @@ public class MarkDownReportBuilder implements ReportBuilder {
 
   MarkDownReportBuilder(MarkDownUtils markDownUtils) {
     this.markDownUtils = markDownUtils;
+  }
+
+  @Override
+  public ReportBuilder appendProjectId(String projectId) {
+    if (!StringUtils.isEmpty(projectId)) {
+      sb.append(MarkDownUtils.projectId(projectId));
+    }
+
+    return this;
   }
 
   @Override

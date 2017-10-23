@@ -31,6 +31,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
+
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.github.GHCommitState;
 import org.kohsuke.github.GHCommitStatus;
 import org.kohsuke.github.GHIssueComment;
@@ -72,6 +74,7 @@ public class PullRequestFacade {
 
   public PullRequestFacade(GitHubPluginConfiguration config) {
     this.config = config;
+
   }
 
   public void init(int pullRequestNumber, File projectBaseDir) {
@@ -136,8 +139,12 @@ public class PullRequestFacade {
         // Ignore comments from other users
         continue;
       }
+      if (!StringUtils.isEmpty(config.projectKey()) && !comment.getBody().contains(MarkDownUtils.projectId(config.projectKey()))) {
+        // Ignore comments that don't contain projectId
+        continue;
+      }
       if (!existingReviewCommentsByLocationByFile.containsKey(comment.getPath())) {
-        existingReviewCommentsByLocationByFile.put(comment.getPath(), new HashMap<Integer, GHPullRequestReviewComment>());
+        existingReviewCommentsByLocationByFile.put(comment.getPath(), new HashMap<>());
       }
       // By default all previous comments will be marked for deletion
       reviewCommentToBeDeletedById.put(comment.getId(), comment);
@@ -255,6 +262,10 @@ public class PullRequestFacade {
     boolean found = false;
     for (GHIssueComment comment : pr.listComments()) {
       if (myself.equals(comment.getUser().getLogin())) {
+        if (!StringUtils.isEmpty(config.projectKey()) && !comment.getBody().contains(MarkDownUtils.projectId(config.projectKey()))) {
+          // Ignore comments that don't contain projectId
+          continue;
+        }
         if (markup == null || found || !markup.equals(comment.getBody())) {
           comment.delete();
           continue;
