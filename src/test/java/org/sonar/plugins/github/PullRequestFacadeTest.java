@@ -64,8 +64,8 @@ public class PullRequestFacadeTest {
     when(pr.getHead().getSha()).thenReturn("abc123");
     facade.setPr(pr);
     InputPath inputPath = mock(InputPath.class);
-    when(inputPath.file()).thenReturn(new File(gitBasedir, "src/main/Foo.java"));
-    assertThat(facade.getGithubUrl(inputPath, 10)).isEqualTo("https://github.com/SonarSource/sonar-java/blob/abc123/src/main/Foo.java#L10");
+    when(inputPath.file()).thenReturn(new File(gitBasedir, "src/main/with space/Foo.java"));
+    assertThat(facade.getGithubUrl(inputPath, 10).toString()).isEqualTo("https://github.com/SonarSource/sonar-java/blob/abc123/src/main/with%20space/Foo.java#L10");
   }
 
   @Test

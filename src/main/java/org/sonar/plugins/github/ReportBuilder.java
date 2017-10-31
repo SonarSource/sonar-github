@@ -19,6 +19,7 @@
  */
 package org.sonar.plugins.github;
 
+import java.net.URL;
 import javax.annotation.Nullable;
 import org.sonar.api.batch.postjob.issue.PostJobIssue;
 import org.sonar.api.batch.rule.Severity;
@@ -48,7 +49,7 @@ public interface ReportBuilder {
    * @param gitHubUrl GitHub URL
    * @return a reference to this object
    */
-  ReportBuilder registerExtraIssue(PostJobIssue issue, @Nullable String gitHubUrl);
+  ReportBuilder registerExtraIssue(PostJobIssue issue, @Nullable URL gitHubUrl);
 
   /**
    * Append the registered extra issues.

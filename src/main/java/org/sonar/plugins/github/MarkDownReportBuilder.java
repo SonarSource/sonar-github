@@ -19,6 +19,7 @@
  */
 package org.sonar.plugins.github;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -38,9 +39,9 @@ public class MarkDownReportBuilder implements ReportBuilder {
 
   private static class IssueHolder {
     private final PostJobIssue issue;
-    private final String gitHubUrl;
+    private final URL gitHubUrl;
 
-    private IssueHolder(PostJobIssue issue, String gitHubUrl) {
+    private IssueHolder(PostJobIssue issue, URL gitHubUrl) {
       this.issue = issue;
       this.gitHubUrl = gitHubUrl;
     }
@@ -72,7 +73,7 @@ public class MarkDownReportBuilder implements ReportBuilder {
   }
 
   @Override
-  public ReportBuilder registerExtraIssue(PostJobIssue issue, String gitHubUrl) {
+  public ReportBuilder registerExtraIssue(PostJobIssue issue, URL gitHubUrl) {
     extraIssues.add(new IssueHolder(issue, gitHubUrl));
     return this;
   }
