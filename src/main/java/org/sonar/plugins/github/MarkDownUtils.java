@@ -20,6 +20,7 @@
 package org.sonar.plugins.github;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -58,8 +59,8 @@ public class MarkDownUtils {
     return sb.toString();
   }
 
-  private static String getLocation(String url) {
-    String filename = Pattern.compile(".*/", Pattern.DOTALL).matcher(url).replaceAll(StringUtils.EMPTY);
+  private static String getLocation(URL url) {
+    String filename = Pattern.compile(".*/", Pattern.DOTALL).matcher(url.toString()).replaceAll(StringUtils.EMPTY);
     if (filename.length() <= 0) {
       filename = "Project";
     }
@@ -67,7 +68,7 @@ public class MarkDownUtils {
     return filename;
   }
 
-  public String globalIssue(String message, String ruleKey, @Nullable String url, String componentKey) {
+  public String globalIssue(String message, String ruleKey, @Nullable URL url, String componentKey) {
     StringBuilder sb = new StringBuilder();
     if (url != null) {
       sb.append("[").append(getLocation(url)).append("]").append("(").append(url).append(")");
@@ -80,10 +81,10 @@ public class MarkDownUtils {
   }
 
   String getRuleLink(String ruleKey) {
-    return "[![rule](" + IMAGES_ROOT_URL + "rule.png)](" + ruleUrlPrefix + "coding_rules#rule_key=" + encodeForUrl(ruleKey) + ")";
+    return "[![rule](" + IMAGES_ROOT_URL + "rule.png)](" + ruleUrlPrefix + "coding_rules#rule_key=" + encodeForUrlParam(ruleKey) + ")";
   }
 
-  static String encodeForUrl(String url) {
+  static String encodeForUrlParam(String url) {
     try {
       return URLEncoder.encode(url, "UTF-8");
 

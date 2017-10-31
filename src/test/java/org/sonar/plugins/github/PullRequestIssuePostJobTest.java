@@ -19,6 +19,8 @@
  */
 package org.sonar.plugins.github;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import javax.annotation.CheckForNull;
 import org.junit.Before;
@@ -99,13 +101,13 @@ public class PullRequestIssuePostJobTest {
   }
 
   @Test
-  public void testPullRequestAnalysisWithNewIssues() {
+  public void testPullRequestAnalysisWithNewIssues() throws MalformedURLException {
     DefaultInputFile inputFile1 = new DefaultInputFile("foo", "src/Foo.php");
     PostJobIssue newIssue = newMockedIssue("foo:src/Foo.php", inputFile1, 1, Severity.BLOCKER, true, "msg1");
-    when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn("http://github/blob/abc123/src/Foo.php#L1");
+    when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn(new URL("http://github/blob/abc123/src/Foo.php#L1"));
 
     PostJobIssue lineNotVisible = newMockedIssue("foo:src/Foo.php", inputFile1, 2, Severity.BLOCKER, true, "msg2");
-    when(pullRequestFacade.getGithubUrl(inputFile1, 2)).thenReturn("http://github/blob/abc123/src/Foo.php#L2");
+    when(pullRequestFacade.getGithubUrl(inputFile1, 2)).thenReturn(new URL("http://github/blob/abc123/src/Foo.php#L2"));
 
     DefaultInputFile inputFile2 = new DefaultInputFile("foo", "src/Foo2.php");
     PostJobIssue fileNotInPR = newMockedIssue("foo:src/Foo2.php", inputFile2, 1, Severity.BLOCKER, true, "msg3");
@@ -138,18 +140,18 @@ public class PullRequestIssuePostJobTest {
   }
 
   @Test
-  public void testSortIssues() {
+  public void testSortIssues() throws MalformedURLException {
     ArgumentCaptor<String> commentCaptor = forClass(String.class);
     DefaultInputFile inputFile1 = new DefaultInputFile("foo", "src/Foo.php");
     DefaultInputFile inputFile2 = new DefaultInputFile("foo", "src/Foo2.php");
 
     // Blocker and 8th line => Should be displayed in 3rd position
     PostJobIssue newIssue = newMockedIssue("foo:src/Foo.php", inputFile1, 8, Severity.BLOCKER, true, "msg1");
-    when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn("http://github/blob/abc123/src/Foo.php#L1");
+    when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn(new URL("http://github/blob/abc123/src/Foo.php#L1"));
 
     // Blocker and 2nd line (Foo2.php) => Should be displayed in 4th position
     PostJobIssue issueInSecondFile = newMockedIssue("foo:src/Foo2.php", inputFile2, 2, Severity.BLOCKER, true, "msg2");
-    when(pullRequestFacade.getGithubUrl(inputFile1, 2)).thenReturn("http://github/blob/abc123/src/Foo.php#L2");
+    when(pullRequestFacade.getGithubUrl(inputFile1, 2)).thenReturn(new URL("http://github/blob/abc123/src/Foo.php#L2"));
 
     // Major => Should be displayed in 6th position
     PostJobIssue newIssue2 = newMockedIssue("foo:src/Foo.php", inputFile1, 4, Severity.MAJOR, true, "msg3");
@@ -179,10 +181,10 @@ public class PullRequestIssuePostJobTest {
   }
 
   @Test
-  public void testPullRequestAnalysisWithNewCriticalIssues() {
+  public void testPullRequestAnalysisWithNewCriticalIssues() throws MalformedURLException {
     DefaultInputFile inputFile1 = new DefaultInputFile("foo", "src/Foo.php");
     PostJobIssue newIssue = newMockedIssue("foo:src/Foo.php", inputFile1, 1, Severity.CRITICAL, true, "msg1");
-    when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn("http://github/blob/abc123/src/Foo.php#L1");
+    when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn(new URL("http://github/blob/abc123/src/Foo.php#L1"));
 
     when(context.issues()).thenReturn(Arrays.<PostJobIssue>asList(newIssue));
     when(pullRequestFacade.hasFile(inputFile1)).thenReturn(true);
@@ -194,10 +196,10 @@ public class PullRequestIssuePostJobTest {
   }
 
   @Test
-  public void testPullRequestAnalysisWithNewIssuesNoBlockerNorCritical() {
+  public void testPullRequestAnalysisWithNewIssuesNoBlockerNorCritical() throws MalformedURLException {
     DefaultInputFile inputFile1 = new DefaultInputFile("foo", "src/Foo.php");
     PostJobIssue newIssue = newMockedIssue("foo:src/Foo.php", inputFile1, 1, Severity.MAJOR, true, "msg1");
-    when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn("http://github/blob/abc123/src/Foo.php#L1");
+    when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn(new URL("http://github/blob/abc123/src/Foo.php#L1"));
 
     when(context.issues()).thenReturn(Arrays.<PostJobIssue>asList(newIssue));
     when(pullRequestFacade.hasFile(inputFile1)).thenReturn(true);
@@ -209,13 +211,13 @@ public class PullRequestIssuePostJobTest {
   }
 
   @Test
-  public void testPullRequestAnalysisWithNewBlockerAndCriticalIssues() {
+  public void testPullRequestAnalysisWithNewBlockerAndCriticalIssues() throws MalformedURLException {
     DefaultInputFile inputFile1 = new DefaultInputFile("foo", "src/Foo.php");
     PostJobIssue newIssue = newMockedIssue("foo:src/Foo.php", inputFile1, 1, Severity.CRITICAL, true, "msg1");
-    when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn("http://github/blob/abc123/src/Foo.php#L1");
+    when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn(new URL("http://github/blob/abc123/src/Foo.php#L1"));
 
     PostJobIssue lineNotVisible = newMockedIssue("foo:src/Foo.php", inputFile1, 2, Severity.BLOCKER, true, "msg2");
-    when(pullRequestFacade.getGithubUrl(inputFile1, 2)).thenReturn("http://github/blob/abc123/src/Foo.php#L2");
+    when(pullRequestFacade.getGithubUrl(inputFile1, 2)).thenReturn(new URL("http://github/blob/abc123/src/Foo.php#L2"));
 
     when(context.issues()).thenReturn(Arrays.<PostJobIssue>asList(newIssue, lineNotVisible));
     when(pullRequestFacade.hasFile(inputFile1)).thenReturn(true);

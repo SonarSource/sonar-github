@@ -19,6 +19,10 @@
  */
 package org.sonar.plugins.github;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import javax.annotation.CheckForNull;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +41,7 @@ import static org.mockito.Mockito.when;
 
 public class GlobalReportTest {
 
-  private static final String GITHUB_URL = "https://github.com/SonarSource/sonar-github";
+  private static final URL GITHUB_URL = parse("https://github.com/SonarSource/sonar-github");
 
   private Settings settings;
 
@@ -51,6 +55,14 @@ public class GlobalReportTest {
       .build()));
 
     settings.setProperty("sonar.host.url", "http://myserver");
+  }
+
+  private static URL parse(String url) {
+    try {
+      return new URL(url);
+    } catch (MalformedURLException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   private PostJobIssue newMockedIssue(String componentKey, @CheckForNull DefaultInputFile inputFile, @CheckForNull Integer line, Severity severity, boolean isNew, String message,
@@ -240,10 +252,13 @@ public class GlobalReportTest {
   }
 
   @Test
-  public void shouldLimitGlobalIssues() {
+  public void shouldLimitGlobalIssues() throws MalformedURLException, URISyntaxException {
     GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
     for (int i = 0; i < 17; i++) {
-      globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue number:" + i, "rule" + i), GITHUB_URL + "/File.java#L" + i, false);
+      globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue number:" + i, "rule" + i),
+        new URI(GITHUB_URL.getProtocol(), null, GITHUB_URL.getHost(), GITHUB_URL.getPort(),
+          GITHUB_URL.getFile() + "/with space/File.java", null, "L" + i).toURL(),
+        false);
     }
 
     String desiredMarkdown = "SonarQube analysis reported 17 issues\n" +
@@ -251,25 +266,25 @@ public class GlobalReportTest {
       "\n#### Top 10 extra issues\n" +
       "\nNote: The following issues were found on lines that were not modified in the pull request. Because these issues can't be reported as line comments, they are summarized here:\n\n"
       +
-      "1. ![MAJOR][MAJOR] [File.java#L0](https://github.com/SonarSource/sonar-github/File.java#L0): Issue number:0 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule0)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L0](https://github.com/SonarSource/sonar-github/with%20space/File.java#L0): Issue number:0 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule0)\n"
       +
-      "1. ![MAJOR][MAJOR] [File.java#L1](https://github.com/SonarSource/sonar-github/File.java#L1): Issue number:1 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule1)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L1](https://github.com/SonarSource/sonar-github/with%20space/File.java#L1): Issue number:1 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule1)\n"
       +
-      "1. ![MAJOR][MAJOR] [File.java#L2](https://github.com/SonarSource/sonar-github/File.java#L2): Issue number:2 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule2)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L2](https://github.com/SonarSource/sonar-github/with%20space/File.java#L2): Issue number:2 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule2)\n"
       +
-      "1. ![MAJOR][MAJOR] [File.java#L3](https://github.com/SonarSource/sonar-github/File.java#L3): Issue number:3 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule3)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L3](https://github.com/SonarSource/sonar-github/with%20space/File.java#L3): Issue number:3 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule3)\n"
       +
-      "1. ![MAJOR][MAJOR] [File.java#L4](https://github.com/SonarSource/sonar-github/File.java#L4): Issue number:4 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule4)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L4](https://github.com/SonarSource/sonar-github/with%20space/File.java#L4): Issue number:4 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule4)\n"
       +
-      "1. ![MAJOR][MAJOR] [File.java#L5](https://github.com/SonarSource/sonar-github/File.java#L5): Issue number:5 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule5)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L5](https://github.com/SonarSource/sonar-github/with%20space/File.java#L5): Issue number:5 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule5)\n"
       +
-      "1. ![MAJOR][MAJOR] [File.java#L6](https://github.com/SonarSource/sonar-github/File.java#L6): Issue number:6 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule6)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L6](https://github.com/SonarSource/sonar-github/with%20space/File.java#L6): Issue number:6 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule6)\n"
       +
-      "1. ![MAJOR][MAJOR] [File.java#L7](https://github.com/SonarSource/sonar-github/File.java#L7): Issue number:7 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule7)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L7](https://github.com/SonarSource/sonar-github/with%20space/File.java#L7): Issue number:7 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule7)\n"
       +
-      "1. ![MAJOR][MAJOR] [File.java#L8](https://github.com/SonarSource/sonar-github/File.java#L8): Issue number:8 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule8)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L8](https://github.com/SonarSource/sonar-github/with%20space/File.java#L8): Issue number:8 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule8)\n"
       +
-      "1. ![MAJOR][MAJOR] [File.java#L9](https://github.com/SonarSource/sonar-github/File.java#L9): Issue number:9 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule9)\n"
+      "1. ![MAJOR][MAJOR] [File.java#L9](https://github.com/SonarSource/sonar-github/with%20space/File.java#L9): Issue number:9 [![rule](https://sonarsource.github.io/sonar-github/rule.png)](http://myserver/coding_rules#rule_key=repo%3Arule9)\n"
       + "\n"
       + "[MAJOR]: https://sonarsource.github.io/sonar-github/severity-major.png 'Severity: MAJOR'";
 
@@ -279,10 +294,13 @@ public class GlobalReportTest {
   }
 
   @Test
-  public void shouldLimitGlobalIssuesWhenInlineCommentsDisabled() {
+  public void shouldLimitGlobalIssuesWhenInlineCommentsDisabled() throws MalformedURLException, URISyntaxException {
     GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false);
     for (int i = 0; i < 17; i++) {
-      globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue number:" + i, "rule" + i), GITHUB_URL + "/File.java#L" + i, false);
+      globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue number:" + i, "rule" + i),
+        new URI(GITHUB_URL.getProtocol(), null, GITHUB_URL.getHost(), GITHUB_URL.getPort(),
+          GITHUB_URL.getFile() + "/File.java", null, "L" + i).toURL(),
+        false);
     }
 
     String desiredMarkdown = "SonarQube analysis reported 17 issues\n" +

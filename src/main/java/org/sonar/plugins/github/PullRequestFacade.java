@@ -24,6 +24,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -289,10 +293,16 @@ public class PullRequestFacade {
   }
 
   @CheckForNull
-  public String getGithubUrl(@Nullable InputComponent inputComponent, @Nullable Integer issueLine) {
+  public URL getGithubUrl(@Nullable InputComponent inputComponent, @Nullable Integer issueLine) {
     if (inputComponent instanceof InputPath) {
       String path = getPath((InputPath) inputComponent);
-      return ghRepo.getHtmlUrl().toString() + "/blob/" + pr.getHead().getSha() + "/" + path + (issueLine != null ? ("#L" + issueLine) : "");
+      URL url1 = ghRepo.getHtmlUrl();
+      try {
+        return new URI(url1.getProtocol(), null, url1.getHost(), url1.getPort(),
+          url1.getFile() + "/blob/" + pr.getHead().getSha() + "/" + path, null, issueLine != null ? ("L" + issueLine) : "").toURL();
+      } catch (MalformedURLException | URISyntaxException e) {
+        LOG.error("Invalid URL", e);
+      }
     }
     return null;
   }

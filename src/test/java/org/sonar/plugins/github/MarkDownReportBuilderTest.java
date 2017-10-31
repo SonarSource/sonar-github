@@ -19,6 +19,8 @@
  */
 package org.sonar.plugins.github;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import org.junit.Test;
 import org.sonar.api.batch.postjob.issue.PostJobIssue;
 import org.sonar.api.batch.rule.Severity;
@@ -88,14 +90,14 @@ public class MarkDownReportBuilderTest {
   }
 
   @Test
-  public void should_append_reference_definitions_for_extra_issues_too() {
+  public void should_append_reference_definitions_for_extra_issues_too() throws MalformedURLException {
     ReportBuilder builder = new MarkDownReportBuilder(mock(MarkDownUtils.class));
     builder.append(Severity.BLOCKER).append(" fix the leak!\n");
 
     PostJobIssue postJobIssue = mock(PostJobIssue.class);
     when(postJobIssue.severity()).thenReturn(Severity.INFO);
     when(postJobIssue.ruleKey()).thenReturn(mock(RuleKey.class));
-    builder.registerExtraIssue(postJobIssue, "http://github.com/dummy");
+    builder.registerExtraIssue(postJobIssue, new URL("http://github.com/dummy"));
     builder.appendExtraIssues();
 
     builder.append("\nCheck comments too!\n");
@@ -110,14 +112,14 @@ public class MarkDownReportBuilderTest {
   }
 
   @Test
-  public void should_append_reference_definitions_for_extra_issues_only_if_used() {
+  public void should_append_reference_definitions_for_extra_issues_only_if_used() throws MalformedURLException {
     ReportBuilder builder = new MarkDownReportBuilder(mock(MarkDownUtils.class));
     builder.append(Severity.BLOCKER).append(" fix the leak!\n");
 
     PostJobIssue postJobIssue = mock(PostJobIssue.class);
     when(postJobIssue.severity()).thenReturn(Severity.INFO);
     when(postJobIssue.ruleKey()).thenReturn(mock(RuleKey.class));
-    builder.registerExtraIssue(postJobIssue, "http://github.com/dummy");
+    builder.registerExtraIssue(postJobIssue, new URL("http://github.com/dummy"));
 
     builder.append("Check comments too!\n");
     assertThat(builder.toString()).isEqualTo("![BLOCKER][BLOCKER] fix the leak!\n"
