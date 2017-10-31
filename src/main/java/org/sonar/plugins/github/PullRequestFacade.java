@@ -66,7 +66,7 @@ public class PullRequestFacade {
   private Map<String, Map<Integer, GHPullRequestReviewComment>> existingReviewCommentsByLocationByFile = new HashMap<>();
   private GHRepository ghRepo;
   private GHPullRequest pr;
-  private Map<Integer, GHPullRequestReviewComment> reviewCommentToBeDeletedById = new HashMap<>();
+  private Map<Long, GHPullRequestReviewComment> reviewCommentToBeDeletedById = new HashMap<>();
   private File gitBaseDir;
   private String myself;
 

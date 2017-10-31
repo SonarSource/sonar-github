@@ -90,7 +90,7 @@
     <dependency>
       <groupId>org.kohsuke</groupId>
       <artifactId>github-api</artifactId>
-      <version>1.76</version>
+      <version>1.90</version>
     </dependency>
     <!-- Override version used by GitHub API -->
     <dependency>
