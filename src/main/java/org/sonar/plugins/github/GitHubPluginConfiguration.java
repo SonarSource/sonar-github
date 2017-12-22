@@ -137,6 +137,26 @@ public class GitHubPluginConfiguration {
   }
 
   /**
+   * Gets the number of allowed issues with with {@link org.sonar.api.rule.Severity#MINOR}.
+   * defaults to -1 if not configured, indicating that there is unlimited amount of minor issues allowed
+   *
+   * @return amount of allowed minor issues or -1 if not configured
+   */
+  public int getAllowedMinorIssues() {
+    return settings.getInt(GitHubPlugin.GITHUB_ALLOWED_MINOR_ISSUES);
+  }
+
+  /**
+   * Gets the number of allowed issues with {@link org.sonar.api.rule.Severity#MAJOR}.
+   * defaults to -1 if not configured, indicating that there is unlimited amount of major issues allowed
+   *
+   * @return amount of allowed major issues or -1 if not configured
+   */
+  public int getAllowedMajorIssues() {
+    return settings.getInt(GitHubPlugin.GITHUB_ALLOWED_MAJOR_ISSUES);
+  }
+
+  /**
    * Checks if a proxy was passed with command line parameters or configured in the system.
    * If only an HTTP proxy was configured then it's properties are copied to the HTTPS proxy (like SonarQube configuration)
    * @return True iff a proxy was configured to be used in the plugin.

@@ -64,11 +64,15 @@ public class PullRequestIssuePostJobTest {
       .category(CoreProperties.CATEGORY_GENERAL)
       .defaultValue(CoreProperties.SERVER_BASE_URL_DEFAULT_VALUE)
       .build()));
-    GitHubPluginConfiguration config = new GitHubPluginConfiguration(settings, new System2());
-    context = mock(PostJobContext.class);
 
+    settings.setProperty(GitHubPlugin.GITHUB_ALLOWED_MAJOR_ISSUES,-1);
+    settings.setProperty(GitHubPlugin.GITHUB_ALLOWED_MINOR_ISSUES,-1);
     settings.setProperty("sonar.host.url", "http://192.168.0.1");
     settings.setProperty(CoreProperties.SERVER_BASE_URL, "http://myserver");
+
+    GitHubPluginConfiguration config = new GitHubPluginConfiguration(settings, new System2());
+    context = mock(PostJobContext.class);
+    
     pullRequestIssuePostJob = new PullRequestIssuePostJob(config, pullRequestFacade, new MarkDownUtils(settings));
   }
 

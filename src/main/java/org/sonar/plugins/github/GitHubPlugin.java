@@ -59,7 +59,23 @@ import org.sonar.api.PropertyType;
     description = "Issues will not be reported as inline comments but only in the global summary comment",
     project = true,
     global = true,
-    type = PropertyType.BOOLEAN)
+    type = PropertyType.BOOLEAN),
+  @Property(
+    key = GitHubPlugin.GITHUB_ALLOWED_MINOR_ISSUES,
+    defaultValue = "-1",
+    name = "Allowed minor issues",
+    description = "If number of allowed minor issues is exceeded the commit state will be error",
+    project = true,
+    global = false,
+    type = PropertyType.INTEGER),
+  @Property(
+    key = GitHubPlugin.GITHUB_ALLOWED_MAJOR_ISSUES,
+    defaultValue = "-1",
+    name = "Allowed major issues",
+    description = "If number of allowed major issues is exceeded the commit state will be error",
+    project = true,
+    global = false,
+    type = PropertyType.INTEGER)
 })
 public class GitHubPlugin implements Plugin {
 
@@ -68,7 +84,8 @@ public class GitHubPlugin implements Plugin {
   public static final String GITHUB_REPO = "sonar.github.repository";
   public static final String GITHUB_PULL_REQUEST = "sonar.github.pullRequest";
   public static final String GITHUB_DISABLE_INLINE_COMMENTS = "sonar.github.disableInlineComments";
-
+  public static final String GITHUB_ALLOWED_MINOR_ISSUES = "sonar.github.allowedMinorIssues";
+  public static final String GITHUB_ALLOWED_MAJOR_ISSUES = "sonar.github.allowedMajorIssues";
 
   @Override
   public void define(Context context) {

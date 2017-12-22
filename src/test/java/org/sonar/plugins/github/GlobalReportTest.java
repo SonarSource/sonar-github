@@ -24,8 +24,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import javax.annotation.CheckForNull;
+
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.kohsuke.github.GHCommitState;
 import org.sonar.api.CoreProperties;
 import org.sonar.api.batch.fs.internal.DefaultInputFile;
 import org.sonar.api.batch.postjob.issue.PostJobIssue;
@@ -83,7 +86,7 @@ public class GlobalReportTest {
 
   @Test
   public void noIssues() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true,-1,-1);
 
     String desiredMarkdown = "SonarQube analysis reported no issues.";
 
@@ -94,7 +97,7 @@ public class GlobalReportTest {
 
   @Test
   public void oneIssue() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true,-1,-1);
     globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue", "rule"), GITHUB_URL, true);
 
     String desiredMarkdown = "SonarQube analysis reported 1 issue\n" +
@@ -108,8 +111,48 @@ public class GlobalReportTest {
   }
 
   @Test
+  public void errorCommitStatusOnBlocker(){
+      GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true,-1,-1);
+      globalReport.process(newMockedIssue("component", null, null, Severity.BLOCKER, true, "Issue", "rule"), GITHUB_URL, true);
+      Assert.assertTrue(globalReport.getStatus() == GHCommitState.ERROR);
+  }
+
+  @Test
+  public void errorCommitStatusOnCritical(){
+      GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true,-1,-1);
+      globalReport.process(newMockedIssue("component", null, null, Severity.CRITICAL, true, "Issue", "rule"), GITHUB_URL, true);
+      Assert.assertTrue(globalReport.getStatus() == GHCommitState.ERROR);
+  }
+
+  @Test
+  public void errorCommitStatusOnMajor() {
+      GlobalReport zeroMajorAllowed = new GlobalReport(new MarkDownUtils(settings), true, 0, -1);
+      zeroMajorAllowed.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue", "rule"), GITHUB_URL, true);
+      Assert.assertTrue(zeroMajorAllowed.getStatus() == GHCommitState.ERROR);
+
+      GlobalReport threeMajorAllowed = new GlobalReport(new MarkDownUtils(settings), true, 3, -1);
+      threeMajorAllowed.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue0", "rule"), GITHUB_URL, true);
+      threeMajorAllowed.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue1", "rule"), GITHUB_URL, true);
+      threeMajorAllowed.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue2", "rule"), GITHUB_URL, true);
+      Assert.assertTrue(threeMajorAllowed.getStatus() == GHCommitState.SUCCESS);
+  }
+
+  @Test
+  public void errorCommitStatusOnMinor() {
+      GlobalReport zeroMinorAllowed = new GlobalReport(new MarkDownUtils(settings), true, -1, 0);
+      zeroMinorAllowed.process(newMockedIssue("component", null, null, Severity.MINOR, true, "Issue", "rule"), GITHUB_URL, true);
+      Assert.assertTrue(zeroMinorAllowed.getStatus() == GHCommitState.ERROR);
+
+      GlobalReport threeMinorAllowed = new GlobalReport(new MarkDownUtils(settings), true, -1, 3);
+      threeMinorAllowed.process(newMockedIssue("component", null, null, Severity.MINOR, true, "Issue0", "rule"), GITHUB_URL, true);
+      threeMinorAllowed.process(newMockedIssue("component", null, null, Severity.MINOR, true, "Issue1", "rule"), GITHUB_URL, true);
+      threeMinorAllowed.process(newMockedIssue("component", null, null, Severity.MINOR, true, "Issue2", "rule"), GITHUB_URL, true);
+      Assert.assertTrue(threeMinorAllowed.getStatus() == GHCommitState.SUCCESS);
+  }
+
+  @Test
   public void oneIssueOnDir() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true,-1,-1);
     globalReport.process(newMockedIssue("component0", null, null, Severity.INFO, true, "Issue0", "rule0"), null, false);
 
     String desiredMarkdown = "SonarQube analysis reported 1 issue\n\n" +
@@ -125,7 +168,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldFormatIssuesForMarkdownNoInline() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true,-1,-1);
     globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue", "rule"), GITHUB_URL, true);
     globalReport.process(newMockedIssue("component", null, null, Severity.MINOR, true, "Issue", "rule"), GITHUB_URL, true);
     globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue", "rule"), GITHUB_URL, true);
@@ -153,7 +196,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldFormatIssuesForMarkdownMixInlineGlobal() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true,-1,-1);
     globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue 0", "rule0"), GITHUB_URL, true);
     globalReport.process(newMockedIssue("component", null, null, Severity.MINOR, true, "Issue 1", "rule1"), GITHUB_URL, false);
     globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue 2", "rule2"), GITHUB_URL, true);
@@ -187,7 +230,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldFormatIssuesForMarkdownWhenInlineCommentsDisabled() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false,-1,-1);
     globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue 0", "rule0"), GITHUB_URL, false);
     globalReport.process(newMockedIssue("component", null, null, Severity.MINOR, true, "Issue 1", "rule1"), GITHUB_URL, false);
     globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue 2", "rule2"), GITHUB_URL, false);
@@ -218,7 +261,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldFormatIssuesForMarkdownWhenInlineCommentsDisabledAndLimitReached() {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false, 4);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false,-1,-1, 4);
     globalReport.process(newMockedIssue("component", null, null, Severity.INFO, true, "Issue 0", "rule0"), GITHUB_URL, false);
     globalReport.process(newMockedIssue("component", null, null, Severity.MINOR, true, "Issue 1", "rule1"), GITHUB_URL, false);
     globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue 2", "rule2"), GITHUB_URL, false);
@@ -253,7 +296,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldLimitGlobalIssues() throws MalformedURLException, URISyntaxException {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true,-1,-1);
     for (int i = 0; i < 17; i++) {
       globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue number:" + i, "rule" + i),
         new URI(GITHUB_URL.getProtocol(), null, GITHUB_URL.getHost(), GITHUB_URL.getPort(),
@@ -295,7 +338,7 @@ public class GlobalReportTest {
 
   @Test
   public void shouldLimitGlobalIssuesWhenInlineCommentsDisabled() throws MalformedURLException, URISyntaxException {
-    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false);
+    GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false,-1,-1);
     for (int i = 0; i < 17; i++) {
       globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue number:" + i, "rule" + i),
         new URI(GITHUB_URL.getProtocol(), null, GITHUB_URL.getHost(), GITHUB_URL.getPort(),
