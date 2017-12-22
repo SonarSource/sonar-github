@@ -31,15 +31,19 @@ public class GlobalReport {
   private int[] newIssuesBySeverity = new int[Severity.values().length];
   private int extraIssueCount = 0;
   private int maxGlobalReportedIssues;
+  private final int allowedMinorIssues;
+  private final int allowedMajorIssues;
   private final ReportBuilder builder;
 
-  public GlobalReport(MarkDownUtils markDownUtils, boolean tryReportIssuesInline) {
-    this(markDownUtils, tryReportIssuesInline, GitHubPluginConfiguration.MAX_GLOBAL_ISSUES);
+  public GlobalReport(MarkDownUtils markDownUtils, boolean tryReportIssuesInline,int allowedMajorIssues,int allowedMinorIssues) {
+    this(markDownUtils, tryReportIssuesInline, allowedMajorIssues, allowedMinorIssues, GitHubPluginConfiguration.MAX_GLOBAL_ISSUES);
   }
 
-  public GlobalReport(MarkDownUtils markDownUtils, boolean tryReportIssuesInline, int maxGlobalReportedIssues) {
+  public GlobalReport(MarkDownUtils markDownUtils, boolean tryReportIssuesInline,int allowedMajorIssues,int allowedMinorIssues, int maxGlobalReportedIssues) {
     this.tryReportIssuesInline = tryReportIssuesInline;
     this.maxGlobalReportedIssues = maxGlobalReportedIssues;
+    this.allowedMajorIssues = allowedMajorIssues;
+    this.allowedMinorIssues = allowedMinorIssues;
     this.builder = new MarkDownReportBuilder(markDownUtils);
   }
 
@@ -98,8 +102,27 @@ public class GlobalReport {
     return sb.toString();
   }
 
+  /**
+   * Determines the {@link GHCommitState} based on the {@link GitHubPluginConfiguration} allowedIssues properties
+   * Rules:
+   * <ul>
+   * <li>Always fails when there is issues with severity blocker</li>
+   * <li>Always fails when there is issues with severity critical</li>
+   * <li>Fails when there is issues with severity major exceeding the amount as defined with {@link GitHubPlugin#GITHUB_ALLOWED_MAJOR_ISSUES}</li>
+   * <li>Fails when there is issues with severity minor exceeding the amount as defined with {@link GitHubPlugin#GITHUB_ALLOWED_MINOR_ISSUES}</li>
+   * </ul>
+   *
+   * Notes:
+   * To ensure downwards compatibility the allowedMajor and allowedMinor issues are defaulting to -1 (infinite amount allowed)
+   * @return GHCommitState based on allowed issue configuration
+   */
   public GHCommitState getStatus() {
-    return (newIssues(Severity.BLOCKER) > 0 || newIssues(Severity.CRITICAL) > 0) ? GHCommitState.ERROR : GHCommitState.SUCCESS;
+    boolean failsOnBlockers = newIssues(Severity.BLOCKER) > 0;
+    boolean failsOnCritical = newIssues(Severity.CRITICAL) > 0;
+    boolean failsOnMajor = allowedMajorIssues != -1 && newIssues(Severity.MAJOR) > allowedMajorIssues;
+    boolean failsOnMinor = allowedMinorIssues != -1 && newIssues(Severity.MINOR) > allowedMinorIssues;
+
+    return (failsOnBlockers || failsOnCritical || failsOnMajor || failsOnMinor) ? GHCommitState.ERROR : GHCommitState.SUCCESS;
   }
 
   private int newIssues(Severity s) {
