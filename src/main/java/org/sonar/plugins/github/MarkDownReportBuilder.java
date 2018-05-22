@@ -52,6 +52,12 @@ public class MarkDownReportBuilder implements ReportBuilder {
   }
 
   @Override
+  public ReportBuilder appendProjectId(String projectId) {
+    sb.append(markDownUtils.projectId(projectId));
+    return this;
+  }
+
+  @Override
   public ReportBuilder append(Object o) {
     sb.append(o);
     return this;
