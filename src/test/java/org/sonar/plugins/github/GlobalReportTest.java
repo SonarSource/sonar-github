@@ -278,7 +278,7 @@ public class GlobalReportTest {
   }
 
   @Test
-  public void shouldLimitGlobalIssues() {
+  public void shouldLimitGlobalIssues() throws MalformedURLException, URISyntaxException {
     GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), true, "");
     for (int i = 0; i < 17; i++) {
       globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue number:" + i, "rule" + i),
@@ -320,7 +320,7 @@ public class GlobalReportTest {
   }
 
   @Test
-  public void shouldLimitGlobalIssuesWhenInlineCommentsDisabled() {
+  public void shouldLimitGlobalIssuesWhenInlineCommentsDisabled() throws MalformedURLException, URISyntaxException{
     GlobalReport globalReport = new GlobalReport(new MarkDownUtils(settings), false, "");
     for (int i = 0; i < 17; i++) {
       globalReport.process(newMockedIssue("component", null, null, Severity.MAJOR, true, "Issue number:" + i, "rule" + i),
