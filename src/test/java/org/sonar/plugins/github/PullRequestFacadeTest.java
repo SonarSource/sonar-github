@@ -1,6 +1,6 @@
 /*
  * SonarQube :: GitHub Plugin
- * Copyright (C) 2015-2017 SonarSource SA
+ * Copyright (C) 2015-2018 SonarSource SA
  * mailto:info AT sonarsource DOT com
  *
  * This program is free software; you can redistribute it and/or
@@ -38,6 +38,7 @@ import org.kohsuke.github.PagedIterable;
 import org.mockito.Mockito;
 import org.sonar.api.batch.fs.InputPath;
 import org.sonar.api.batch.fs.internal.DefaultInputFile;
+import org.sonar.api.batch.fs.internal.TestInputFileBuilder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
@@ -137,7 +138,9 @@ public class PullRequestFacadeTest {
     PullRequestFacade facade = new PullRequestFacade(mock(GitHubPluginConfiguration.class));
     File projectBaseDir = temp.newFolder();
     facade.initGitBaseDir(projectBaseDir);
-    assertThat(facade.getPath(new DefaultInputFile("foo", "src/main/java/Foo.java").setModuleBaseDir(projectBaseDir.toPath()))).isEqualTo("src/main/java/Foo.java");
+    assertThat(facade.getPath(new TestInputFileBuilder("foo", "src/main/java/Foo.java")
+      .setModuleBaseDir(projectBaseDir.toPath())
+      .build())).isEqualTo("src/main/java/Foo.java");
   }
 
   @Test
@@ -147,6 +150,7 @@ public class PullRequestFacadeTest {
     Files.createDirectory(gitBaseDir.toPath().resolve(".git"));
     File projectBaseDir = new File(gitBaseDir, "myProject");
     facade.initGitBaseDir(projectBaseDir);
-    assertThat(facade.getPath(new DefaultInputFile("foo", "src/main/java/Foo.java").setModuleBaseDir(projectBaseDir.toPath()))).isEqualTo("myProject/src/main/java/Foo.java");
+    assertThat(facade.getPath(new TestInputFileBuilder("foo", "src/main/java/Foo.java")
+      .setModuleBaseDir(projectBaseDir.toPath()).build())).isEqualTo("myProject/src/main/java/Foo.java");
   }
 }

@@ -1,6 +1,6 @@
 /*
  * SonarQube :: GitHub Plugin
- * Copyright (C) 2015-2017 SonarSource SA
+ * Copyright (C) 2015-2018 SonarSource SA
  * mailto:info AT sonarsource DOT com
  *
  * This program is free software; you can redistribute it and/or

@@ -1,6 +1,6 @@
 /*
  * SonarQube :: GitHub Plugin
- * Copyright (C) 2015-2017 SonarSource SA
+ * Copyright (C) 2015-2018 SonarSource SA
  * mailto:info AT sonarsource DOT com
  *
  * This program is free software; you can redistribute it and/or
@@ -21,6 +21,8 @@ package org.sonar.plugins.github;
 
 import org.junit.Test;
 import org.sonar.api.Plugin;
+import org.sonar.api.SonarQubeSide;
+import org.sonar.api.internal.SonarRuntimeImpl;
 import org.sonar.api.utils.Version;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,7 +31,7 @@ public class GitHubPluginTest {
 
   @Test
   public void uselessTest() {
-    Plugin.Context context = new Plugin.Context(Version.parse("5.6"));
+    Plugin.Context context = new Plugin.Context(SonarRuntimeImpl.forSonarQube(Version.create(6,7), SonarQubeSide.SCANNER));
     new GitHubPlugin().define(context);
     assertThat(context.getExtensions().size()).isGreaterThan(1);
   }

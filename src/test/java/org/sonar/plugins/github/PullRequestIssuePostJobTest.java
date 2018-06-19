@@ -1,6 +1,6 @@
 /*
  * SonarQube :: GitHub Plugin
- * Copyright (C) 2015-2017 SonarSource SA
+ * Copyright (C) 2015-2018 SonarSource SA
  * mailto:info AT sonarsource DOT com
  *
  * This program is free software; you can redistribute it and/or
@@ -30,12 +30,14 @@ import org.mockito.ArgumentCaptor;
 import org.sonar.api.CoreProperties;
 import org.sonar.api.batch.fs.InputFile;
 import org.sonar.api.batch.fs.internal.DefaultInputFile;
+import org.sonar.api.batch.fs.internal.TestInputFileBuilder;
 import org.sonar.api.batch.postjob.PostJobContext;
 import org.sonar.api.batch.postjob.issue.PostJobIssue;
 import org.sonar.api.batch.rule.Severity;
 import org.sonar.api.config.PropertyDefinition;
 import org.sonar.api.config.PropertyDefinitions;
 import org.sonar.api.config.Settings;
+import org.sonar.api.config.internal.MapSettings;
 import org.sonar.api.rule.RuleKey;
 import org.sonar.api.utils.System2;
 
@@ -58,7 +60,7 @@ public class PullRequestIssuePostJobTest {
   @Before
   public void prepare() throws Exception {
     pullRequestFacade = mock(PullRequestFacade.class);
-    Settings settings = new Settings(new PropertyDefinitions(PropertyDefinition.builder(CoreProperties.SERVER_BASE_URL)
+    MapSettings settings = new MapSettings(new PropertyDefinitions(PropertyDefinition.builder(CoreProperties.SERVER_BASE_URL)
       .name("Server base URL")
       .description("HTTP URL of this SonarQube server, such as <i>http://yourhost.yourdomain/sonar</i>. This value is used i.e. to create links in emails.")
       .category(CoreProperties.CATEGORY_GENERAL)
@@ -102,14 +104,14 @@ public class PullRequestIssuePostJobTest {
 
   @Test
   public void testPullRequestAnalysisWithNewIssues() throws MalformedURLException {
-    DefaultInputFile inputFile1 = new DefaultInputFile("foo", "src/Foo.php");
+    DefaultInputFile inputFile1 = new TestInputFileBuilder("foo", "src/Foo.php").build();
     PostJobIssue newIssue = newMockedIssue("foo:src/Foo.php", inputFile1, 1, Severity.BLOCKER, true, "msg1");
     when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn(new URL("http://github/blob/abc123/src/Foo.php#L1"));
 
     PostJobIssue lineNotVisible = newMockedIssue("foo:src/Foo.php", inputFile1, 2, Severity.BLOCKER, true, "msg2");
     when(pullRequestFacade.getGithubUrl(inputFile1, 2)).thenReturn(new URL("http://github/blob/abc123/src/Foo.php#L2"));
 
-    DefaultInputFile inputFile2 = new DefaultInputFile("foo", "src/Foo2.php");
+    DefaultInputFile inputFile2 = new TestInputFileBuilder("foo", "src/Foo2.php").build();
     PostJobIssue fileNotInPR = newMockedIssue("foo:src/Foo2.php", inputFile2, 1, Severity.BLOCKER, true, "msg3");
 
     PostJobIssue notNewIssue = newMockedIssue("foo:src/Foo.php", inputFile1, 1, Severity.BLOCKER, false, "msg");
@@ -142,8 +144,8 @@ public class PullRequestIssuePostJobTest {
   @Test
   public void testSortIssues() throws MalformedURLException {
     ArgumentCaptor<String> commentCaptor = forClass(String.class);
-    DefaultInputFile inputFile1 = new DefaultInputFile("foo", "src/Foo.php");
-    DefaultInputFile inputFile2 = new DefaultInputFile("foo", "src/Foo2.php");
+    DefaultInputFile inputFile1 = new TestInputFileBuilder("foo", "src/Foo.php").build();
+    DefaultInputFile inputFile2 = new TestInputFileBuilder("foo", "src/Foo2.php").build();
 
     // Blocker and 8th line => Should be displayed in 3rd position
     PostJobIssue newIssue = newMockedIssue("foo:src/Foo.php", inputFile1, 8, Severity.BLOCKER, true, "msg1");
@@ -182,7 +184,7 @@ public class PullRequestIssuePostJobTest {
 
   @Test
   public void testPullRequestAnalysisWithNewCriticalIssues() throws MalformedURLException {
-    DefaultInputFile inputFile1 = new DefaultInputFile("foo", "src/Foo.php");
+    DefaultInputFile inputFile1 = new TestInputFileBuilder("foo", "src/Foo.php").build();
     PostJobIssue newIssue = newMockedIssue("foo:src/Foo.php", inputFile1, 1, Severity.CRITICAL, true, "msg1");
     when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn(new URL("http://github/blob/abc123/src/Foo.php#L1"));
 
@@ -197,7 +199,7 @@ public class PullRequestIssuePostJobTest {
 
   @Test
   public void testPullRequestAnalysisWithNewIssuesNoBlockerNorCritical() throws MalformedURLException {
-    DefaultInputFile inputFile1 = new DefaultInputFile("foo", "src/Foo.php");
+    DefaultInputFile inputFile1 = new TestInputFileBuilder("foo", "src/Foo.php").build();
     PostJobIssue newIssue = newMockedIssue("foo:src/Foo.php", inputFile1, 1, Severity.MAJOR, true, "msg1");
     when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn(new URL("http://github/blob/abc123/src/Foo.php#L1"));
 
@@ -212,7 +214,7 @@ public class PullRequestIssuePostJobTest {
 
   @Test
   public void testPullRequestAnalysisWithNewBlockerAndCriticalIssues() throws MalformedURLException {
-    DefaultInputFile inputFile1 = new DefaultInputFile("foo", "src/Foo.php");
+    DefaultInputFile inputFile1 = new TestInputFileBuilder("foo", "src/Foo.php").build();
     PostJobIssue newIssue = newMockedIssue("foo:src/Foo.php", inputFile1, 1, Severity.CRITICAL, true, "msg1");
     when(pullRequestFacade.getGithubUrl(inputFile1, 1)).thenReturn(new URL("http://github/blob/abc123/src/Foo.php#L1"));
 

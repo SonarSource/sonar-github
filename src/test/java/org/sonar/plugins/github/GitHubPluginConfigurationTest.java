@@ -1,6 +1,6 @@
 /*
  * SonarQube :: GitHub Plugin
- * Copyright (C) 2015-2017 SonarSource SA
+ * Copyright (C) 2015-2018 SonarSource SA
  * mailto:info AT sonarsource DOT com
  *
  * This program is free software; you can redistribute it and/or
@@ -27,6 +27,7 @@ import org.junit.rules.ExpectedException;
 import org.sonar.api.CoreProperties;
 import org.sonar.api.config.PropertyDefinitions;
 import org.sonar.api.config.Settings;
+import org.sonar.api.config.internal.MapSettings;
 import org.sonar.api.utils.MessageException;
 import org.sonar.api.utils.System2;
 
@@ -39,12 +40,12 @@ public class GitHubPluginConfigurationTest {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
-  private Settings settings;
+  private MapSettings settings;
   private GitHubPluginConfiguration config;
 
   @Before
   public void prepare() {
-    settings = new Settings(new PropertyDefinitions(GitHubPlugin.class));
+    settings = new MapSettings(new PropertyDefinitions(GitHubPlugin.class));
     config = new GitHubPluginConfiguration(settings, new System2());
   }
 
