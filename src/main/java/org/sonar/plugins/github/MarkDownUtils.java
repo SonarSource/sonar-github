@@ -1,6 +1,6 @@
 /*
  * SonarQube :: GitHub Plugin
- * Copyright (C) 2015-2017 SonarSource SA
+ * Copyright (C) 2015-2018 SonarSource SA
  * mailto:info AT sonarsource DOT com
  *
  * This program is free software; you can redistribute it and/or
@@ -27,12 +27,12 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.apache.commons.lang.StringUtils;
 import org.sonar.api.CoreProperties;
-import org.sonar.api.batch.BatchSide;
 import org.sonar.api.batch.InstantiationStrategy;
+import org.sonar.api.batch.ScannerSide;
 import org.sonar.api.batch.rule.Severity;
 import org.sonar.api.config.Settings;
 
-@BatchSide
+@ScannerSide
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 public class MarkDownUtils {
 
