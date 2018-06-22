@@ -31,6 +31,7 @@ import javax.annotation.CheckForNull;
 import org.sonar.api.CoreProperties;
 import org.sonar.api.batch.BatchSide;
 import org.sonar.api.batch.InstantiationStrategy;
+import org.sonar.api.batch.ScannerSide;
 import org.sonar.api.config.Settings;
 import org.sonar.api.utils.MessageException;
 import org.sonar.api.utils.System2;
@@ -39,7 +40,7 @@ import org.sonar.api.utils.log.Loggers;
 
 import static org.apache.commons.lang.StringUtils.isNotBlank;
 
-@BatchSide
+@ScannerSide
 @InstantiationStrategy(InstantiationStrategy.PER_BATCH)
 public class GitHubPluginConfiguration {
 
