@@ -59,7 +59,16 @@ import org.sonar.api.PropertyType;
     description = "Issues will not be reported as inline comments but only in the global summary comment",
     project = true,
     global = true,
-    type = PropertyType.BOOLEAN)
+    type = PropertyType.BOOLEAN),
+  @Property(
+    key = GitHubPlugin.GITHUB_COMMIT_CONTEXT,
+    defaultValue = "sonarqube",
+    name = "GitHub Commit Context",
+    description = "GitHub commit context for this analysis. Useful if you have more than one SonarQube server",
+    global = false,
+    project = false,
+    module = false
+  )
 })
 public class GitHubPlugin implements Plugin {
 
@@ -68,6 +77,7 @@ public class GitHubPlugin implements Plugin {
   public static final String GITHUB_REPO = "sonar.github.repository";
   public static final String GITHUB_PULL_REQUEST = "sonar.github.pullRequest";
   public static final String GITHUB_DISABLE_INLINE_COMMENTS = "sonar.github.disableInlineComments";
+  public static final String GITHUB_COMMIT_CONTEXT = "sonar.github.commitContext";
 
   @Override
   public void define(Context context) {

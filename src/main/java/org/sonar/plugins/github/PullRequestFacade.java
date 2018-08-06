@@ -64,8 +64,6 @@ public class PullRequestFacade {
 
   private static final Logger LOG = Loggers.get(PullRequestFacade.class);
 
-  static final String COMMIT_CONTEXT = "sonarqube";
-
   private final GitHubPluginConfiguration config;
   private Map<String, Map<Integer, Integer>> patchPositionMappingByFile;
   private Map<String, Map<Integer, GHPullRequestReviewComment>> existingReviewCommentsByLocationByFile = new HashMap<>();
@@ -74,6 +72,7 @@ public class PullRequestFacade {
   private Map<Long, GHPullRequestReviewComment> reviewCommentToBeDeletedById = new HashMap<>();
   private File gitBaseDir;
   private String myself;
+  private String gitHubCommitContext;
 
   public PullRequestFacade(GitHubPluginConfiguration config) {
     this.config = config;
@@ -90,6 +89,7 @@ public class PullRequestFacade {
       }
       setGhRepo(github.getRepository(config.repository()));
       setPr(ghRepo.getPullRequest(pullRequestNumber));
+      setCommitContext(config.commitContext());
       LOG.info("Starting analysis of pull request: " + pr.getHtmlUrl());
       myself = github.getMyself().getLogin();
       loadExistingReviewComments();
@@ -116,6 +116,10 @@ public class PullRequestFacade {
 
   void setPr(GHPullRequest pr) {
     this.pr = pr;
+  }
+
+  void setCommitContext(String commitContext) {
+    this.gitHubCommitContext = commitContext;
   }
 
   public File findGitBaseDir(@Nullable File baseDir) {
@@ -272,15 +276,19 @@ public class PullRequestFacade {
     return found;
   }
 
+  public String getGithubCommitContext() {
+    return gitHubCommitContext;
+  }
+
   public void createOrUpdateSonarQubeStatus(GHCommitState status, String statusDescription) {
     try {
       // Copy previous targetUrl in case it was set by an external system (like the CI job).
       String targetUrl = null;
-      GHCommitStatus lastStatus = getCommitStatusForContext(pr, COMMIT_CONTEXT);
+      GHCommitStatus lastStatus = getCommitStatusForContext(pr, gitHubCommitContext);
       if (lastStatus != null) {
         targetUrl = lastStatus.getTargetUrl();
       }
-      ghRepo.createCommitStatus(pr.getHead().getSha(), status, targetUrl, statusDescription, COMMIT_CONTEXT);
+      ghRepo.createCommitStatus(pr.getHead().getSha(), status, targetUrl, statusDescription, gitHubCommitContext);
     } catch (FileNotFoundException e) {
       String msg = "Unable to set pull request status. GitHub account probably miss push permission on the repository.";
       if (LOG.isDebugEnabled()) {

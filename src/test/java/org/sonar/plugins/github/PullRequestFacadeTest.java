@@ -113,12 +113,13 @@ public class PullRequestFacadeTest {
     when(pr.getRepository()).thenReturn(ghRepo);
     when(pr.getHead().getSha()).thenReturn("abc123");
     when(ghRepo.listCommitStatuses(pr.getHead().getSha())).thenReturn(ghCommitStatuses);
-    assertThat(facade.getCommitStatusForContext(pr, PullRequestFacade.COMMIT_CONTEXT)).isNull();
+    assertThat(facade.getCommitStatusForContext(pr, facade.getGithubCommitContext())).isNull();
   }
 
   @Test
   public void testGetCommitStatusForContextWithOneCorrectStatus() throws IOException {
     PullRequestFacade facade = new PullRequestFacade(mock(GitHubPluginConfiguration.class));
+    facade.setCommitContext("sonarQubeContext");
     GHRepository ghRepo = mock(GHRepository.class);
     PagedIterable<GHCommitStatus> ghCommitStatuses = Mockito.mock(PagedIterable.class);
     List<GHCommitStatus> ghCommitStatusesList = new ArrayList<>();
@@ -129,8 +130,8 @@ public class PullRequestFacadeTest {
     when(pr.getHead().getSha()).thenReturn("abc123");
     when(ghRepo.listCommitStatuses(pr.getHead().getSha())).thenReturn(ghCommitStatuses);
     when(ghCommitStatuses.asList()).thenReturn(ghCommitStatusesList);
-    when(ghCommitStatusGHPRHContext.getContext()).thenReturn(PullRequestFacade.COMMIT_CONTEXT);
-    assertThat(facade.getCommitStatusForContext(pr, PullRequestFacade.COMMIT_CONTEXT).getContext()).isEqualTo(PullRequestFacade.COMMIT_CONTEXT);
+    when(ghCommitStatusGHPRHContext.getContext()).thenReturn(facade.getGithubCommitContext());
+    assertThat(facade.getCommitStatusForContext(pr, facade.getGithubCommitContext()).getContext()).isEqualTo(facade.getGithubCommitContext());
   }
 
   @Test
