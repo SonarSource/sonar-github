@@ -19,7 +19,9 @@
   <inceptionYear>2015</inceptionYear>
   
   <properties>
-    <sonar.version>6.7</sonar.version>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <sonar.version>7.0</sonar.version>
     <sonar.pluginName>GitHub</sonar.pluginName>
     <sonar.pluginClass>org.sonar.plugins.github.GitHubPlugin</sonar.pluginClass>
 
