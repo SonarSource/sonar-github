@@ -38,6 +38,7 @@ public class MarkDownUtils {
 
   private static final String IMAGES_ROOT_URL = "https://sonarsource.github.io/sonar-github/";
   private final String ruleUrlPrefix;
+  private final String projectKey;
 
   public MarkDownUtils(Settings settings) {
     // If server base URL was not configured in SQ server then is is better to take URL configured on batch side
@@ -46,6 +47,7 @@ public class MarkDownUtils {
       baseUrl += "/";
     }
     this.ruleUrlPrefix = baseUrl;
+    this.projectKey = settings.getString(CoreProperties.PROJECT_KEY_PROPERTY);
   }
 
   public String inlineIssue(Severity severity, String message, String ruleKey) {
@@ -55,7 +57,9 @@ public class MarkDownUtils {
       .append(" ")
       .append(message)
       .append(" ")
-      .append(ruleLink);
+      .append(ruleLink)
+      .append("\n")
+      .append(getProjectNameMeta());
     return sb.toString();
   }
 
@@ -82,6 +86,10 @@ public class MarkDownUtils {
 
   String getRuleLink(String ruleKey) {
     return "[![rule](" + IMAGES_ROOT_URL + "rule.png)](" + ruleUrlPrefix + "coding_rules#rule_key=" + encodeForUrlParam(ruleKey) + ")";
+  }
+
+  String getProjectNameMeta(){
+    return "<sub>" + this.projectKey + "</sub>";
   }
 
   static String encodeForUrlParam(String url) {

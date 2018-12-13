@@ -28,19 +28,21 @@ import org.sonar.api.batch.rule.Severity;
 
 public class GlobalReport {
   private final boolean tryReportIssuesInline;
+  private final String projectKeyMarkdown;
   private int[] newIssuesBySeverity = new int[Severity.values().length];
   private int extraIssueCount = 0;
   private int maxGlobalReportedIssues;
   private final ReportBuilder builder;
 
-  public GlobalReport(MarkDownUtils markDownUtils, boolean tryReportIssuesInline) {
-    this(markDownUtils, tryReportIssuesInline, GitHubPluginConfiguration.MAX_GLOBAL_ISSUES);
+  public GlobalReport(MarkDownUtils markDownUtils, String projectKeyMarkdown, boolean tryReportIssuesInline) {
+    this(markDownUtils, projectKeyMarkdown, tryReportIssuesInline, GitHubPluginConfiguration.MAX_GLOBAL_ISSUES);
   }
 
-  public GlobalReport(MarkDownUtils markDownUtils, boolean tryReportIssuesInline, int maxGlobalReportedIssues) {
+  public GlobalReport(MarkDownUtils markDownUtils, String projectKeyMarkdown, boolean tryReportIssuesInline, int maxGlobalReportedIssues) {
     this.tryReportIssuesInline = tryReportIssuesInline;
     this.maxGlobalReportedIssues = maxGlobalReportedIssues;
     this.builder = new MarkDownReportBuilder(markDownUtils);
+    this.projectKeyMarkdown = projectKeyMarkdown;
   }
 
   private void increment(Severity severity) {
@@ -50,12 +52,13 @@ public class GlobalReport {
   public String formatForMarkdown() {
     int newIssues = newIssues(Severity.BLOCKER) + newIssues(Severity.CRITICAL) + newIssues(Severity.MAJOR) + newIssues(Severity.MINOR) + newIssues(Severity.INFO);
     if (newIssues == 0) {
-      return "SonarQube analysis reported no issues.";
+        return projectKeyMarkdown + "\nSonarQube analysis reported no issues.";
     }
+    builder.append(projectKeyMarkdown);
 
     boolean hasInlineIssues = newIssues > extraIssueCount;
     boolean extraIssuesTruncated = extraIssueCount > maxGlobalReportedIssues;
-    builder.append("SonarQube analysis reported ").append(newIssues).append(" issue").append(newIssues > 1 ? "s" : "").append("\n");
+    builder.append("\nSonarQube analysis reported ").append(newIssues).append(" issue").append(newIssues > 1 ? "s" : "").append("\n");
     if (hasInlineIssues || extraIssuesTruncated) {
       appendSummaryBySeverity(builder);
     }

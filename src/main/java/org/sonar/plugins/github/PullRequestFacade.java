@@ -141,6 +141,10 @@ public class PullRequestFacade {
         // Ignore comments from other users
         continue;
       }
+      if (!comment.getBody().contains(getProjectKeyMarkdown())) {
+        // Ignore my comments from other Sonar projects in multi projects setups
+        continue;
+      }
       if (!existingReviewCommentsByLocationByFile.containsKey(comment.getPath())) {
         existingReviewCommentsByLocationByFile.put(comment.getPath(), new HashMap<Integer, GHPullRequestReviewComment>());
       }
@@ -150,6 +154,9 @@ public class PullRequestFacade {
     }
   }
 
+  String getProjectKeyMarkdown() {
+    return "<sub>" + config.getProjectKey() + "</sub>";
+  }
   /**
    * GitHub expect review comments to be added on "patch lines" (aka position) but not on file lines.
    * So we have to iterate over each patch and compute corresponding file line in order to later map issues to the correct position.
@@ -259,7 +266,8 @@ public class PullRequestFacade {
   private boolean findAndDeleteOthers(@Nullable String markup) throws IOException {
     boolean found = false;
     for (GHIssueComment comment : pr.listComments()) {
-      if (myself.equals(comment.getUser().getLogin())) {
+      if (myself.equals(comment.getUser().getLogin())
+              && comment.getBody().contains(getProjectKeyMarkdown())) {
         if (markup == null || found || !markup.equals(comment.getBody())) {
           comment.delete();
           continue;

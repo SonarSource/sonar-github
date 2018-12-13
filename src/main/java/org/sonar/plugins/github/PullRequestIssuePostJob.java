@@ -61,7 +61,7 @@ public class PullRequestIssuePostJob implements PostJob {
 
   @Override
   public void execute(PostJobContext context) {
-    GlobalReport report = new GlobalReport(markDownUtils, gitHubPluginConfiguration.tryReportIssuesInline());
+    GlobalReport report = new GlobalReport(markDownUtils, pullRequestFacade.getProjectKeyMarkdown(), gitHubPluginConfiguration.tryReportIssuesInline());
     try {
       Map<InputFile, Map<Integer, StringBuilder>> commentsToBeAddedByLine = processIssues(report, context.issues());
 
@@ -69,7 +69,9 @@ public class PullRequestIssuePostJob implements PostJob {
 
       pullRequestFacade.deleteOutdatedComments();
 
-      pullRequestFacade.createOrUpdateGlobalComments(report.hasNewIssue() ? report.formatForMarkdown() : null);
+      pullRequestFacade.createOrUpdateGlobalComments(report.hasNewIssue()
+              ? report.formatForMarkdown()
+              : null);
 
       pullRequestFacade.createOrUpdateSonarQubeStatus(report.getStatus(), report.getStatusDescription());
     } catch (Exception e) {
